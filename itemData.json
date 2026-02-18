@@ -1,0 +1,12 @@
+{
+	"ITEM TYPES":{
+		"unknown item":0,
+		"Ceremonial Sword":1,
+		"Berry":2
+	},
+	"ITEM ASSETS":[
+		"assets/missing.png",
+		"assets/items/ceremonial-sword.png",
+		"assets/items/berry.png"
+	]
+}

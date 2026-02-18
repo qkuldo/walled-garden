@@ -1,0 +1,60 @@
+{
+	"_comments":[
+	"#: wall",
+	"_: upper left corner wall",
+	"-: upper right corner wall",
+	"+: bottom left corner wall",
+	"=: bottom right corner wall", 
+	"^: side wall",
+	"any integer: prop tile slots",
+	"@: player starting position",
+	"(blank space): empty tile",
+	"a-z: extras"
+],
+	"rooms":{
+	"test":{
+		"wall set":0,
+		"prop set":0,
+		"theme":[7,5,129],
+		"0":"01010101010101010111aa11011",
+		"1":"01010101010101010111aa11011",
+		"2":"01010101010101010111aa11011",
+		"3":"01010101010101010111aa11011",
+		"4":"01010101010101010111ba11011",
+		"5":"0      _^^^^^^^^^-  0b    1",
+		"6":"0      #  @   0  #  d1    1",
+		"7":"0      #    0  1 #  cd    1",
+		"8":"0      +^^ ^^^^^^=   c    1",
+		"9":"0        0    1           1",
+		"10":"010101010101010101111111011",
+		"11":"010101010101010101111111011",
+		"12":"010101010101010101111111011",
+		"13":"010101010101010101111111011",
+		"14":"010101010101010101111111011",
+		"items":[1,2,2],
+		"itemCoordinates":[[8,10],[10,10],[11,11]]
+	},
+	"spawnSpot":{
+		"wall set":0,
+		"prop set":0,
+		"theme":[7,5,129],
+		"0":"  1      dfffffffd    2   0 ",
+		"1": "1  0  dddaeeeeeeeaddd 1    ",
+		"2": " 2 dddaaaaeeeeeeeaaaaddd01 ",
+		"3": "dddaaaabaaeeeeeeeaabaaaaddd",
+		"4": "aaaabaa1aaeeeeeeeaa2aabaaaa",
+		"5": "abaa0aadaaeeeeeeeaadaa1aaba",
+		"6": "a2aadaabaaeeeeeeeaabaadaa0a",
+		"7": "adaabaa2aaeeeeeeeaa2aabaada",
+		"8": "abaa1aadacfffffffcadaa0aaba",
+		"9": "a0aadaccc         cccadaa2a",
+		"10": "adaccc               cccada",
+		"11":"ccc          @     1    ccc",
+		"12":"                           ",
+		"13":"   0         2         1   ",
+		"14":"       1                   ",
+		"items":[1],
+		"itemCoordinates":[[13,13]]
+	}
+	}
+}
