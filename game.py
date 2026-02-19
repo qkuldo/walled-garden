@@ -358,7 +358,7 @@ def game():
 	INVENTORY_DESCLAYER = initDrawLayer()
 	DEBUGLAYER = initDrawLayer()
 	clearLayer(TILELAYER)
-	current_room = "test"
+	current_room = "spawnSpot"
 	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets)
 	#directionalFrames custom attribute is written as a list for compatibility with DIRECTION_IDS constant dict
 	Player = modules.interactables.Sprite(playerAsset,currentRoomData["playerSpawn"],5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
