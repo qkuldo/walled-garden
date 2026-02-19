@@ -101,10 +101,11 @@ def goto_angle(velocity,angle):
 	direction = pg.Vector2(0, velocity).rotate(-angle)
 	return direction
 
-def loadRoom(roomname,tileLayer,itemAssets, loadAll=True):
+def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 	#loadRoom function needs only to be used when loading a new room
 	alphabet = "abcdefghijklmnopqrstuvwxyz"
 	wallLetters = "abde"
+	animatedTiles = "f"
 	extras = pg.image.load("assets/extras.png").convert_alpha()
 	#all letters up until h are walls
 	extras = modules.sheets.Spritesheet(extras,16,16)
@@ -147,7 +148,10 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True):
 					tileLayer.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(5), (TILESIZE,TILESIZE)), (drawx, drawy))
 					collisionBoxes.append(pg.Rect((drawx,drawy),(TILESIZE,TILESIZE)))
 				elif (column in alphabet):
-					tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column)), (TILESIZE,TILESIZE)), (drawx, drawy))
+					if (column in animatedTiles):
+						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column), frame), (TILESIZE,TILESIZE)), (drawx, drawy))
+					else:
+						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column)), (TILESIZE,TILESIZE)), (drawx, drawy))
 					if (column in wallLetters):
 						collisionBoxes.append(pg.Rect((drawx,drawy),(TILESIZE,TILESIZE)))
 				else:
@@ -431,6 +435,8 @@ def game():
 	ITEMTYPE_YMARGIN = 10
 	target_angle = 0
 	hand = pg.transform.scale(pg.image.load("assets/hand.png"), (8, 8)).convert()
+	roomFrame = 0
+	roomAccumulateFrames = 0
 	while running:
 		#below line is pretty trippy ngl
 		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
@@ -453,7 +459,6 @@ def game():
 		clearLayer(TILELAYER)
 		clearLayer(DEBUGLAYER)
 		keys = pg.key.get_pressed()
-		loadRoom(current_room,TILELAYER,itemAssets,False)
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
 				terminate()
@@ -597,8 +602,16 @@ def game():
 		playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle)[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle)[1])
 		if (switchFrame and (not specialPickupVisible)):
 			animateLoop(Player, Player.customAttributes["directionalFrames"][Player.customAttributes["facingDirection"]]["startFrame"], Player.customAttributes["directionalFrames"][Player.customAttributes["facingDirection"]]["endFrame"])
+			roomAccumulateFrames += 1
+			if (roomAccumulateFrames == 2):
+				if (roomFrame == 0):
+					roomFrame = 1
+				else:
+					roomFrame = 0
+				roomAccumulateFrames = 0
 		elif (specialPickupVisible):
 			Player.customAttributes["currentFrame"] = 12
+		loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
 		if (specialPickupVisible and specialPickupFade):
 			specialPickupAlpha -= 15
 			specialPickupText.set_alpha(specialPickupAlpha)
