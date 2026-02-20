@@ -197,7 +197,7 @@ def terminate():
 	sys.exit()
 
 def setup():
-	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET
+	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, MEDIUMDISPLAYFONT
 	pg.init()
 	pg.mixer.init()
 	clock = pg.time.Clock()
@@ -211,6 +211,7 @@ def setup():
 		SFX[os.path.splitext(SFX_name)[0]].set_volume(0.3)
 	BIGDISPLAYFONT = pg.font.Font("font/PixelifySans-Bold.ttf", 30)
 	SMALLDISPLAYFONT = pg.font.Font("font/PixelifySans-Bold.ttf", 15)
+	MEDIUMDISPLAYFONT = pg.font.Font("font/PixelifySans-Bold.ttf", 25)
 	CURSOR = pg.image.load("assets/cursor.png").convert_alpha()
 	CURSORCLICKED = pg.image.load("assets/cursorClicked.png").convert_alpha()
 	CURSOR = pg.transform.scale(CURSOR, (TILESIZE,TILESIZE))
@@ -310,6 +311,8 @@ def createText(center, font = 0, text = "hello there", color=(255,255,255)):
 		textSurface = BIGDISPLAYFONT.render(text, False, color)
 	elif (font == 1):
 		textSurface = SMALLDISPLAYFONT.render(text, False, color)
+	elif (font == 2):
+		textSurface = MEDIUMDISPLAYFONT.render(text, False, color)
 	textRect = textSurface.get_rect()
 	textRect.center = center
 	return (textSurface, textRect)
@@ -434,17 +437,19 @@ def game():
 	target_angle = 0
 	roomFrame = 0
 	roomAccumulateFrames = 0
+	#rect creation
+	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
+	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
+	playerHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
+	playerMaxHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
 	#make text
 	#testText, textTestRect = createText((SCREENWIDTH/2,SCREENHEIGHT/2))
 	specialPickupText, specialPickupTextRect = createText((0,0), text = DEBUGTEXT)
 	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
 	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
 	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
-	#rect creation
-	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
-	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
-	playerHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
-	playerMaxHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
+	healthText = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
+	healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthText, color = WHITE, font = 2)
 	while running:
 		#below line is pretty trippy ngl
 		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
@@ -664,6 +669,7 @@ def game():
 		if (not debugMode):
 			pg.draw.rect(INFOLAYER, BLUE, playerMaxHealthRect)
 			pg.draw.rect(INFOLAYER, ORANGE, playerHealthRect)
+			INFOLAYER.blit(healthText, healthTextRect)
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
 			#loops through INVENTORYBUTTONS for a rect that passes colliderect check with mouse position
