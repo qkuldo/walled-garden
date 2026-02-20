@@ -411,16 +411,8 @@ def game():
 	on_attack_button_cooldown = False
 	#------------------------------
 	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
-	#make text
-	#testText, textTestRect = createText((SCREENWIDTH/2,SCREENHEIGHT/2))
-	specialPickupText, specialPickupTextRect = createText((0,0), text = DEBUGTEXT)
-	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
-	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
-	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
-	#rect creation
-	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
-	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
 	#define other variables
+	debugMode = 0
 	specialPickupVisible = False
 	specialPickupAlpha = 255
 	specialPickupFade = False
@@ -436,12 +428,22 @@ def game():
 	INVENTORY_ITEMS = []
 	SPECIAL_ITEMGET_FLY = 3
 	special_itemGet_addY = 0
-	debugMode = 0
 	ITEMTYPE_XMARGIN = 25
 	ITEMTYPE_YMARGIN = 10
 	target_angle = 0
 	roomFrame = 0
 	roomAccumulateFrames = 0
+	#make text
+	#testText, textTestRect = createText((SCREENWIDTH/2,SCREENHEIGHT/2))
+	specialPickupText, specialPickupTextRect = createText((0,0), text = DEBUGTEXT)
+	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
+	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
+	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
+	#rect creation
+	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
+	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
+	playerHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
+	playerMaxHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
 	while running:
 		#below line is pretty trippy ngl
 		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
@@ -658,6 +660,9 @@ def game():
 		if (specialPickupVisible):
 			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
 			SPRITELAYER.blit(specialItem, specialItemRect)
+		if (not debugMode):
+			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect)
+			pg.draw.rect(INFOLAYER, BRIGHTYELLOW, playerHealthRect)
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
 			#loops through INVENTORYBUTTONS for a rect that passes colliderect check with mouse position
