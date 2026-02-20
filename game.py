@@ -345,6 +345,7 @@ def goto_angleAndSetDir(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWI
 	return directional_vector
 
 def game():
+	#find and make assets
 	itemAssets = ITEMDATA["ITEM ASSETS"]
 	for assetPath in itemAssets:
 		itemAssets[itemAssets.index(assetPath)] = pg.image.load(assetPath).convert_alpha()
@@ -352,6 +353,9 @@ def game():
 	playerAsset = modules.sheets.Spritesheet(playerAsset, 16, 16)
 	playerPortrait = pg.image.load("assets/playerPortrait.png").convert()
 	playerPortrait = pg.transform.scale(playerPortrait,(128,128))
+	hand = pg.transform.scale(pg.image.load("assets/hand.png"), (8, 8)).convert()
+	specialItem = pg.Surface((TILESIZE,TILESIZE)).convert_alpha()
+	specialItemRect = specialItem.get_rect()
 	#define screen layers
 	TILELAYER = initDrawLayer()
 	HUDLAYER = initDrawLayer()
@@ -405,21 +409,23 @@ def game():
 	attack_qte_ongoing_attack = False
 	ATTACK_BUTTON_COOLDOWN = pg.event.custom_type()
 	on_attack_button_cooldown = False
-	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
-	timedRect_fillRate = 1
-	timedRect_fill = False
-	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
 	#------------------------------
 	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
+	#make text
 	#testText, textTestRect = createText((SCREENWIDTH/2,SCREENHEIGHT/2))
 	specialPickupText, specialPickupTextRect = createText((0,0), text = DEBUGTEXT)
 	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
 	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
+	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
+	#rect creation
+	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
+	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
+	#define other variables
 	specialPickupVisible = False
 	specialPickupAlpha = 255
 	specialPickupFade = False
-	specialItem = pg.Surface((TILESIZE,TILESIZE)).convert_alpha()
-	specialItemRect = specialItem.get_rect()
+	timedRect_fillRate = 1
+	timedRect_fill = False
 	ZOOM_LEVEL = 2
 	SIMOVE_SUB = -1
 	SIMOVE_ADD = 1
@@ -431,11 +437,9 @@ def game():
 	SPECIAL_ITEMGET_FLY = 3
 	special_itemGet_addY = 0
 	debugMode = 0
-	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
 	ITEMTYPE_XMARGIN = 25
 	ITEMTYPE_YMARGIN = 10
 	target_angle = 0
-	hand = pg.transform.scale(pg.image.load("assets/hand.png"), (8, 8)).convert()
 	roomFrame = 0
 	roomAccumulateFrames = 0
 	while running:
