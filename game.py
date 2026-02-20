@@ -11,6 +11,7 @@ WHITE = (255,255,255)
 BRIGHTYELLOW = (255,228,3)
 BLUE = (7,5,129)
 DARKBLUE = (7,5,35)
+ORANGE = (255,126,71)
 BASEIMGPATH = "assets/"
 TILESIZE = 48
 #from bottom
@@ -661,8 +662,8 @@ def game():
 			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
 			SPRITELAYER.blit(specialItem, specialItemRect)
 		if (not debugMode):
-			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect)
-			pg.draw.rect(INFOLAYER, BRIGHTYELLOW, playerHealthRect)
+			pg.draw.rect(INFOLAYER, BLUE, playerMaxHealthRect)
+			pg.draw.rect(INFOLAYER, ORANGE, playerHealthRect)
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
 			#loops through INVENTORYBUTTONS for a rect that passes colliderect check with mouse position
