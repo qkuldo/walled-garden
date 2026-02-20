@@ -448,9 +448,11 @@ def game():
 	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
 	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
 	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
-	healthText = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
-	healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthText, color = WHITE, font = 2)
 	while running:
+		playerHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
+		playerMaxHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
+		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
+		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = WHITE, font = 2)
 		#below line is pretty trippy ngl
 		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
 		if (debugMode == 1):
@@ -568,7 +570,7 @@ def game():
 		if (keys[pg.K_p] and menuPressCooldown <= 0):
 			#pepug menu
 			debugMode += 1
-			if (debugMode > 2):
+			if (debugMode > 3):
 				debugMode = 0
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"])):
@@ -722,6 +724,11 @@ def game():
 			if (debugMode == 2):
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
 				pg.draw.rect(DEBUGLAYER,WHITE,Player.hitbox)
+			elif (debugMode == 3):
+				if (keys[pg.K_f]):
+					Player.customAttributes["stats"]["health"] -= 1
+				if (keys[pg.K_g]):
+					Player.customAttributes["stats"]["health"] += 1
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
 			BASELAYER.blit(TILELAYER,(0,0))
 			BASELAYER.blit(SPRITELAYER, (0,0))
