@@ -367,6 +367,7 @@ def game():
 	#directionalFrames custom attribute is written as a list for compatibility with DIRECTION_IDS constant dict
 	Player = modules.interactables.Sprite(playerAsset,currentRoomData["playerSpawn"],5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
 			"currentFrame":0,
+			"frameRow":0,
 			"facingDirection":DIRECTION_IDS["left"],
 			"directionalFrames":[{"startFrame":0, "endFrame":2}, {"startFrame":3, "endFrame":5}, {"startFrame":6, "endFrame":8}, {"startFrame":9, "endFrame":11}],
 			"inventory":{},
@@ -609,8 +610,10 @@ def game():
 				else:
 					roomFrame = 0
 				roomAccumulateFrames = 0
+			Player.customAttributes["frameRow"] = 0
 		elif (specialPickupVisible):
-			Player.customAttributes["currentFrame"] = 12
+			Player.customAttributes["currentFrame"] = 0
+			Player.customAttributes["frameRow"] = 1
 		loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
 		if (specialPickupVisible and specialPickupFade):
 			specialPickupAlpha -= 15
@@ -631,7 +634,7 @@ def game():
 			#else:
 			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
 		else:
-			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10))
+			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
 		if (playerSword.customAttributes["visible"]):
 			if (playerSword.customAttributes["moving"]):
 				directional_vector = goto_angleAndSetDir(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])

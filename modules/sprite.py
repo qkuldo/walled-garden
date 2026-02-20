@@ -38,14 +38,14 @@ class Sprite:
 		elif (operation == -1):
 			self.coordinates[movement_line] -= self.speed
 		self.moved = True
-	def draw(self, frame, layer, offset = (0,0)):
+	def draw(self, frame, layer, offset = (0,0), frameRow = 0):
 		drawCoordinates = (self.coordinates[0]+offset[0],self.coordinates[1]+offset[1])
 		drawSurf = None
 		if (type(self.asset) == sheets.Spritesheet):
 			if (self.spriteScale != (0,0)):
-				drawSurf = pg.transform.scale(self.asset.load_frame(frame),self.spriteScale)
+				drawSurf = pg.transform.scale(self.asset.load_frame(frame, frameRow),self.spriteScale)
 			else:
-				drawSurf = self.asset.load_frame(frame)
+				drawSurf = self.asset.load_frame(frame, frameRow)
 		elif (type(self.asset) == pg.Surface):
 			if (self.spriteScale != (0,0)):
 				drawSurf = pg.transform.scale(self.asset,self.spriteScale)
