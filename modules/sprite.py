@@ -13,7 +13,6 @@ class Sprite:
 		self.hitbox = pg.Rect(hitboxLocation,hitboxScale)
 		self.moved = False
 		self.angle = angle
-		self.visible = True
 	def siMove(self,movement_line,operation):
 		#to check for collisions
 		dummy = self.createDummy()
@@ -40,21 +39,20 @@ class Sprite:
 			self.coordinates[movement_line] -= self.speed
 		self.moved = True
 	def draw(self, frame, layer, offset = (0,0), frameRow = 0):
-		if (self.visible):
-			drawCoordinates = (self.coordinates[0]+offset[0],self.coordinates[1]+offset[1])
-			drawSurf = None
-			if (type(self.asset) == sheets.Spritesheet):
-				if (self.spriteScale != (0,0)):
-					drawSurf = pg.transform.scale(self.asset.load_frame(frame, frameRow),self.spriteScale)
-				else:
-					drawSurf = self.asset.load_frame(frame, frameRow)
-			elif (type(self.asset) == pg.Surface):
-				if (self.spriteScale != (0,0)):
-					drawSurf = pg.transform.scale(self.asset,self.spriteScale)
-				else:
-					drawSurf = self.asset
-			drawSurf = pg.transform.rotate(drawSurf, self.angle)
-			layer.blit(drawSurf, drawCoordinates)
+		drawCoordinates = (self.coordinates[0]+offset[0],self.coordinates[1]+offset[1])
+		drawSurf = None
+		if (type(self.asset) == sheets.Spritesheet):
+			if (self.spriteScale != (0,0)):
+				drawSurf = pg.transform.scale(self.asset.load_frame(frame, fr),self.spriteScale)
+			else:
+				drawSurf = self.asset.load_frame(frame, frameRow)
+		elif (type(self.asset) == pg.Surface):
+			if (self.spriteScale != (0,0)):
+				drawSurf = pg.transform.scale(self.asset,self.spriteScale)
+			else:
+				drawSurf = self.asset
+		drawSurf = pg.transform.rotate(drawSurf, self.angle)
+		layer.blit(drawSurf, drawCoordinates)
 	def update(self, rectOperation=None):
 		#if rectOperation = None, hitbox topleft will default to player coordinates\
 		if (rectOperation != None):
