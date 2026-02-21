@@ -43,7 +43,7 @@ class Sprite:
 		drawSurf = None
 		if (type(self.asset) == sheets.Spritesheet):
 			if (self.spriteScale != (0,0)):
-				drawSurf = pg.transform.scale(self.asset.load_frame(frame, fr),self.spriteScale)
+				drawSurf = pg.transform.scale(self.asset.load_frame(frame, frameRow),self.spriteScale)
 			else:
 				drawSurf = self.asset.load_frame(frame, frameRow)
 		elif (type(self.asset) == pg.Surface):

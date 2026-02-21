@@ -392,7 +392,9 @@ def game():
 					},
 					"OTHER EQUIPMENT":[]
 				}
-			}
+			},
+			"visible":True,
+			"got hit":False
 		})
 	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False})
 	blackHudArea = pg.Rect((0,HUDMARGIN),(SCREENWIDTH,HUDMARGIN))
@@ -413,6 +415,7 @@ def game():
 	attack_qte_ongoing_attack = False
 	ATTACK_BUTTON_COOLDOWN = pg.event.custom_type()
 	on_attack_button_cooldown = False
+	PLAYER_HITSTOP = pg.event.custom_type()
 	#------------------------------
 	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
 	#define other variables
@@ -525,6 +528,8 @@ def game():
 				playerSword.customAttributes["visible"] = False
 			elif (event.type == ENDSWORD_PLAYERMOVEMENT):
 				playerSword.customAttributes["moving"] = False
+			elif (event.type == PLAYER_HITSTOP):
+				Player.customAttributes["got hit"] = False
 		if (keys[pg.K_ESCAPE] and menuPressCooldown <= 0 and (not specialPickupVisible) and (not attack_qte_ongoing_attack) and (not playerSword.customAttributes["visible"])):
 			drawHud = not drawHud
 			menuPressCooldown = MENUPRESSTIME
@@ -625,6 +630,10 @@ def game():
 					roomFrame = 0
 				roomAccumulateFrames = 0
 			Player.customAttributes["frameRow"] = 0
+			if (Player.customAttributes["got hit"]):
+				Player.customAttributes["visible"] = not Player.customAttributes["visible"]
+			else:
+				Player.customAttributes["visible"] = True
 		elif (specialPickupVisible):
 			Player.customAttributes["currentFrame"] = 0
 			Player.customAttributes["frameRow"] = 1
@@ -641,14 +650,15 @@ def game():
 			specialItemRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-25-special_itemGet_addY]
 			specialPickupTextRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-70-special_itemGet_addY]
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
-		if (not specialPickupVisible):
-			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
-			#if (playerSword.customAttributes["visible"]):
-			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
-			#else:
-			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
-		else:
-			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
+		if (Player.customAttributes["visible"]):
+			if (not specialPickupVisible):
+				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
+				#if (playerSword.customAttributes["visible"]):
+				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
+				#else:
+				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
+			else:
+				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
 		if (playerSword.customAttributes["visible"]):
 			if (playerSword.customAttributes["moving"]):
 				directional_vector = goto_angleAndSetDir(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
@@ -729,6 +739,10 @@ def game():
 					Player.customAttributes["stats"]["health"] -= 1
 				if (keys[pg.K_g]):
 					Player.customAttributes["stats"]["health"] += 1
+				if (keys[pg.K_h] and menuPressCooldown <= 0):
+					menuPressCooldown = MENUPRESSTIME
+					Player.customAttributes["got hit"] = True
+					pg.time.set_timer(PLAYER_HITSTOP, 1000)
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
 			BASELAYER.blit(TILELAYER,(0,0))
 			BASELAYER.blit(SPRITELAYER, (0,0))
