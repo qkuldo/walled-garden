@@ -452,7 +452,7 @@ def game():
 		playerHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
 		playerMaxHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
-		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = WHITE, font = 2)
+		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
 		#below line is pretty trippy ngl
 		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
 		if (debugMode == 1):
@@ -669,8 +669,8 @@ def game():
 			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
 			SPRITELAYER.blit(specialItem, specialItemRect)
 		if (not debugMode):
-			pg.draw.rect(INFOLAYER, BLUE, playerMaxHealthRect)
-			pg.draw.rect(INFOLAYER, ORANGE, playerHealthRect)
+			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect)
+			pg.draw.rect(INFOLAYER, BLUE, playerHealthRect)
 			INFOLAYER.blit(healthText, healthTextRect)
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
