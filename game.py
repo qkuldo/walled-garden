@@ -686,7 +686,7 @@ def game():
 			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
 			SPRITELAYER.blit(specialItem, specialItemRect)
 		if (not debugMode):
-			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect)c
+			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect)
 			pg.draw.rect(INFOLAYER, BLUE, playerHealthRect)
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
