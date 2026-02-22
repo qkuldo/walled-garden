@@ -197,7 +197,7 @@ def terminate():
 	sys.exit()
 
 def setup():
-	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, MEDIUMDISPLAYFONT
+	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, MEDIUMDISPLAYFONT, HPBARDESIGN
 	pg.init()
 	pg.mixer.init()
 	clock = pg.time.Clock()
@@ -222,6 +222,8 @@ def setup():
 	TARGET = pg.transform.scale(TARGET, (TILESIZE,TILESIZE))
 	LOCKEDTARGET = pg.image.load("assets/locked_target.png").convert_alpha()
 	LOCKEDTARGET = pg.transform.scale(LOCKEDTARGET, (TILESIZE,TILESIZE))
+	HPBARDESIGN = pg.image.load("assets/healthbarDesign.png")
+	HPBARDESIGN = pg.transform.scale(HPBARDESIGN, (TILESIZE*2, TILESIZE*2))
 	TARGETRECT = TARGET.get_rect()
 	pg.mouse.set_visible(False)
 
@@ -687,6 +689,7 @@ def game():
 			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect)
 			pg.draw.rect(INFOLAYER, BLUE, playerHealthRect)
 			INFOLAYER.blit(healthText, healthTextRect)
+			INFOLAYER.blit(HPBARDESIGN, [playerMaxHealthRect.topleft[0],playerMaxHealthRect.topleft[1]-10])
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
 			#loops through INVENTORYBUTTONS for a rect that passes colliderect check with mouse position
