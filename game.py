@@ -439,6 +439,7 @@ def game():
 	special_itemGet_addY = 0
 	ITEMTYPE_XMARGIN = 25
 	ITEMTYPE_YMARGIN = 10
+	HEALTHBAR_COORDINATES = (85,55)
 	target_angle = 0
 	roomFrame = 0
 	roomAccumulateFrames = 0
@@ -454,8 +455,8 @@ def game():
 	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
 	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
 	while running:
-		playerHealthRect = pg.Rect(80, 55, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
-		playerMaxHealthRect = pg.Rect(80, 55, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
+		playerHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
+		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
 		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
 		#below line is pretty trippy ngl
@@ -688,6 +689,7 @@ def game():
 		if (not debugMode):
 			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect)
 			pg.draw.rect(INFOLAYER, BLUE, playerHealthRect)
+			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect.inflate(5,5),5)
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
 		#SPRITELAYER.blit(testText, textTestRect)
