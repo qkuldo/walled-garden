@@ -626,7 +626,14 @@ def game():
 		if (switchFrame and (not specialPickupVisible)):
 			if (Player.customAttributes["got hit"]):
 				Player.customAttributes["visible"] = not Player.customAttributes["visible"]
-				Player.customAttributes["currentFrame"] = 1
+				if (Player.customAttributes["facingDirection"] == DIRECTION_IDS["left"]):
+					Player.customAttributes["currentFrame"] = 4
+				elif (Player.customAttributes["facingDirection"] == DIRECTION_IDS["right"]):
+					Player.customAttributes["currentFrame"] = 1
+				elif (Player.customAttributes["facingDirection"] == DIRECTION_IDS["up"]):
+					Player.customAttributes["currentFrame"] = 2
+				elif (Player.customAttributes["facingDirection"] == DIRECTION_IDS["down"]):
+					Player.customAttributes["currentFrame"] = 3
 				Player.customAttributes["frameRow"] = 1
 			else:
 				Player.customAttributes["visible"] = True
@@ -657,10 +664,7 @@ def game():
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 		if (Player.customAttributes["visible"]):
 			if (not specialPickupVisible):
-				if ((not Player.customAttributes["got hit"]) or (Player.customAttributes["got hit"] and Player.customAttributes["facingDirection"] == DIRECTION_IDS["right"])):
-					Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
-				else:
-					Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"], flipX=True)
+				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 				#if (playerSword.customAttributes["visible"]):
 				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
 				#else:
