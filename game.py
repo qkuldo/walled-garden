@@ -758,8 +758,8 @@ def game():
 					Player.customAttributes["stats"]["health"] += 1
 				if (keys[pg.K_h] and menuPressCooldown <= 0):
 					menuPressCooldown = MENUPRESSTIME
-					pg.time.set_timer(PLAYER_HITSTART, 500)
-					pg.time.set_timer(PLAYER_HITSTOP, 1000)
+					pg.time.set_timer(PLAYER_HITSTART, 500, 1)
+					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
 			BASELAYER.blit(TILELAYER,(0,0))
 			BASELAYER.blit(SPRITELAYER, (0,0))
