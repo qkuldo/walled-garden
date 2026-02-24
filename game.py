@@ -10,6 +10,7 @@ BGCOLOR = "black"
 WHITE = (255,255,255)
 BRIGHTYELLOW = (255,228,3)
 BLUE = (7,5,129)
+PALEBLUE = (24, 23, 87)
 DARKBLUE = (7,5,35)
 ORANGE = (255,126,71)
 BASEIMGPATH = "assets/"
@@ -694,7 +695,7 @@ def game():
 			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
 			SPRITELAYER.blit(specialItem, specialItemRect)
 		if (not debugMode):
-			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect)
+			pg.draw.rect(INFOLAYER, PALEBLUE, playerMaxHealthRect)
 			pg.draw.rect(INFOLAYER, BLUE, playerHealthRect)
 			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect.inflate(5,5),5)
 			INFOLAYER.blit(healthText, healthTextRect)
