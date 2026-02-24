@@ -396,7 +396,7 @@ def game():
 				}
 			},
 			"visible":True,
-			"got hit":False
+			"hit animation":False
 		})
 	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False})
 	blackHudArea = pg.Rect((0,HUDMARGIN),(SCREENWIDTH,HUDMARGIN))
@@ -409,6 +409,8 @@ def game():
 	START_FADEOUT = pg.event.custom_type()
 	ENDSWORD_VISIBILITY = pg.event.custom_type()
 	ENDSWORD_PLAYERMOVEMENT = pg.event.custom_type()
+	PLAYER_HITSTART = pg.event.custom_type()
+	PLAYER_HITSTOP = pg.event.custom_type()
 	#player attack variables
 	ATTACK_QTE_END = pg.event.custom_type()
 	ATTACK_QTE_START = pg.event.custom_type()
@@ -417,7 +419,6 @@ def game():
 	attack_qte_ongoing_attack = False
 	ATTACK_BUTTON_COOLDOWN = pg.event.custom_type()
 	on_attack_button_cooldown = False
-	PLAYER_HITSTOP = pg.event.custom_type()
 	#------------------------------
 	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
 	#define other variables
@@ -532,7 +533,9 @@ def game():
 			elif (event.type == ENDSWORD_PLAYERMOVEMENT):
 				playerSword.customAttributes["moving"] = False
 			elif (event.type == PLAYER_HITSTOP):
-				Player.customAttributes["got hit"] = False
+				Player.customAttributes["hit animation"] = False
+			elif (event.type == PLAYER_HITSTART):
+				Player.customAttributes["hit animation"] = True
 		if (keys[pg.K_ESCAPE] and menuPressCooldown <= 0 and (not specialPickupVisible) and (not attack_qte_ongoing_attack) and (not playerSword.customAttributes["visible"])):
 			drawHud = not drawHud
 			menuPressCooldown = MENUPRESSTIME
@@ -624,7 +627,7 @@ def game():
 		playerSword.hitbox.center = Player.hitbox.center
 		playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle)[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle)[1])
 		if (switchFrame and (not specialPickupVisible)):
-			if (Player.customAttributes["got hit"]):
+			if (Player.customAttributes["hit animation"]):
 				Player.customAttributes["visible"] = not Player.customAttributes["visible"]
 				if (Player.customAttributes["facingDirection"] == DIRECTION_IDS["left"]):
 					Player.customAttributes["currentFrame"] = 4
@@ -755,7 +758,7 @@ def game():
 					Player.customAttributes["stats"]["health"] += 1
 				if (keys[pg.K_h] and menuPressCooldown <= 0):
 					menuPressCooldown = MENUPRESSTIME
-					Player.customAttributes["got hit"] = True
+					pg.time.set_timer(PLAYER_HITSTART, 500)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000)
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
 			BASELAYER.blit(TILELAYER,(0,0))
