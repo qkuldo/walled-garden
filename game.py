@@ -657,7 +657,7 @@ def game():
 				elif (Player.customAttributes["facingDirection"] == DIRECTION_IDS["down"]):
 					Player.customAttributes["currentFrame"] = 3
 				Player.customAttributes["frameRow"] = 1
-			else:
+			elif (not Player.customAttributes["apply knockback"]):
 				Player.customAttributes["visible"] = True
 				animateLoop(Player, Player.customAttributes["directionalFrames"][Player.customAttributes["facingDirection"]]["startFrame"], Player.customAttributes["directionalFrames"][Player.customAttributes["facingDirection"]]["endFrame"])
 				Player.customAttributes["frameRow"] = 0
