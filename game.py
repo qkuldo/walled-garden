@@ -37,6 +37,12 @@ DIRECTION_IDS = {
 "up":2,
 "down":3
 }
+DIRECTION_ANGLES = {
+"left":90,
+"right":-90,
+"up":0,
+"down":180
+}
 
 def loadImages(path):
 	images = []
@@ -333,9 +339,9 @@ def face_target(person_pos,targetpos,face=True):
 		angle = math.degrees(math.atan2(out_dir[0],out_dir[1]))
 	return angle
 
-def goto_angleAndSetDir(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDTH/2, SCREENHEIGHT/2)):
+def goto_angleAndSetDir(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDTH/2, SCREENHEIGHT/2), checkCollision=False, collisionList=()):
 	#goto_angle that also sets the "facingDirection" custom attribute of sprite
-	#returns the initial goto_angle call
+	#returns the initial goto_angle call if checkCollision is False, else returns (0,0) if collision checks with any rect in collisionList parameter fail
 	directional_vector = -goto_angle(Sprite.speed*speed_multiplier, angle)
 	distance_fromTarget = (Sprite.coordinates[0]-targetPos[0], Sprite.coordinates[1]-targetPos[1])
 	assert "facingDirection" in Sprite.customAttributes.keys(), "<qkuldo>Sprite incompatible with function due to the lack of the facingDirection custom attribute. Use goto_angle instead if this is intended.</qkuldo>"
@@ -349,7 +355,17 @@ def goto_angleAndSetDir(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWI
 			Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
 		elif (abs(distance_fromTarget[1]) != distance_fromTarget[1]):
 			Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
-	return directional_vector
+	if (checkCollision):
+		assert len(collisionList) > 0, "<qkuldo>Cannot detect collisions with walls if there are no walls</qkuldo>"
+		spriteDummy = Sprite.createDummy()
+		spriteDummy.x += directional_vector[0]
+		spriteDummy.y += directional_vector[1]
+		if (spriteDummy.collidelist(collisionList) != -1 and hitboxInbound(spriteDummy)):
+			return directional_vector
+		else:
+			return (0, 0)
+	else:
+		return directional_vector
 
 def game():
 	#find and make assets
@@ -590,15 +606,19 @@ def game():
 				if (keys[pg.K_w] or keys[pg.K_UP]):
 					complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData)
 					Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
+					#Player.angle = DIRECTION_ANGLES["up"]
 				elif (keys[pg.K_s] or keys[pg.K_DOWN]):
 					complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData)
 					Player.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
+					#Player.angle = DIRECTION_ANGLES["down"]
 				if (keys[pg.K_a] or keys[pg.K_LEFT]):
 					complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData)
 					Player.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
+					#Player.angle = DIRECTION_ANGLES["left"]
 				elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
 					complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData)
 					Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
+					#Player.angle = DIRECTION_ANGLES["right"]
 				if (keys[pg.K_LSHIFT]):
 					goto_angleAndSetDir(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 					target_angle += 4
@@ -677,13 +697,7 @@ def game():
 				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
 		if (playerSword.customAttributes["visible"]):
 			if (playerSword.customAttributes["moving"]):
-				directional_vector = goto_angleAndSetDir(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
-				collisionTestDummy = Player.createDummy()
-				collisionTestDummy.x += directional_vector[0]
-				collisionTestDummy.y += directional_vector[1]
-				if (collisionTestDummy.collidelist(currentRoomData["collisionBoxes"]) == -1 and hitboxInbound(collisionTestDummy)):
-					Player.coordinates[0] += directional_vector[0]
-					Player.coordinates[1] += directional_vector[1]
+				directional_vector = goto_angleAndSetDir(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"])
 			playerSword.draw(0, SPRITELAYER)
 			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle), (Player.hitbox.center[0]-goto_angle(40,playerSword.angle)[0], Player.hitbox.center[1]-goto_angle(40,playerSword.angle)[1]))
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
