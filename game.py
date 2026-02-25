@@ -37,12 +37,7 @@ DIRECTION_IDS = {
 "up":2,
 "down":3
 }
-DIRECTION_ANGLES = {
-"left":90,
-"right":-90,
-"up":0,
-"down":180
-}
+DIRECTION_ANGLES = (90,-90,0,180)
 
 def loadImages(path):
 	images = []
@@ -339,28 +334,29 @@ def face_target(person_pos,targetpos,face=True):
 		angle = math.degrees(math.atan2(out_dir[0],out_dir[1]))
 	return angle
 
-def goto_angleAndSetDir(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDTH/2, SCREENHEIGHT/2), checkCollision=False, collisionList=()):
-	#goto_angle that also sets the "facingDirection" custom attribute of sprite
+def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDTH/2, SCREENHEIGHT/2), checkCollision=False, collisionList=(), setDir = True):
+	#goto_angle that also sets the "facingDirection" custom attribute of sprite if setDir is True
 	#returns the initial goto_angle call if checkCollision is False, else returns (0,0) if collision checks with any rect in collisionList parameter fail
 	directional_vector = -goto_angle(Sprite.speed*speed_multiplier, angle)
-	distance_fromTarget = (Sprite.coordinates[0]-targetPos[0], Sprite.coordinates[1]-targetPos[1])
-	assert "facingDirection" in Sprite.customAttributes.keys(), "<qkuldo>Sprite incompatible with function due to the lack of the facingDirection custom attribute. Use goto_angle instead if this is intended.</qkuldo>"
-	if (abs(distance_fromTarget[0]) > abs(distance_fromTarget[1])):
-		if (abs(distance_fromTarget[0]) == distance_fromTarget[0]):
-			Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
-		elif (abs(distance_fromTarget[0]) != distance_fromTarget[0]):
-			Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
-	else:
-		if (abs(distance_fromTarget[1]) == distance_fromTarget[1]):
-			Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
-		elif (abs(distance_fromTarget[1]) != distance_fromTarget[1]):
-			Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
+	if (setDir):
+		distance_fromTarget = (Sprite.coordinates[0]-targetPos[0], Sprite.coordinates[1]-targetPos[1])
+		assert "facingDirection" in Sprite.customAttributes.keys(), "<qkuldo>Sprite incompatible with function due to the lack of the facingDirection custom attribute. Use goto_angle instead if this is intended.</qkuldo>"
+		if (abs(distance_fromTarget[0]) > abs(distance_fromTarget[1])):
+			if (abs(distance_fromTarget[0]) == distance_fromTarget[0]):
+				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
+			elif (abs(distance_fromTarget[0]) != distance_fromTarget[0]):
+				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
+		else:
+			if (abs(distance_fromTarget[1]) == distance_fromTarget[1]):
+				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
+			elif (abs(distance_fromTarget[1]) != distance_fromTarget[1]):
+				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
 	if (checkCollision):
 		assert len(collisionList) > 0, "<qkuldo>Cannot detect collisions with walls if there are no walls</qkuldo>"
 		spriteDummy = Sprite.createDummy()
 		spriteDummy.x += directional_vector[0]
 		spriteDummy.y += directional_vector[1]
-		if (spriteDummy.collidelist(collisionList) != -1 and hitboxInbound(spriteDummy)):
+		if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
 			return directional_vector
 		else:
 			return (0, 0)
@@ -413,7 +409,8 @@ def game():
 				}
 			},
 			"visible":True,
-			"hit animation":False
+			"hit animation":False,
+			"apply knockback":False
 		})
 	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False})
 	blackHudArea = pg.Rect((0,HUDMARGIN),(SCREENWIDTH,HUDMARGIN))
@@ -551,6 +548,7 @@ def game():
 				playerSword.customAttributes["moving"] = False
 			elif (event.type == PLAYER_HITSTOP):
 				Player.customAttributes["hit animation"] = False
+				Player.customAttributes["apply knockback"] = False
 			elif (event.type == PLAYER_HITSTART):
 				Player.customAttributes["hit animation"] = True
 		if (keys[pg.K_ESCAPE] and menuPressCooldown <= 0 and (not specialPickupVisible) and (not attack_qte_ongoing_attack) and (not playerSword.customAttributes["visible"])):
@@ -620,7 +618,7 @@ def game():
 					Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 					#Player.angle = DIRECTION_ANGLES["right"]
 				if (keys[pg.K_LSHIFT]):
-					goto_angleAndSetDir(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
+					goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 					target_angle += 4
 					TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 					TARGETRECT.center = Player.customAttributes["target pos"]
@@ -686,6 +684,17 @@ def game():
 			specialItemRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-25-special_itemGet_addY]
 			specialPickupTextRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-70-special_itemGet_addY]
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
+		if (playerSword.customAttributes["visible"]):
+			if (playerSword.customAttributes["moving"]):
+				directional_vector = goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"])
+				Player.coordinates[0] += directional_vector[0]
+				Player.coordinates[1] += directional_vector[1]
+			playerSword.draw(0, SPRITELAYER)
+			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle), (Player.hitbox.center[0]-goto_angle(40,playerSword.angle)[0], Player.hitbox.center[1]-goto_angle(40,playerSword.angle)[1]))
+		if (Player.customAttributes["apply knockback"] and not Player.customAttributes["hit animation"]):
+			directional_vector = goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
+			Player.coordinates[0] += directional_vector[0]
+			Player.coordinates[1] += directional_vector[1]
 		if (Player.customAttributes["visible"]):
 			if (not specialPickupVisible):
 				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
@@ -695,11 +704,6 @@ def game():
 				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
 			else:
 				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
-		if (playerSword.customAttributes["visible"]):
-			if (playerSword.customAttributes["moving"]):
-				directional_vector = goto_angleAndSetDir(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"])
-			playerSword.draw(0, SPRITELAYER)
-			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle), (Player.hitbox.center[0]-goto_angle(40,playerSword.angle)[0], Player.hitbox.center[1]-goto_angle(40,playerSword.angle)[1]))
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
 			target_angle += 2
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
@@ -773,6 +777,7 @@ def game():
 					Player.customAttributes["stats"]["health"] += 1
 				if (keys[pg.K_h] and menuPressCooldown <= 0):
 					menuPressCooldown = MENUPRESSTIME
+					Player.customAttributes["apply knockback"] = True
 					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
