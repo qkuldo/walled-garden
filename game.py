@@ -198,7 +198,7 @@ def terminate():
 	sys.exit()
 
 def setup():
-	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, MEDIUMDISPLAYFONT, HPBARDESIGN
+	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT_BOLD,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT_BOLD, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, MEDIUMDISPLAYFONT_BOLD, HPBARDESIGN
 	pg.init()
 	pg.mixer.init()
 	clock = pg.time.Clock()
@@ -210,9 +210,9 @@ def setup():
 	for SFX_name in os.listdir(SFX_PATH):
 		SFX[os.path.splitext(SFX_name)[0]] = pg.mixer.Sound(SFX_PATH + SFX_name)
 		SFX[os.path.splitext(SFX_name)[0]].set_volume(0.3)
-	BIGDISPLAYFONT = pg.font.Font("font/PixelifySans-Bold.ttf", 30)
-	SMALLDISPLAYFONT = pg.font.Font("font/PixelifySans-Bold.ttf", 15)
-	MEDIUMDISPLAYFONT = pg.font.Font("font/PixelifySans-Bold.ttf", 25)
+	BIGDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 30)
+	SMALLDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 15)
+	MEDIUMDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 25)
 	CURSOR = pg.image.load("assets/cursor.png").convert_alpha()
 	CURSORCLICKED = pg.image.load("assets/cursorClicked.png").convert_alpha()
 	CURSOR = pg.transform.scale(CURSOR, (TILESIZE,TILESIZE))
@@ -311,11 +311,11 @@ def animateLoop(Sprite, startFrame, endFrame):
 
 def createText(center, font = 0, text = "hello there", color=(255,255,255)):
 	if (font == 0):
-		textSurface = BIGDISPLAYFONT.render(text, False, color)
+		textSurface = BIGDISPLAYFONT_BOLD.render(text, False, color)
 	elif (font == 1):
-		textSurface = SMALLDISPLAYFONT.render(text, False, color)
+		textSurface = SMALLDISPLAYFONT_BOLD.render(text, False, color)
 	elif (font == 2):
-		textSurface = MEDIUMDISPLAYFONT.render(text, False, color)
+		textSurface = MEDIUMDISPLAYFONT_BOLD.render(text, False, color)
 	textRect = textSurface.get_rect()
 	textRect.center = center
 	return (textSurface, textRect)
