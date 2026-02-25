@@ -38,7 +38,7 @@ class Sprite:
 		elif (operation == -1):
 			self.coordinates[movement_line] -= self.speed
 		self.moved = True
-	def draw(self, frame, layer, offset = (0,0), frameRow = 0, flipX=False, flipY=False):
+	def draw(self, frame, layer, offset = (0,0), frameRow = 0, angleOffset = 0,flipX=False, flipY=False):
 		drawCoordinates = (self.coordinates[0]+offset[0],self.coordinates[1]+offset[1])
 		drawSurf = None
 		if (type(self.asset) == sheets.Spritesheet):
@@ -51,7 +51,7 @@ class Sprite:
 				drawSurf = pg.transform.scale(self.asset,self.spriteScale)
 			else:
 				drawSurf = self.asset
-		drawSurf = pg.transform.rotate(drawSurf, self.angle)
+		drawSurf = pg.transform.rotate(drawSurf, self.angle+angleOffset)
 		drawSurf = pg.transform.flip(drawSurf, flipX, flipY)
 		layer.blit(drawSurf, drawCoordinates)
 	def update(self, rectOperation=None):

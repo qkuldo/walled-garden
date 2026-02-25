@@ -420,7 +420,7 @@ def game():
 			"hit animation":False,
 			"apply knockback":False
 		})
-	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False})
+	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0})
 	blackHudArea = pg.Rect((0,HUDMARGIN),(SCREENWIDTH,HUDMARGIN))
 	drawHud = False
 	menuPressCooldown = 0
@@ -642,6 +642,7 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
+				playerSword.customAttributes["offset"] = 90
 				playerSword.angle = face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
 				attack_qte_success = False
@@ -693,12 +694,14 @@ def game():
 			specialPickupTextRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-70-special_itemGet_addY]
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 		if (playerSword.customAttributes["visible"]):
+			if (playerSword.customAttributes["offset"] > 0):
+				playerSword.customAttributes["offset"] -= 10
 			if (playerSword.customAttributes["moving"]):
 				directional_vector = goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"])
 				Player.coordinates[0] += directional_vector[0]
 				Player.coordinates[1] += directional_vector[1]
-			playerSword.draw(0, SPRITELAYER)
-			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle), (Player.hitbox.center[0]-goto_angle(40,playerSword.angle)[0], Player.hitbox.center[1]-goto_angle(40,playerSword.angle)[1]))
+			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"])
+			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(40,playerSword.angle)[0], Player.hitbox.center[1]-goto_angle(40,playerSword.angle)[1]))
 		if (Player.customAttributes["apply knockback"] and not Player.customAttributes["hit animation"]):
 			directional_vector = goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
 			Player.coordinates[0] += directional_vector[0]
