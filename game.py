@@ -359,6 +359,14 @@ def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDT
 		if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
 			return directional_vector
 		else:
+			spriteDummy = Sprite.createDummy()
+			spriteDummy.x += directional_vector[0]
+			if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
+				return (directional_vector[0],0)
+			spriteDummy = Sprite.createDummy()
+			spriteDummy.y += directional_vector[1]
+			if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
+				return (0,directional_vector[1])
 			return (0, 0)
 	else:
 		return directional_vector
