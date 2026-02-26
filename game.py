@@ -704,32 +704,6 @@ def game():
 			directional_vector = goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
 			Player.coordinates[0] += directional_vector[0]
 			Player.coordinates[1] += directional_vector[1]
-		if (Player.customAttributes["visible"]):
-			if (not specialPickupVisible):
-				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
-				#if (playerSword.customAttributes["visible"]):
-				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
-				#else:
-				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
-			else:
-				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
-		if (playerSword.customAttributes["visible"]):
-			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
-			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle)[0]-playerSword.customAttributes["offset"], Player.hitbox.center[1]-goto_angle(35,playerSword.angle)[1]-(TILESIZE/5)))
-		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
-			target_angle += 2
-			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
-			TARGETRECT.center = Player.customAttributes["target pos"]
-			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
-		if (specialPickupVisible):
-			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
-			SPRITELAYER.blit(specialItem, specialItemRect)
-		if (not debugMode):
-			pg.draw.rect(INFOLAYER, PALEBLUE, playerMaxHealthRect)
-			pg.draw.rect(INFOLAYER, BLUE, playerHealthRect)
-			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect.inflate(5,5),5)
-			INFOLAYER.blit(healthText, healthTextRect)
-			INFOLAYER.blit(HPBARDESIGN, (0,20))
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
 			#loops through INVENTORYBUTTONS for a rect that passes colliderect check with mouse position
@@ -792,6 +766,37 @@ def game():
 					Player.customAttributes["apply knockback"] = True
 					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
+		if (Player.customAttributes["visible"]):
+			if (not specialPickupVisible):
+				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
+				#if (playerSword.customAttributes["visible"]):
+				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
+				#else:
+				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
+			else:
+				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
+
+		if (playerSword.customAttributes["visible"]):
+			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
+			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle)[0]-playerSword.customAttributes["offset"], Player.hitbox.center[1]-goto_angle(35,playerSword.angle)[1]-(TILESIZE/5)))
+
+		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
+			target_angle += 2
+			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
+			TARGETRECT.center = Player.customAttributes["target pos"]
+			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
+
+		if (specialPickupVisible):
+			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
+			SPRITELAYER.blit(specialItem, specialItemRect)
+
+		if (not debugMode):
+			pg.draw.rect(INFOLAYER, PALEBLUE, playerMaxHealthRect)
+			pg.draw.rect(INFOLAYER, BLUE, playerHealthRect)
+			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect.inflate(5,5),5)
+			INFOLAYER.blit(healthText, healthTextRect)
+			INFOLAYER.blit(HPBARDESIGN, (0,20))
+
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
 			BASELAYER.blit(TILELAYER,(0,0))
 			BASELAYER.blit(SPRITELAYER, (0,0))
