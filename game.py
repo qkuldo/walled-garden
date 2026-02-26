@@ -642,7 +642,7 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
-				playerSword.customAttributes["offset"] = 120
+				playerSword.customAttributes["offset"] = 40
 				playerSword.angle = face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
 				attack_qte_success = False
@@ -695,12 +695,11 @@ def game():
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 		if (playerSword.customAttributes["visible"]):
 			if (playerSword.customAttributes["offset"] > 0):
-				playerSword.customAttributes["offset"] -= 10
+				playerSword.customAttributes["offset"] -= 4
 			if (playerSword.customAttributes["moving"]):
 				directional_vector = goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"])
 				Player.coordinates[0] += directional_vector[0]
 				Player.coordinates[1] += directional_vector[1]
-			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(40,playerSword.angle)[0]+playerSword.customAttributes["offset"]/10, Player.hitbox.center[1]-goto_angle(40,playerSword.angle)[1]))
 		if (Player.customAttributes["apply knockback"] and not Player.customAttributes["hit animation"]):
 			directional_vector = goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
 			Player.coordinates[0] += directional_vector[0]
@@ -715,7 +714,8 @@ def game():
 			else:
 				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
 		if (playerSword.customAttributes["visible"]):
-			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(playerSword.customAttributes["offset"]/10,0))
+			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
+			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(40,playerSword.angle)[0]-playerSword.customAttributes["offset"], Player.hitbox.center[1]-goto_angle(40,playerSword.angle)[1]-(TILESIZE/5)))
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
 			target_angle += 2
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()

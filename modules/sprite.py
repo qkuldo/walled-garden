@@ -53,7 +53,7 @@ class Sprite:
 				drawSurf = self.asset
 		drawSurf = pg.transform.rotate(drawSurf, self.angle+angleOffset)
 		drawSurf = pg.transform.flip(drawSurf, flipX, flipY)
-		layer.blit(drawSurf, drawCoordinates)
+		layer.blit(drawSurf, drawSurf.get_rect(topleft=drawCoordinates))
 	def update(self, rectOperation=None):
 		#if rectOperation = None, hitbox topleft will default to player coordinates\
 		if (rectOperation != None):
