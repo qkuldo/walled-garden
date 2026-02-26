@@ -715,7 +715,7 @@ def game():
 				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
 		if (playerSword.customAttributes["visible"]):
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
-			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(40,playerSword.angle)[0]-playerSword.customAttributes["offset"], Player.hitbox.center[1]-goto_angle(40,playerSword.angle)[1]-(TILESIZE/5)))
+			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle)[0]-playerSword.customAttributes["offset"], Player.hitbox.center[1]-goto_angle(35,playerSword.angle)[1]-(TILESIZE/5)))
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
 			target_angle += 2
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
