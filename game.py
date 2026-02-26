@@ -545,6 +545,7 @@ def game():
 					playerSword.customAttributes["moving"] = True
 				else:
 					#print("fail")
+					SFX["failedSlash"].play()
 					if (debugMode == 2):
 						test_text, test_text_rect = createText((100, 20), text = "fail", color=BRIGHTYELLOW)
 				attack_qte_success = False
