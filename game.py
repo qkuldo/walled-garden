@@ -392,9 +392,52 @@ def game():
 	CAMERALAYER = initDrawLayer()
 	INVENTORY_DESCLAYER = initDrawLayer()
 	DEBUGLAYER = initDrawLayer()
-	clearLayer(TILELAYER)
+	blackHudArea = pg.Rect((0,HUDMARGIN),(SCREENWIDTH,HUDMARGIN))
+	#define custom events
+	ANIMATIONSWITCHEVENT = pg.event.custom_type()
+	SPECIALPICKUPSTAY = pg.event.custom_type()
+	START_FADEOUT = pg.event.custom_type()
+	ENDSWORD_VISIBILITY = pg.event.custom_type()
+	ENDSWORD_PLAYERMOVEMENT = pg.event.custom_type()
+	PLAYER_HITSTART = pg.event.custom_type()
+	PLAYER_HITSTOP = pg.event.custom_type()
+	#player attack variables
+	ATTACK_QTE_END = pg.event.custom_type()
+	ATTACK_QTE_START = pg.event.custom_type()
+	attack_qte_active = False
+	attack_qte_success = None
+	attack_qte_ongoing_attack = False
+	ATTACK_BUTTON_COOLDOWN = pg.event.custom_type()
+	on_attack_button_cooldown = False
+	#define other variables
+	drawHud = False
+	menuPressCooldown = 0
+	running = True
+	debugMode = 0
+	specialPickupVisible = False
+	specialPickupAlpha = 255
+	specialPickupFade = False
+	timedRect_fillRate = 1
+	timedRect_fill = False
+	ZOOM_LEVEL = 2
+	SIMOVE_SUB = -1
+	SIMOVE_ADD = 1
+	SIMOVE_Y = 1
+	SIMOVE_X = 0
+	clicked = False
+	INVENTORYBUTTONS = []
+	INVENTORY_ITEMS = []
+	SPECIAL_ITEMGET_FLY = 3
+	special_itemGet_addY = 0
+	ITEMTYPE_XMARGIN = 25
+	ITEMTYPE_YMARGIN = 10
+	HEALTHBAR_COORDINATES = (85,55)
+	target_angle = 0
+	roomFrame = 0
+	roomAccumulateFrames = 0
 	current_room = "spawnSpot"
 	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets)
+	#define sprites
 	#directionalFrames custom attribute is written as a list for compatibility with DIRECTION_IDS constant dict
 	Player = modules.interactables.Sprite(playerAsset,currentRoomData["playerSpawn"],5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
 			"currentFrame":0,
@@ -421,51 +464,6 @@ def game():
 			"apply knockback":False
 		})
 	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0})
-	blackHudArea = pg.Rect((0,HUDMARGIN),(SCREENWIDTH,HUDMARGIN))
-	drawHud = False
-	menuPressCooldown = 0
-	running = True
-	#define custom events
-	ANIMATIONSWITCHEVENT = pg.event.custom_type()
-	SPECIALPICKUPSTAY = pg.event.custom_type()
-	START_FADEOUT = pg.event.custom_type()
-	ENDSWORD_VISIBILITY = pg.event.custom_type()
-	ENDSWORD_PLAYERMOVEMENT = pg.event.custom_type()
-	PLAYER_HITSTART = pg.event.custom_type()
-	PLAYER_HITSTOP = pg.event.custom_type()
-	#player attack variables
-	ATTACK_QTE_END = pg.event.custom_type()
-	ATTACK_QTE_START = pg.event.custom_type()
-	attack_qte_active = False
-	attack_qte_success = None
-	attack_qte_ongoing_attack = False
-	ATTACK_BUTTON_COOLDOWN = pg.event.custom_type()
-	on_attack_button_cooldown = False
-	#------------------------------
-	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
-	#define other variables
-	debugMode = 0
-	specialPickupVisible = False
-	specialPickupAlpha = 255
-	specialPickupFade = False
-	timedRect_fillRate = 1
-	timedRect_fill = False
-	ZOOM_LEVEL = 2
-	SIMOVE_SUB = -1
-	SIMOVE_ADD = 1
-	SIMOVE_Y = 1
-	SIMOVE_X = 0
-	clicked = False
-	INVENTORYBUTTONS = []
-	INVENTORY_ITEMS = []
-	SPECIAL_ITEMGET_FLY = 3
-	special_itemGet_addY = 0
-	ITEMTYPE_XMARGIN = 25
-	ITEMTYPE_YMARGIN = 10
-	HEALTHBAR_COORDINATES = (85,55)
-	target_angle = 0
-	roomFrame = 0
-	roomAccumulateFrames = 0
 	#rect creation
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
@@ -477,22 +475,11 @@ def game():
 	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
 	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
 	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
+	#set timers
+	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
 	while running:
-		playerHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
-		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
-		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
-		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
-		#below line is pretty trippy ngl
-		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
-		if (debugMode == 1):
-			test_text, test_text_rect = createText((200, 20), text = current_room + " MODE " + str(debugMode), color=BRIGHTYELLOW)
-		else:
-			test_text, test_text_rect = createText((100, 20), text = "MODE "+str(debugMode), color=BRIGHTYELLOW)
-		timedRect.bottomleft = Player.hitbox.topright
-		timedRectBG.bottomleft = Player.hitbox.topright
-		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
-		switchFrame = False
-		current_time = pg.time.get_ticks()
+		#cleanup
+
 		BASELAYER.fill(BGCOLOR)
 		screen.fill(BGCOLOR)
 		clearLayer(SPRITELAYER)
@@ -500,9 +487,30 @@ def game():
 		clearLayer(HUDLAYER)
 		clearLayer(INVENTORY_DESCLAYER)
 		clearLayer(INFOLAYER)
-		clearLayer(TILELAYER)
 		clearLayer(DEBUGLAYER)
-		keys = pg.key.get_pressed()
+		#set stuff
+		timedRect.bottomleft = Player.hitbox.topright
+		timedRectBG.bottomleft = Player.hitbox.topright
+		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
+
+		playerHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
+		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
+		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
+		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
+
+		playerSword.hitbox.center = Player.hitbox.center
+		playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle)[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle)[1])
+		#below line is pretty trippy ngl
+		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
+
+		if (debugMode == 1):
+			test_text, test_text_rect = createText((200, 20), text = current_room + " MODE " + str(debugMode), color=BRIGHTYELLOW)
+		else:
+			test_text, test_text_rect = createText((100, 20), text = "MODE "+str(debugMode), color=BRIGHTYELLOW)
+
+		switchFrame = False
+		current_time = pg.time.get_ticks()
+		#handle events
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
 				terminate()
@@ -560,6 +568,12 @@ def game():
 				Player.customAttributes["apply knockback"] = False
 			elif (event.type == PLAYER_HITSTART):
 				Player.customAttributes["hit animation"] = True
+		#detect key presses
+		keys = pg.key.get_pressed()
+		if (drawHud):
+			MOUSE_HOVER_INVENTORY_INDEX = mouseRect.collidelist(INVENTORYBUTTONS)
+			loadHudLayer(HUDLAYER,blackHudArea,currentRoomData, playerPortrait)
+			showInventory(HUDLAYER,Player, itemAssets, loadAll=False, mouse_collide_index=MOUSE_HOVER_INVENTORY_INDEX)
 		if (keys[pg.K_ESCAPE] and menuPressCooldown <= 0 and (not specialPickupVisible) and (not attack_qte_ongoing_attack) and (not playerSword.customAttributes["visible"])):
 			drawHud = not drawHud
 			menuPressCooldown = MENUPRESSTIME
@@ -569,39 +583,6 @@ def game():
 				INVENTORYBUTTONS, INVENTORY_ITEMS = showInventory(HUDLAYER,Player, itemAssets, loadAll=True)
 			else:
 				SFX["openMenu"].play()
-		if (drawHud):
-			MOUSE_HOVER_INVENTORY_INDEX = mouseRect.collidelist(INVENTORYBUTTONS)
-			loadHudLayer(HUDLAYER,blackHudArea,currentRoomData, playerPortrait)
-			showInventory(HUDLAYER,Player, itemAssets, loadAll=False, mouse_collide_index=MOUSE_HOVER_INVENTORY_INDEX)
-		for item in currentRoomData["items"]:
-			if (item.customAttributes["active"]):
-				item.update()
-				if (switchFrame and item.customAttributes["oscillate"] == 0):
-					item.customAttributes["fromGroundOffset"] -= 2
-					if (abs(item.customAttributes["fromGroundOffset"]) >= 10):
-						item.customAttributes["oscillate"] = 1
-				elif (switchFrame and item.customAttributes["oscillate"] == 1):
-					item.customAttributes["fromGroundOffset"] += 2
-					if (item.customAttributes["fromGroundOffset"] >= 0):
-						item.customAttributes["oscillate"] = 0
-				item.draw(0, SPRITELAYER, (0,item.customAttributes["fromGroundOffset"]))
-				if (item.hitbox.colliderect(Player.hitbox)):
-					item.customAttributes["active"] = False
-					if (item.customAttributes["itemID"] in Player.customAttributes["inventory"]):
-						Player.customAttributes["inventory"][item.customAttributes["itemID"]] += 1
-					else:
-						Player.customAttributes["inventory"][item.customAttributes["itemID"]] = 1
-					if (ITEMTYPEIDS[item.customAttributes["itemID"]] in ("weapon", "armor")):
-						SFX["special_ItemCollect"].play()
-						itemText = ITEMIDS[item.customAttributes["itemID"]]
-						specialPickupText, specialPickupTextRect = createText((0,0), text = f"You got a {itemText}!", color=BRIGHTYELLOW)
-						specialPickupVisible = True
-						pg.time.set_timer(SPECIALPICKUPSTAY, 2700)
-						pg.time.set_timer(START_FADEOUT,1890)
-						specialItem.fill((0,0,0,0))
-						specialItem = pg.transform.scale(item.asset, (TILESIZE, TILESIZE))
-					else:
-						SFX["itemCollect"].play()
 		if (keys[pg.K_p] and menuPressCooldown <= 0):
 			#pepug menu
 			debugMode += 1
@@ -653,8 +634,7 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
-		playerSword.hitbox.center = Player.hitbox.center
-		playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle)[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle)[1])
+		#update stuff
 		if (switchFrame and (not specialPickupVisible)):
 			if (Player.customAttributes["hit animation"]):
 				Player.customAttributes["visible"] = not Player.customAttributes["visible"]
@@ -678,14 +658,17 @@ def game():
 				else:
 					roomFrame = 0
 				roomAccumulateFrames = 0
+			clearLayer(TILELAYER)
+			loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
 		elif (specialPickupVisible):
 			Player.customAttributes["currentFrame"] = 0
 			Player.customAttributes["frameRow"] = 1
-		loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
+
 		if (specialPickupVisible and specialPickupFade):
 			specialPickupAlpha -= 15
 			specialPickupText.set_alpha(specialPickupAlpha)
 			specialItem.set_alpha(specialPickupAlpha)
+
 		if (not specialPickupFade):
 			specialItemRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-25]
 			specialPickupTextRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-70]
@@ -693,6 +676,7 @@ def game():
 			special_itemGet_addY += SPECIAL_ITEMGET_FLY
 			specialItemRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-25-special_itemGet_addY]
 			specialPickupTextRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-70-special_itemGet_addY]
+
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 		if (playerSword.customAttributes["visible"]):
 			if (playerSword.customAttributes["offset"] > 0):
@@ -701,10 +685,12 @@ def game():
 				directional_vector = goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"])
 				Player.coordinates[0] += directional_vector[0]
 				Player.coordinates[1] += directional_vector[1]
+
 		if (Player.customAttributes["apply knockback"] and not Player.customAttributes["hit animation"]):
 			directional_vector = goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
 			Player.coordinates[0] += directional_vector[0]
 			Player.coordinates[1] += directional_vector[1]
+
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
 			#loops through INVENTORYBUTTONS for a rect that passes colliderect check with mouse position
@@ -746,12 +732,14 @@ def game():
 			HUDLAYER.blit(INVENTORY_DESCLAYER, (0, 0))
 		else:
 			INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((500,520), text = DEBUGTEXT)
+
 		if (timedRect_fill):
 			timedRect.width += timedRect_fillRate
 			pg.draw.rect(INFOLAYER, DARKBLUE, timedRectBG)
 			pg.draw.rect(INFOLAYER, BLUE, timedRectBG,3)
 		#draw circle function below is for testing purposes
 		pg.draw.rect(INFOLAYER, BRIGHTYELLOW, timedRect)
+
 		if (debugMode > 0):
 			DEBUGLAYER.blit(test_text, test_text_rect)
 			if (debugMode == 2):
@@ -767,6 +755,37 @@ def game():
 					Player.customAttributes["apply knockback"] = True
 					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
+
+		for item in currentRoomData["items"]:
+			if (item.customAttributes["active"]):
+				item.update()
+				if (switchFrame and item.customAttributes["oscillate"] == 0):
+					item.customAttributes["fromGroundOffset"] -= 2
+					if (abs(item.customAttributes["fromGroundOffset"]) >= 10):
+						item.customAttributes["oscillate"] = 1
+				elif (switchFrame and item.customAttributes["oscillate"] == 1):
+					item.customAttributes["fromGroundOffset"] += 2
+					if (item.customAttributes["fromGroundOffset"] >= 0):
+						item.customAttributes["oscillate"] = 0
+				item.draw(0, SPRITELAYER, (0,item.customAttributes["fromGroundOffset"]))
+				if (item.hitbox.colliderect(Player.hitbox)):
+					item.customAttributes["active"] = False
+					if (item.customAttributes["itemID"] in Player.customAttributes["inventory"]):
+						Player.customAttributes["inventory"][item.customAttributes["itemID"]] += 1
+					else:
+						Player.customAttributes["inventory"][item.customAttributes["itemID"]] = 1
+					if (ITEMTYPEIDS[item.customAttributes["itemID"]] in ("weapon", "armor")):
+						SFX["special_ItemCollect"].play()
+						itemText = ITEMIDS[item.customAttributes["itemID"]]
+						specialPickupText, specialPickupTextRect = createText((0,0), text = f"You got a {itemText}!", color=BRIGHTYELLOW)
+						specialPickupVisible = True
+						pg.time.set_timer(SPECIALPICKUPSTAY, 2700)
+						pg.time.set_timer(START_FADEOUT,1890)
+						specialItem.fill((0,0,0,0))
+						specialItem = pg.transform.scale(item.asset, (TILESIZE, TILESIZE))
+					else:
+						SFX["itemCollect"].play()
+
 		if (Player.customAttributes["visible"]):
 			if (not specialPickupVisible):
 				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
@@ -805,6 +824,7 @@ def game():
 		elif (drawHud and Player.hitbox.center[1] > 420):
 			BASELAYER.blit(TILELAYER,(0,(420-Player.coordinates[1])-30))
 			BASELAYER.blit(SPRITELAYER, (0,(420-Player.coordinates[1])-30))
+
 		if (drawHud):
 			BASELAYER.blit(HUDLAYER,(0,0))
 		BASELAYER.blit(DEBUGLAYER, (0,0))
@@ -815,10 +835,12 @@ def game():
 			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)).get_rect()
 			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
 			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)), CAMERA_ZOOMED_RECT)
+
 		if ((not specialPickupVisible) and (not clicked)):
 			screen.blit(CURSOR, pg.mouse.get_pos())
 		elif ((not specialPickupVisible) and clicked):
 			screen.blit(CURSORCLICKED, pg.mouse.get_pos())
+
 		if (menuPressCooldown > 0):
 			menuPressCooldown -= 1
 		pg.display.flip()
