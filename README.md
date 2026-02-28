@@ -19,4 +19,7 @@ just run the `game.py` file like a normal python file.
 ## Contributing
 pull requests are very much welcome, and will require my approval.
 ## License
-later.
+[GNU GPLv3](LICENSES/GPL-3.0-or-later.md) is the license for all code within this repository.
+The [CC-BY-SA-4.0](LICENSES/CC-BY-SA-4.0.md) license is for all the assets, music or art, created by me[^1].
+### footnotes
+[^1]:qkuldo, the repository admin and the lead developer *(not like there are other developers...)* of this project.
