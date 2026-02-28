@@ -1,6 +1,6 @@
 # Walled Garden
 an RPG game about a post-apocalyptic laybrinth. inspired by undertale, kirby, and pokemon *(well not that much really...)*.
-made by qkuldo in [python](python.org) with [pygame-ce](https://github.com/pygame-community/pygame-ce).
+made by qkuldo in [python](python.org) with [pygame-ce](@pygame-community/pygame-ce).
 ## Installation
 to install, ensure you have the latest version of python, which you can find [here](https://www.python.org/downloads/), and pip *(all installations of python 3.4 and up include pip, so you shouldn't really be worried about that.)*.
 then, run the following commands, line by line.
