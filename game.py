@@ -574,6 +574,8 @@ def game():
 			MOUSE_HOVER_INVENTORY_INDEX = mouseRect.collidelist(INVENTORYBUTTONS)
 			loadHudLayer(HUDLAYER,blackHudArea,currentRoomData, playerPortrait)
 			showInventory(HUDLAYER,Player, itemAssets, loadAll=False, mouse_collide_index=MOUSE_HOVER_INVENTORY_INDEX)
+		else:
+			MOUSE_HOVER_INVENTORY_INDEX = -1
 		if (keys[pg.K_ESCAPE] and menuPressCooldown <= 0 and (not specialPickupVisible) and (not attack_qte_ongoing_attack) and (not playerSword.customAttributes["visible"])):
 			drawHud = not drawHud
 			menuPressCooldown = MENUPRESSTIME
