@@ -31,6 +31,7 @@ here's a to-do list of tasks:
 ## Gameplay Footage
 here's some footage from development
 ![alpha gameplay](assets/externalAssets/alpha-footage.gif)
+*bit low quality but it will do.*
 ## Contributing
 pull requests are very much welcome, and will require my[^1] approval.
 ## License
