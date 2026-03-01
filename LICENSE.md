@@ -1,3 +1,5 @@
+**IMPORTANT**: This license (GPLv3), applies to the entire repository except for subfolders with a different `LICENSE.md` file.
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
