@@ -1,4 +1,5 @@
 # Walled Garden
+![the player](assets/externalAssets/baseIdle.png)
 an RPG game about a post-apocalyptic laybrinth. inspired by undertale, kirby, and pokemon *(well not that much really...)*.
 made by qkuldo in [python](python.org) with [pygame-ce](https://github.com/pygame-community/pygame-ce).
 ## Installation
