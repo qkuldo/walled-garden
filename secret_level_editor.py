@@ -1,8 +1,32 @@
 import game
 game.readAllJsonData()
+commandList = ["[p]: Paint Tile", "[q]: Change Tile Brush", "[e]: exit"]
+commandActivators = ["p", "q","e"]
+brush = "a"
+currentRoom = "test"
+roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
 
-def levelGet(currentRoom):
-	roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
+def levelGet():
 	for tile in roomLayout:
 		print(tile)
-levelGet("test")
+
+def changeAt(coordinates = (0, 0), changeTo = "a"):
+	#don't forget - coordinates are flipped
+	rowConverted = list(roomLayout[coordinates[0]])
+	rowConverted[coordinates[1]] = changeTo
+	roomLayout[coordinates[0]] = "".join(map(str, rowConverted))
+
+while True:
+	levelGet()
+	for command in commandList:
+		print(command)
+	command = input("> ")
+	if (command in commandActivators):
+		if (command == "p"):
+			tileX = int(input("where x?> "))
+			tileY = int(input("where y?> "))
+			changeAt((tileY, tileX), brush)
+		elif (command == "e"):
+			break
+	else:
+		print(f"{command} is not a recognized command.")
