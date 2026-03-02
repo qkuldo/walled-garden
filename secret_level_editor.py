@@ -1,4 +1,7 @@
 import game
+ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
+WALL_LETTERS = "abde"
+ANIMATED = "f"
 game.readAllJsonData()
 commandList = ["[p]: Paint Tile", "[q]: Change Tile Brush", "[e]: exit"]
 commandActivators = ["p", "q","e"]
@@ -30,5 +33,7 @@ while True:
 			break
 		elif (command == "q"):
 			brush = input("brush type?> ")
+			assert brush in ACCEPTED_TILES, "<qkuldo>that's not a tile!</qkuldo>"
+			assert len(brush) < 2 and len(brush) > 0, "<qkuldo>that's not a tile!</qkuldo>"
 	else:
 		print(f"{command} is not a recognized command.")
