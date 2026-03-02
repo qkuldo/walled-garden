@@ -28,5 +28,7 @@ while True:
 			changeAt((tileY, tileX), brush)
 		elif (command == "e"):
 			break
+		elif (command == "q"):
+			brush = input("brush type?> ")
 	else:
 		print(f"{command} is not a recognized command.")
