@@ -34,7 +34,8 @@ while True:
 			sys.exit()
 		elif (command == "q"):
 			brush = input("brush type?> ")
-			assert brush in ACCEPTED_TILES, "<qkuldo>that's not a tile!</qkuldo>"
-			assert len(brush) < 2 and len(brush) > 0, "<qkuldo>that's not a tile!</qkuldo>"
+			if (not (brush in ACCEPTED_TILES and (len(brush) < 2 and len(brush) > 0))):
+				print("<qkuldo>that's not a tile!</qkuldo>")
+				brush = "a"
 	else:
 		print(f"{command} is not a recognized command.")
