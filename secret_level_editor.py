@@ -4,8 +4,8 @@ ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
 WALL_LETTERS = "abde"
 ANIMATED = "f"
 game.readAllJsonData()
-commandList = ["[p]: Paint Tile", "[q]: Change Tile Brush", "[e]: exit"]
-commandActivators = ["p", "q","e"]
+commandList = ["[p]: Paint Tile", "[q]: Change Tile Brush", "[i]: Pick Tile", "[e]: exit"]
+commandActivators = ["p", "q","e","i"]
 brush = "a"
 currentRoom = "test"
 roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
@@ -37,5 +37,9 @@ while True:
 			if (not (brush in ACCEPTED_TILES and (len(brush) < 2 and len(brush) > 0))):
 				print("<qkuldo>that's not a tile!</qkuldo>")
 				brush = "a"
+		elif (command == "i"):
+			tileX = int(input("where x?> "))
+			tileY = int(input("where y?> "))
+			brush = roomLayout[tileX][tileY]
 	else:
 		print(f"{command} is not a recognized command.")
