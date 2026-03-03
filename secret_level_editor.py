@@ -86,6 +86,17 @@ def runEditor():
 	roomFrame = 0
 	currentRoom = "test"
 	clicked = False
+	tileCoordinatesX = list(range(0, 28))
+	tileCoordinatesY = list(range(0, 15))
+	findoutX = 0
+	findoutY = 0
+	tileBoxList = []
+	for row in roomLayout:
+		findoutX = 0
+		findoutY += 48
+		for column in row:
+			tileBoxList.append(pg.Rect(findoutX, findoutY, 48, 48))
+			findoutX += 48
 	while True:
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		game.clearLayer(ROOMLAYER)
@@ -103,6 +114,7 @@ def runEditor():
 					roomFrame = 0
 			elif (event.type == pg.MOUSEBUTTONDOWN):
 				clicked = True
+				changeAt((tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48), brush)
 			elif (event.type == pg.MOUSEBUTTONUP):
 				clicked = False
 		customRoomRenderer(EDITORHUDLAYER, roomLayout, roomFrame)
