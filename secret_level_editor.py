@@ -1,5 +1,6 @@
 import game
 import sys
+import pygame as pg
 ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
 WALL_LETTERS = "abde"
 ANIMATED = "f"
@@ -29,8 +30,6 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 	if (command in commandActivators):
 		if (command == "p"):
 			changeAt((tileY, tileX), brush)
-		elif (command == "e"):
-			sys.exit()
 		elif (command == "q"):
 			if (tileOption in ACCEPTED_TILES and (len(tileOption) < 2 and len(tileOption) > 0)):
 				brush = tileOption
@@ -41,3 +40,45 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 		return True
 	else:
 		return 1
+
+def runEditor():
+	ROOMLAYER = game.initDrawLayer()
+	EDITORHUDLAYER = game.initDrawLayer()
+	ANIMATIONSWITCHEVENT = pg.event.custom_type()
+	pg.time.set_timer(ANIMATIONSWITCHEVENT, 360)
+	roomFrame = 0
+	currentRoom = "test"
+	clicked = False
+	while True:
+		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
+		game.clearLayer(ROOMLAYER)
+		game.clearLayer(EDITORHUDLAYER)
+		game.clearLayer(game.screen)
+		switchFrame = False
+		for event in pg.event.get():
+			if (event.type == pg.QUIT):
+				game.terminate()
+			elif (event.type == ANIMATIONSWITCHEVENT):
+				switchFrame = True
+				if (roomFrame == 0):
+					roomFrame = 1
+				else:
+					roomFrame = 0
+			elif (event.type == pg.MOUSEBUTTONDOWN):
+				clicked = True
+			elif (event.type == pg.MOUSEBUTTONUP):
+				clicked = False
+		game.loadRoom(currentRoom, ROOMLAYER, game.ITEMDATA["ITEM ASSETS"], False, roomFrame)
+		game.screen.blit(ROOMLAYER, (0, 0))
+		game.screen.blit(EDITORHUDLAYER, (0, 0))
+		if (not clicked):
+			game.screen.blit(game.CURSOR, pg.mouse.get_pos())
+		else:
+			game.screen.blit(game.CURSORCLICKED, pg.mouse.get_pos())
+		pg.display.flip()
+		game.clock.tick(game.FPS)
+
+if (__name__ == "__main__"):
+	game.setup()
+	game.loadTileSpritesheets()
+	runEditor()
