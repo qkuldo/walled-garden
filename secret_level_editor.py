@@ -1,6 +1,7 @@
 import game
 import sys
 import pygame as pg
+import modules
 ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
 WALL_LETTERS = "abde"
 ANIMATED = "f"
@@ -41,6 +42,42 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 	else:
 		return 1
 
+def customRoomRenderer(tileLayer, roomLayout, frame):
+	alphabet = "abcdefghijklmnopqrstuvwxyz"
+	animatedTiles = "f"
+	wallSet = game.ROOMTILEDATA[currentRoom]["wall set"]
+	propSet = game.ROOMTILEDATA[currentRoom]["prop set"]
+	drawx, drawy = (0, 0)
+	extras = pg.image.load("assets/extras.png").convert_alpha()
+	extras = modules.sheets.Spritesheet(extras,16,16)
+	for row in roomLayout:
+		for column in row:
+			if ((not column == " ") and (not column == "@")):
+				if (column.isdigit()):
+					tileLayer.blit(pg.transform.scale(game.proptileSpritesheets[propSet].load_frame(int(column)), (48,48)), (drawx, drawy))
+				elif (column == "#"):
+					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(0), (48,48)), (drawx, drawy))
+				elif (column == "_"):
+					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(1), (48,48)), (drawx, drawy))
+				elif (column == "-"):
+					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(2), (48,48)), (drawx, drawy))
+				elif (column == "+"):
+					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(3), (48,48)), (drawx, drawy))
+				elif (column == "="):
+					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(4), (48,48)), (drawx, drawy))
+				elif (column == "^"):
+					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), (drawx, drawy))
+				elif (column in alphabet):
+					if (column in animatedTiles):
+						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column), frame), (48,48)), (drawx, drawy))
+					else:
+						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column)), (48,48)), (drawx, drawy))
+				else:
+					tileLayer.blit(pg.transform.scale(MISSINGTEXTURE, (48,48)), (drawx, drawy))
+			drawx += 48
+		drawy += 48
+		drawx = 0
+
 def runEditor():
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
@@ -68,7 +105,7 @@ def runEditor():
 				clicked = True
 			elif (event.type == pg.MOUSEBUTTONUP):
 				clicked = False
-		game.loadRoom(currentRoom, ROOMLAYER, game.ITEMDATA["ITEM ASSETS"], False, roomFrame)
+		customRoomRenderer(EDITORHUDLAYER, roomLayout, roomFrame)
 		game.screen.blit(ROOMLAYER, (0, 0))
 		game.screen.blit(EDITORHUDLAYER, (0, 0))
 		if (not clicked):
