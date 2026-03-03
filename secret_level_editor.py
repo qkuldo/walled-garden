@@ -20,26 +20,24 @@ def changeAt(coordinates = (0, 0), changeTo = "a"):
 	rowConverted[coordinates[1]] = changeTo
 	roomLayout[coordinates[0]] = "".join(map(str, rowConverted))
 
-while True:
-	levelGet()
-	for command in commandList:
-		print(command)
-	command = input("> ")
+def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b"):
+	#Returns True if given command was executed. Else, returns certain numbers based on issue
+	tileX = givenX
+	tileY = givenY
+	if ((tileX > 26 or tileX < 0) or (tileY > 14 or tileY < 0) or (type(tileX) != int or type(tileY) != int)):
+		return 0
 	if (command in commandActivators):
 		if (command == "p"):
-			tileX = int(input("where x?> "))
-			tileY = int(input("where y?> "))
 			changeAt((tileY, tileX), brush)
 		elif (command == "e"):
 			sys.exit()
 		elif (command == "q"):
-			brush = input("brush type?> ")
-			if (not (brush in ACCEPTED_TILES and (len(brush) < 2 and len(brush) > 0))):
-				print("<qkuldo>that's not a tile!</qkuldo>")
-				brush = "a"
+			if (tileOption in ACCEPTED_TILES and (len(tileOption) < 2 and len(tileOption) > 0)):
+				brush = tileOption
+			else:
+				return 2
 		elif (command == "i"):
-			tileX = int(input("where x?> "))
-			tileY = int(input("where y?> "))
 			brush = roomLayout[tileX][tileY]
+		return True
 	else:
-		print(f"{command} is not a recognized command.")
+		return 1
