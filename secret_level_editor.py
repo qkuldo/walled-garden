@@ -1,4 +1,5 @@
 import game
+import sys
 ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
 WALL_LETTERS = "abde"
 ANIMATED = "f"
@@ -30,7 +31,7 @@ while True:
 			tileY = int(input("where y?> "))
 			changeAt((tileY, tileX), brush)
 		elif (command == "e"):
-			break
+			sys.exit()
 		elif (command == "q"):
 			brush = input("brush type?> ")
 			assert brush in ACCEPTED_TILES, "<qkuldo>that's not a tile!</qkuldo>"
