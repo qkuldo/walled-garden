@@ -24,7 +24,7 @@ def changeAt(coordinates = (0, 0), changeTo = "a"):
 	roomLayout[coordinates[0]] = "".join(map(str, rowConverted))
 
 def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b"):
-	#Returns True if given command was executed. Else, returns certain numbers based on issue
+	#Returns given brush parameter if given command was executed. Else, returns certain numbers based on issue
 	tileX = givenX
 	tileY = givenY
 	if ((tileX > 26 or tileX < 0) or (tileY > 14 or tileY < 0) or (type(tileX) != int or type(tileY) != int)):
@@ -38,8 +38,8 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 			else:
 				return 2
 		elif (command == "i"):
-			brush = roomLayout[tileX][tileY]
-		return True
+			brush = roomLayout[tileY][tileX]
+		return brush
 	else:
 		return 1
 
@@ -82,6 +82,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 def runEditor():
 	global currentRoom
 	global roomLayout
+	global brush
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
@@ -111,6 +112,7 @@ def runEditor():
 		game.clearLayer(EDITORHUDLAYER)
 		game.clearLayer(game.screen)
 		switchFrame = False
+		tileOption = "a"
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
 				game.terminate()
@@ -137,8 +139,16 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+		elif (keys[pg.K_i] and can_pressbutton):
+			current_tool = "i"
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+		elif (keys[pg.K_p] and can_pressbutton):
+			current_tool = "p"
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		if (clicked):
-			recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
+			brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
