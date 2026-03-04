@@ -32,11 +32,6 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 	if (command in commandActivators):
 		if (command == "p"):
 			changeAt((tileY, tileX), brush)
-		elif (command == "q"):
-			if (tileOption in ACCEPTED_TILES and (len(tileOption) < 2 and len(tileOption) > 0)):
-				brush = tileOption
-			else:
-				return 2
 		elif (command == "i"):
 			brush = roomLayout[tileY][tileX]
 		return brush
