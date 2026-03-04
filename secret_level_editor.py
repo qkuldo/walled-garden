@@ -24,7 +24,7 @@ def changeAt(coordinates = (0, 0), changeTo = "a"):
 	roomLayout[coordinates[0]] = "".join(map(str, rowConverted))
 
 def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b"):
-	#Returns given brush parameter if given command was executed. Else, returns certain numbers based on issue
+	#Returns nothing if given command was executed, unless command was colorpicker, in which case it returns brush. Else, returns certain numbers based on issue
 	tileX = givenX
 	tileY = givenY
 	if ((tileX > 26 or tileX < 0) or (tileY > 14 or tileY < 0) or (type(tileX) != int or type(tileY) != int)):
@@ -34,7 +34,7 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 			changeAt((tileY, tileX), brush)
 		elif (command == "i"):
 			brush = roomLayout[tileY][tileX]
-		return brush
+			return brush
 	else:
 		return 1
 
@@ -69,7 +69,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 					else:
 						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column)), (48,48)), (drawx, drawy))
 				else:
-					tileLayer.blit(pg.transform.scale(MISSINGTEXTURE, (48,48)), (drawx, drawy))
+					tileLayer.blit(pg.transform.scale(game.MISSINGTEXTURE, (48,48)), (drawx, drawy))
 			drawx += 48
 		drawy += 48
 		drawx = 0
@@ -147,9 +147,15 @@ def runEditor():
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
 		if (clicked):
 			if (mouseRect.y > 48):
-				brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
+				if (current_tool == "i"):
+					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
+				else:
+					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
 			else:
-				brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
+				if (current_tool == "i"):
+					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
+				else:
+					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
 		EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
