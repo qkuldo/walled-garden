@@ -6,6 +6,7 @@ ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
 WALL_LETTERS = "abde"
 ANIMATED = "f"
 game.readAllJsonData()
+allrooms = game.readJsonFile("rooms.json")["roomList"]
 commandList = ["[p]: Paint Tile", "[q]: Change Tile Brush", "[i]: Pick Tile", "[e]: exit"]
 commandActivators = ["p", "q","e","i"]
 brush = "a"
@@ -79,18 +80,23 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 		drawx = 0
 
 def runEditor():
+	global currentRoom
+	global roomLayout
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
+	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
+	can_pressbutton = True
 	pg.time.set_timer(ANIMATIONSWITCHEVENT, 360)
 	roomFrame = 0
-	currentRoom = "test"
+	currentRoom = allrooms[0]
 	clicked = False
 	tileCoordinatesX = list(range(0, 28))
 	tileCoordinatesY = list(range(0, 15))
 	findoutX = 0
 	findoutY = 0
 	tileBoxList = []
+	roomIndex = 0
 	for row in roomLayout:
 		findoutX = 0
 		findoutY += 48
@@ -117,6 +123,17 @@ def runEditor():
 				changeAt((tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48), brush)
 			elif (event.type == pg.MOUSEBUTTONUP):
 				clicked = False
+			elif (event.type == BUTTONPRESSCOOLDOWN):
+				can_pressbutton = True
+		keys = pg.key.get_pressed()
+		if (keys[pg.K_l] and can_pressbutton):
+			roomIndex += 1
+			if (roomIndex > len(allrooms)-1):
+				roomIndex = 0
+			currentRoom = allrooms[roomIndex]
+			roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		customRoomRenderer(EDITORHUDLAYER, roomLayout, roomFrame)
 		game.screen.blit(ROOMLAYER, (0, 0))
 		game.screen.blit(EDITORHUDLAYER, (0, 0))

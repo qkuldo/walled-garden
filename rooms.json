@@ -56,5 +56,6 @@
 		"items":[1],
 		"itemCoordinates":[[13,13]]
 	}
-	}
+	},
+	"roomList":["test", "spawnSpot"]
 }
