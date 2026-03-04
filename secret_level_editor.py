@@ -151,7 +151,10 @@ def runEditor():
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
 		if (clicked):
-			brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
+			if (mouseRect.y > 48):
+				brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
+			else:
+				brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
 		EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
