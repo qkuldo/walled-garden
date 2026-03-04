@@ -106,6 +106,7 @@ def runEditor():
 			tileBoxList.append(pg.Rect(findoutX, findoutY, 48, 48))
 			findoutX += 48
 	current_tool = "p"
+	currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
 	while True:
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		game.clearLayer(ROOMLAYER)
@@ -143,14 +144,17 @@ def runEditor():
 			current_tool = "i"
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using COLORPICKER}"), game.BLUE)
 		elif (keys[pg.K_p] and can_pressbutton):
 			current_tool = "p"
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
 		if (clicked):
 			brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
+		EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
 		game.screen.blit(EDITORHUDLAYER, (0, 0))
 		if (not clicked):
