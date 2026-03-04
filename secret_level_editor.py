@@ -97,6 +97,7 @@ def runEditor():
 	findoutY = 0
 	tileBoxList = []
 	roomIndex = 0
+	currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 	for row in roomLayout:
 		findoutX = 0
 		findoutY += 48
@@ -134,7 +135,9 @@ def runEditor():
 			roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-		customRoomRenderer(EDITORHUDLAYER, roomLayout, roomFrame)
+			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
+		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
 		game.screen.blit(EDITORHUDLAYER, (0, 0))
 		if (not clicked):
