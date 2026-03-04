@@ -104,6 +104,7 @@ def runEditor():
 		for column in row:
 			tileBoxList.append(pg.Rect(findoutX, findoutY, 48, 48))
 			findoutX += 48
+	current_tool = "p"
 	while True:
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		game.clearLayer(ROOMLAYER)
@@ -121,7 +122,7 @@ def runEditor():
 					roomFrame = 0
 			elif (event.type == pg.MOUSEBUTTONDOWN):
 				clicked = True
-				changeAt((tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48), brush)
+				
 			elif (event.type == pg.MOUSEBUTTONUP):
 				clicked = False
 			elif (event.type == BUTTONPRESSCOOLDOWN):
@@ -136,6 +137,8 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+		if (clicked):
+			recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
