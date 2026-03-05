@@ -4,6 +4,7 @@ import pygame as pg
 import modules
 ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
 WALL_LETTERS = "abde"
+alphabet = "abcdefghijklmnopqrstuvwxyz"
 ANIMATED = "f"
 game.readAllJsonData()
 allrooms = game.readJsonFile("rooms.json")["roomList"]
@@ -24,7 +25,7 @@ def changeAt(coordinates = (0, 0), changeTo = "a"):
 	roomLayout[coordinates[0]] = "".join(map(str, rowConverted))
 
 def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b"):
-	#Returns nothing if given command was executed, unless command was colorpicker, in which case it returns brush. Else, returns certain numbers based on issue
+	#Returns nothing if given command was executed, unless command changes brush, in which case it returns brush. Else, returns certain numbers based on issue
 	tileX = givenX
 	tileY = givenY
 	if ((tileX > 26 or tileX < 0) or (tileY > 14 or tileY < 0) or (type(tileX) != int or type(tileY) != int)):
@@ -35,12 +36,15 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 		elif (command == "i"):
 			brush = roomLayout[tileY][tileX]
 			return brush
+		elif (command == "r"):
+			brush = tileOption
+			return brush
 	else:
 		return 1
 
 def customRoomRenderer(tileLayer, roomLayout, frame):
 	alphabet = "abcdefghijklmnopqrstuvwxyz"
-	animatedTiles = "f"
+	ANIMATED = "f"
 	wallSet = game.ROOMTILEDATA[currentRoom]["wall set"]
 	propSet = game.ROOMTILEDATA[currentRoom]["prop set"]
 	drawx, drawy = (0, 0)
@@ -64,7 +68,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 				elif (column == "^"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), (drawx, drawy))
 				elif (column in alphabet):
-					if (column in animatedTiles):
+					if (column in ANIMATED):
 						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column), frame), (48,48)), (drawx, drawy))
 					else:
 						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column)), (48,48)), (drawx, drawy))
@@ -102,6 +106,12 @@ def runEditor():
 			findoutX += 48
 	current_tool = "p"
 	currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
+	currentBrushIndex = 0
+	brush = ACCEPTED_TILES[currentBrushIndex]
+	extras = pg.image.load("assets/extras.png").convert_alpha()
+	extras = modules.sheets.Spritesheet(extras,16,16)
+	wallSet = game.ROOMTILEDATA[currentRoom]["wall set"]
+	propSet = game.ROOMTILEDATA[currentRoom]["prop set"]
 	while True:
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		game.clearLayer(ROOMLAYER)
@@ -140,21 +150,71 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using COLORPICKER}"), game.BLUE)
-		elif (keys[pg.K_p] and can_pressbutton):
+		elif (keys[pg.K_b] and can_pressbutton):
 			current_tool = "p"
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
+		elif (keys[pg.K_r] and can_pressbutton):
+			current_tool = "r"
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using BRUSHCHANGE"), game.BLUE)
+		if (keys[pg.K_UP] and can_pressbutton and current_tool == "r"):
+			currentBrushIndex += 1
+			if (currentBrushIndex > len(ACCEPTED_TILES)):
+				currentBrushIndex = 0
+			brush = ACCEPTED_TILES[currentBrushIndex]
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
+		if (keys[pg.K_DOWN] and can_pressbutton and current_tool == "r"):
+			currentBrushIndex -= 1
+			if (currentBrushIndex < 0):
+				currentBrushIndex = len(ACCEPTED_TILES)-1
+			brush = ACCEPTED_TILES[currentBrushIndex]
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
+		if (current_tool == "r" or current_tool == "p"):
+			if (mouseRect.y > 48):
+				tileshowing_pos = tileBoxList[mouseRect.collidelist(tileBoxList)].topleft
+			else:
+				tileshowing_pos = (tileBoxList[mouseRect.collidelist(tileBoxList)].x,0)
+			if ((not brush == " ") and (not brush == "@")):
+				if (brush.isdigit()):
+					EDITORHUDLAYER.blit(pg.transform.scale(game.proptileSpritesheets[propSet].load_frame(int(brush)), (48,48)), tileshowing_pos)
+				elif (brush == "#"):
+					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(0), (48,48)), tileshowing_pos)
+				elif (brush == "_"):
+					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(1), (48,48)), tileshowing_pos)
+				elif (brush == "-"):
+					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(2), (48,48)), tileshowing_pos)
+				elif (brush == "+"):
+					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(3), (48,48)), tileshowing_pos)
+				elif (brush == "="):
+					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(4), (48,48)), tileshowing_pos)
+				elif (brush == "^"):
+					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), tileshowing_pos)
+				elif (brush in alphabet):
+					if (brush in ANIMATED):
+						EDITORHUDLAYER.blit(pg.transform.scale(extras.load_frame(alphabet.index(brush), roomFrame), (48,48)), tileshowing_pos)
+					else:
+						EDITORHUDLAYER.blit(pg.transform.scale(extras.load_frame(alphabet.index(brush)), (48,48)), tileshowing_pos)
+				else:
+					EDITORHUDLAYER.blit(pg.transform.scale(game.MISSINGTEXTURE, (48,48)), tileshowing_pos)
 		if (clicked):
 			if (mouseRect.y > 48):
 				if (current_tool == "i"):
-					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
-				else:
+					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush, currentBrushIndex)
+					currentBrushIndex = ACCEPTED_TILES.index(brush)
+					#print(currentBrushIndex)
+				elif (current_tool == "p"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
 			else:
 				if (current_tool == "i"):
 					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
-				else:
+				elif (current_tool == "p"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
