@@ -39,6 +39,8 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 		elif (command == "r"):
 			brush = tileOption
 			return brush
+		elif (command == "e"):
+			changeAt((tileY, tileX), " ")
 	else:
 		return 1
 
@@ -160,6 +162,11 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using BRUSHCHANGE"), game.BLUE)
+		elif (keys[pg.K_e] and can_pressbutton):
+			current_tool = "e"
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using ERASE"), game.BLUE)
 		if (keys[pg.K_UP] and can_pressbutton and current_tool == "r"):
 			currentBrushIndex += 1
 			if (currentBrushIndex > len(ACCEPTED_TILES)):
@@ -209,12 +216,12 @@ def runEditor():
 					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush, currentBrushIndex)
 					currentBrushIndex = ACCEPTED_TILES.index(brush)
 					#print(currentBrushIndex)
-				elif (current_tool == "p"):
+				elif (current_tool == "p" or current_tool == "e"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
 			else:
 				if (current_tool == "i"):
 					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
-				elif (current_tool == "p"):
+				elif (current_tool == "p" or current_tool == "e"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
