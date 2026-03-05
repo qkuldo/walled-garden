@@ -2,6 +2,7 @@ import game
 import sys
 import pygame as pg
 import modules
+import json
 ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
 WALL_LETTERS = "abde"
 alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -167,6 +168,14 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using ERASE"), game.BLUE)
+		elif (keys[pg.K_s] and can_pressbutton):
+			allroomData = game.readJsonFile("rooms.json")
+			for row in range(15):
+				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
+			with open('rooms.json', 'w') as roomFile:
+				json.dump(allroomData, roomFile, indent=2)
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		if (keys[pg.K_UP] and can_pressbutton and current_tool == "r"):
 			currentBrushIndex += 1
 			if (currentBrushIndex > len(ACCEPTED_TILES)):
