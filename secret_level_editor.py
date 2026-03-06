@@ -89,7 +89,9 @@ def runEditor():
 	EDITORHUDLAYER = game.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
+	SAVECOOLDOWN = pg.event.custom_type()
 	can_pressbutton = True
+	display_saveText = False
 	pg.time.set_timer(ANIMATIONSWITCHEVENT, 360)
 	roomFrame = 0
 	currentRoom = allrooms[0]
@@ -109,6 +111,7 @@ def runEditor():
 			findoutX += 48
 	current_tool = "p"
 	currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
+	saveText, saveTextRect = game.createText((50, 20), 2, "saved!", game.BRIGHTYELLOW)
 	currentBrushIndex = 0
 	brush = ACCEPTED_TILES[currentBrushIndex]
 	extras = pg.image.load("assets/extras.png").convert_alpha()
@@ -133,11 +136,13 @@ def runEditor():
 					roomFrame = 0
 			elif (event.type == pg.MOUSEBUTTONDOWN):
 				clicked = True
-				
 			elif (event.type == pg.MOUSEBUTTONUP):
 				clicked = False
 			elif (event.type == BUTTONPRESSCOOLDOWN):
 				can_pressbutton = True
+			elif (event.type == SAVECOOLDOWN):
+				display_saveText = False
+				saveTextAlpha = 255
 		keys = pg.key.get_pressed()
 		if (keys[pg.K_l] and can_pressbutton):
 			roomIndex += 1
@@ -174,8 +179,12 @@ def runEditor():
 				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
 			with open('rooms.json', 'w') as roomFile:
 				json.dump(allroomData, roomFile, indent=2)
+			saveText, saveTextRect = game.createText((1000, 20), 2, ("saved as "+currentRoom+"!"), game.BRIGHTYELLOW)
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			display_saveText = True
+			pg.time.set_timer(SAVECOOLDOWN, 1000, 1)
+			game.SFX["closeMenu"].play()
 		if (keys[pg.K_UP] and can_pressbutton and current_tool == "r"):
 			currentBrushIndex += 1
 			if (currentBrushIndex > len(ACCEPTED_TILES)):
@@ -233,6 +242,8 @@ def runEditor():
 				elif (current_tool == "p" or current_tool == "e"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
+		if (display_saveText):
+			EDITORHUDLAYER.blit(saveText, saveTextRect)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
 		EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
