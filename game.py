@@ -168,7 +168,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 		for item in range(0, len(ROOMTILEDATA[roomToLoad]["items"])):
 			itemID = ROOMTILEDATA[roomToLoad]["items"][item]
 			itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
-			if (len(itemAssets) >= item):
+			if (len(itemAssets) >= itemID):
 				addItem(items, itemID, itemCoordinate, itemAssets)
 		currentRoomData = {
 			"wall set index":wallSet,

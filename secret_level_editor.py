@@ -80,6 +80,12 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 			drawx += 48
 		drawy += 48
 		drawx = 0
+	for item in range(0, len(game.ROOMTILEDATA[currentRoom]["items"])):
+		itemID = game.ROOMTILEDATA[currentRoom]["items"][item]
+		itemCoordinate = game.findTilePixelLocation(game.ROOMTILEDATA[currentRoom]["itemCoordinates"][item][0],game.ROOMTILEDATA[currentRoom]["itemCoordinates"][item][1])
+		if (len(game.ITEMDATA["ITEM ASSETS"]) >= itemID):
+			itemSurface = pg.transform.scale(pg.image.load(game.ITEMDATA["ITEM ASSETS"][itemID]), (48,48)).convert_alpha()
+			tileLayer.blit(itemSurface, itemCoordinate)
 
 def runEditor():
 	global currentRoom
@@ -118,6 +124,7 @@ def runEditor():
 	extras = modules.sheets.Spritesheet(extras,16,16)
 	wallSet = game.ROOMTILEDATA[currentRoom]["wall set"]
 	propSet = game.ROOMTILEDATA[currentRoom]["prop set"]
+	allroomData = game.readJsonFile("rooms.json")
 	while True:
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		game.clearLayer(ROOMLAYER)
@@ -174,7 +181,6 @@ def runEditor():
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using ERASE"), game.BLUE)
 		elif (keys[pg.K_s] and can_pressbutton):
-			allroomData = game.readJsonFile("rooms.json")
 			for row in range(15):
 				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
 			with open('rooms.json', 'w') as roomFile:
