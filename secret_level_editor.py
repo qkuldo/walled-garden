@@ -3,7 +3,7 @@ import sys
 import pygame as pg
 import modules
 import json
-ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^"
+ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^@"
 WALL_LETTERS = "abde"
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 ANIMATED = "f"
@@ -55,7 +55,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 	extras = modules.sheets.Spritesheet(extras,16,16)
 	for row in roomLayout:
 		for column in row:
-			if ((not column == " ") and (not column == "@")):
+			if ((not column == " ")):
 				if (column.isdigit()):
 					tileLayer.blit(pg.transform.scale(game.proptileSpritesheets[propSet].load_frame(int(column)), (48,48)), (drawx, drawy))
 				elif (column == "#"):
@@ -70,6 +70,8 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(4), (48,48)), (drawx, drawy))
 				elif (column == "^"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), (drawx, drawy))
+				elif (column == "@"):
+					tileLayer.blit(pg.transform.scale(playerAsset.load_frame(0), (48,48)), (drawx, drawy))
 				elif (column in alphabet):
 					if (column in ANIMATED):
 						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column), frame), (48,48)), (drawx, drawy))
@@ -212,7 +214,7 @@ def runEditor():
 				tileshowing_pos = tileBoxList[mouseRect.collidelist(tileBoxList)].topleft
 			else:
 				tileshowing_pos = (tileBoxList[mouseRect.collidelist(tileBoxList)].x,0)
-			if ((not brush == " ") and (not brush == "@")):
+			if ((not brush == " ")):
 				if (brush.isdigit()):
 					EDITORHUDLAYER.blit(pg.transform.scale(game.proptileSpritesheets[propSet].load_frame(int(brush)), (48,48)), tileshowing_pos)
 				elif (brush == "#"):
@@ -227,6 +229,8 @@ def runEditor():
 					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(4), (48,48)), tileshowing_pos)
 				elif (brush == "^"):
 					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), tileshowing_pos)
+				elif (brush == "@"):
+					EDITORHUDLAYER.blit(pg.transform.scale(playerAsset.load_frame(0), (48,48)), tileshowing_pos)
 				elif (brush in alphabet):
 					if (brush in ANIMATED):
 						EDITORHUDLAYER.blit(pg.transform.scale(extras.load_frame(alphabet.index(brush), roomFrame), (48,48)), tileshowing_pos)
@@ -263,5 +267,7 @@ def runEditor():
 
 if (__name__ == "__main__"):
 	game.setup()
+	playerAsset = pg.image.load("assets/player.png").convert_alpha()
+	playerAsset = modules.sheets.Spritesheet(playerAsset, 16, 16)
 	game.loadTileSpritesheets()
 	runEditor()
