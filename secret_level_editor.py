@@ -10,10 +10,12 @@ ANIMATED = "f"
 game.readAllJsonData()
 allrooms = game.readJsonFile("rooms.json")["roomList"]
 commandList = ["[p]: Paint Tile", "[q]: Change Tile Brush", "[i]: Pick Tile", "[e]: exit"]
-commandActivators = ["p", "q","e","i"]
+commandActivators = ["p", "q","e","i","g"]
 brush = "a"
 currentRoom = "test"
 roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
+roomItems = game.ROOMTILEDATA[currentRoom]["items"]
+roomItemCoordinates = game.ROOMTILEDATA[currentRoom]["itemCoordinates"]
 
 def levelGet():
 	for tile in roomLayout:
@@ -25,7 +27,7 @@ def changeAt(coordinates = (0, 0), changeTo = "a"):
 	rowConverted[coordinates[1]] = changeTo
 	roomLayout[coordinates[0]] = "".join(map(str, rowConverted))
 
-def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b"):
+def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b", itembrush=0):
 	#Returns nothing if given command was executed, unless command changes brush, in which case it returns brush. Else, returns certain numbers based on issue
 	tileX = givenX
 	tileY = givenY
@@ -42,6 +44,10 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b")
 			return brush
 		elif (command == "e"):
 			changeAt((tileY, tileX), " ")
+		elif (command == "g"):
+			if (not (givenX, givenY) in roomItemCoordinates):
+				roomItems.append(itembrush)
+				roomItemCoordinates.append((givenX, givenY))
 	else:
 		return 1
 
@@ -82,9 +88,9 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 			drawx += 48
 		drawy += 48
 		drawx = 0
-	for item in range(0, len(game.ROOMTILEDATA[currentRoom]["items"])):
-		itemID = game.ROOMTILEDATA[currentRoom]["items"][item]
-		itemCoordinate = game.findTilePixelLocation(game.ROOMTILEDATA[currentRoom]["itemCoordinates"][item][0],game.ROOMTILEDATA[currentRoom]["itemCoordinates"][item][1])
+	for item in range(0, len(roomItems)):
+		itemID = roomItems[item]
+		itemCoordinate = game.findTilePixelLocation(roomItemCoordinates[item][0],roomItemCoordinates[item][1])
 		if (len(game.ITEMDATA["ITEM ASSETS"]) >= itemID):
 			itemSurface = pg.transform.scale(pg.image.load(game.ITEMDATA["ITEM ASSETS"][itemID]), (48,48)).convert_alpha()
 			tileLayer.blit(itemSurface, itemCoordinate)
@@ -93,6 +99,8 @@ def runEditor():
 	global currentRoom
 	global roomLayout
 	global brush
+	global roomItems
+	global roomItemCoordinates
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
@@ -127,6 +135,7 @@ def runEditor():
 	wallSet = game.ROOMTILEDATA[currentRoom]["wall set"]
 	propSet = game.ROOMTILEDATA[currentRoom]["prop set"]
 	allroomData = game.readJsonFile("rooms.json")
+	itembrush = 2
 	while True:
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		game.clearLayer(ROOMLAYER)
@@ -159,6 +168,8 @@ def runEditor():
 				roomIndex = 0
 			currentRoom = allrooms[roomIndex]
 			roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
+			roomItems = game.ROOMTILEDATA[currentRoom]["items"]
+			roomItemCoordinates = game.ROOMTILEDATA[currentRoom]["itemCoordinates"]
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
@@ -172,6 +183,11 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
+		elif (keys[pg.K_g] and can_pressbutton):
+			current_tool = "g"
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using ITEMPAINT"), game.BLUE)
 		elif (keys[pg.K_r] and can_pressbutton):
 			current_tool = "r"
 			can_pressbutton = False
@@ -185,6 +201,8 @@ def runEditor():
 		elif (keys[pg.K_s] and can_pressbutton):
 			for row in range(15):
 				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
+			allroomData["rooms"][currentRoom]["items"] = roomItems
+			allroomData["rooms"][currentRoom]["itemCoordinates"] = roomItemCoordinates
 			with open('rooms.json', 'w') as roomFile:
 				json.dump(allroomData, roomFile, indent=2)
 			saveText, saveTextRect = game.createText((1000, 20), 2, ("saved as "+currentRoom+"!"), game.BRIGHTYELLOW)
@@ -241,15 +259,17 @@ def runEditor():
 		if (clicked):
 			if (mouseRect.y > 48):
 				if (current_tool == "i"):
-					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush, currentBrushIndex)
+					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
 					currentBrushIndex = ACCEPTED_TILES.index(brush)
 					#print(currentBrushIndex)
 				elif (current_tool == "p" or current_tool == "e"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush)
+				elif (current_tool == "g"):
+					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, tileBoxList[mouseRect.collidelist(tileBoxList)].y//48, brush, itembrush=itembrush)
 			else:
 				if (current_tool == "i"):
 					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
-				elif (current_tool == "p" or current_tool == "e"):
+				elif (current_tool == "p" or current_tool == "e" or current_tool == "g"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush)
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		if (display_saveText):
