@@ -47,8 +47,9 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b",
 			brush = roomLayout[tileY][tileX]
 			return brush
 		elif (command == "r"):
-			brush = tileOption
-			return brush
+			if (not itemVersion):
+				brush = tileOption
+				return brush
 		elif (command == "e"):
 			if (not itemVersion):
 				changeAt((tileY, tileX), " ")
@@ -220,18 +221,28 @@ def runEditor():
 			pg.time.set_timer(SAVECOOLDOWN, 1000, 1)
 			game.SFX["closeMenu"].play()
 		if (keys[pg.K_UP] and can_pressbutton and current_tool == "r"):
-			currentBrushIndex += 1
-			if (currentBrushIndex > len(ACCEPTED_TILES)):
-				currentBrushIndex = 0
-			brush = ACCEPTED_TILES[currentBrushIndex]
+			if (not itemVer):
+				currentBrushIndex += 1
+				if (currentBrushIndex > len(ACCEPTED_TILES)-1):
+					currentBrushIndex = 0
+				brush = ACCEPTED_TILES[currentBrushIndex]
+			else:
+				itembrush += 1
+				if (itembrush > len(game.ITEMDATA["ITEM TYPES"])-1):
+					itembrush = 0
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
 		if (keys[pg.K_DOWN] and can_pressbutton and current_tool == "r"):
-			currentBrushIndex -= 1
-			if (currentBrushIndex < 0):
-				currentBrushIndex = len(ACCEPTED_TILES)-1
-			brush = ACCEPTED_TILES[currentBrushIndex]
+			if (not itemVer):
+				currentBrushIndex -= 1
+				if (currentBrushIndex < 0):
+					currentBrushIndex = len(ACCEPTED_TILES) - 1
+				brush = ACCEPTED_TILES[currentBrushIndex]
+			else:
+				itembrush -= 1
+				if (itembrush < 0):
+					itembrush = len(game.ITEMDATA["ITEM TYPES"]) - 1
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
