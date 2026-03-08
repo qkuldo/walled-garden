@@ -136,6 +136,7 @@ def runEditor():
 			findoutX += 48
 	current_tool = "p"
 	currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
+	currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
 	saveText, saveTextRect = game.createText((50, 20), 2, "saved!", game.BRIGHTYELLOW)
 	currentBrushIndex = 0
 	brush = ACCEPTED_TILES[currentBrushIndex]
@@ -195,6 +196,10 @@ def runEditor():
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
 		elif (keys[pg.K_x] and can_pressbutton):
 			itemVer = not itemVer
+			if (itemVer):
+				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("ITEM MODE"), game.BRIGHTYELLOW)
+			else:
+				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_r] and can_pressbutton):
@@ -294,6 +299,7 @@ def runEditor():
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
 		if (display_saveText):
 			EDITORHUDLAYER.blit(saveText, saveTextRect)
+		EDITORHUDLAYER.blit(currentModeText, currentModeText_Rect)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
 		EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
