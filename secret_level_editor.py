@@ -238,6 +238,18 @@ def runEditor():
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 			roomIndex = allroomData["roomList"].index(currentRoom)
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+		elif (keys[pg.K_d] and can_pressbutton):
+			if (len(allroomData["rooms"]) > 1):
+				allroomData["rooms"].pop(currentRoom)
+				allroomData["roomList"].remove(currentRoom)
+				roomIndex -= 1
+				currentRoom = allroomData["roomList"][roomIndex]
+				currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+				roomLayout = list(allroomData["rooms"][currentRoom].values())[3:18]
+			else:
+				game.SFX["openMenu"].play()
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_i] and can_pressbutton):
 			current_tool = "i"
 			can_pressbutton = False
