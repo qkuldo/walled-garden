@@ -9,7 +9,6 @@ alphabet = "abcdefghijklmnopqrstuvwxyz"
 ANIMATED = "f"
 game.readAllJsonData()
 allrooms = game.readJsonFile("rooms.json")["roomList"]
-commandList = ["[p]: Paint Tile", "[q]: Change Tile Brush", "[i]: Pick Tile", "[e]: exit"]
 commandActivators = ["p", "q","e","i"]
 brush = "a"
 currentRoom = "test"
@@ -110,6 +109,7 @@ def runEditor():
 	global brush
 	global roomItems
 	global roomItemCoordinates
+	commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[h]: Toggle this Help Menu"]
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
@@ -138,6 +138,7 @@ def runEditor():
 	currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
 	currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
 	saveText, saveTextRect = game.createText((50, 20), 2, "saved!", game.BRIGHTYELLOW)
+	helpText, helpText_Rect = game.createText((1100, 20), 2, ("[c]:aaaaaaaaa"), game.ORANGE)
 	currentBrushIndex = 0
 	brush = ACCEPTED_TILES[currentBrushIndex]
 	extras = pg.image.load("assets/extras.png").convert_alpha()
@@ -147,7 +148,10 @@ def runEditor():
 	allroomData = game.readJsonFile("rooms.json")
 	itembrush = 2
 	itemVer = False
+	helpMenu = True
 	while True:
+		helpMenu_index = 0
+		helpMenu_drawy = 20
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		game.clearLayer(ROOMLAYER)
 		game.clearLayer(EDITORHUDLAYER)
@@ -184,6 +188,10 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+		elif (keys[pg.K_h] and can_pressbutton):
+			helpMenu = not helpMenu
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_i] and can_pressbutton):
 			current_tool = "i"
 			can_pressbutton = False
@@ -198,8 +206,10 @@ def runEditor():
 			itemVer = not itemVer
 			if (itemVer):
 				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("ITEM MODE"), game.BRIGHTYELLOW)
+				commandList = ["[b]: Paint Item", "[q]: Change Item Brush", "[i]: Itempicker",  "[l]: Switch room","[x]: Switch to Tile Mode","[e]: Erase Item","[r]: Change Item with up/down arrow keys","[s]: Save Room","[h]: Toggle this Help Menu"]
 			else:
 				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
+				commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[h]: Toggle this Help Menu"]
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_r] and can_pressbutton):
@@ -301,6 +311,18 @@ def runEditor():
 			EDITORHUDLAYER.blit(saveText, saveTextRect)
 		EDITORHUDLAYER.blit(currentModeText, currentModeText_Rect)
 		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
+		if (helpMenu):
+			for text in commandList:
+				helpText, helpText_Rect = game.createText((1100, helpMenu_drawy), 2, text, game.ORANGE)
+				helpMenu_index += 1
+				helpMenu_drawy += 20
+				helpText_Rect.midright = (game.SCREENWIDTH,helpText_Rect.midright[1])
+				EDITORHUDLAYER.blit(helpText, helpText_Rect)
+		else:
+			#helpText text is now equal to the "toggle this help menu" element in commandList
+			helpText, helpText_Rect = game.createText((1100, helpMenu_drawy), 2, commandList[-1], game.ORANGE)
+			helpText_Rect.midright = (game.SCREENWIDTH,helpText_Rect.midright[1])
+			EDITORHUDLAYER.blit(helpText, helpText_Rect)
 		EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
 		game.screen.blit(EDITORHUDLAYER, (0, 0))
