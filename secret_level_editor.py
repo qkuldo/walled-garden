@@ -2,19 +2,21 @@ import game
 import sys
 import pygame as pg
 import modules
+import random
 import json
 ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^@"
 WALL_LETTERS = "abde"
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 ANIMATED = "f"
 game.readAllJsonData()
-allrooms = game.readJsonFile("rooms.json")["roomList"]
 commandActivators = ["p", "q","e","i"]
 brush = "a"
 currentRoom = "test"
-roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
-roomItems = game.ROOMTILEDATA[currentRoom]["items"]
-roomItemCoordinates = game.ROOMTILEDATA[currentRoom]["itemCoordinates"]
+allroomData = game.readJsonFile("rooms.json")
+roomLayout = list(allroomData["rooms"][currentRoom].values())[3:18]
+roomItems = allroomData["rooms"][currentRoom]["items"]
+roomItemCoordinates = allroomData["rooms"][currentRoom]["itemCoordinates"]
+alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 def levelGet():
 	for tile in roomLayout:
@@ -60,16 +62,16 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b",
 		return 1
 
 def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
+	global allroomData
 	"""extraView parameter controls what extra information can be displayed with tiles
 	extraView = 0 means that all tiles will be displayed except for the @ tile(just like normal gameplay)
 	extraView = 1 means that @ tile will be displayed along with all tiles
 	extraView = 2 means that @ tile will be displayed, wall indicators
 	"""
-	alphabet = "abcdefghijklmnopqrstuvwxyz"
 	wallLetters = "abde"
 	ANIMATED = "f"
-	wallSet = game.ROOMTILEDATA[currentRoom]["wall set"]
-	propSet = game.ROOMTILEDATA[currentRoom]["prop set"]
+	wallSet = allroomData["rooms"][currentRoom]["wall set"]
+	propSet = allroomData["rooms"][currentRoom]["prop set"]
 	drawx, drawy = (0, 0)
 	extras = pg.image.load("assets/extras.png").convert_alpha()
 	extras = modules.sheets.Spritesheet(extras,16,16)
@@ -143,7 +145,7 @@ def runEditor():
 	display_saveText = False
 	pg.time.set_timer(ANIMATIONSWITCHEVENT, 360)
 	roomFrame = 0
-	currentRoom = allrooms[0]
+	currentRoom = allroomData["roomList"][0]
 	clicked = False
 	tileCoordinatesX = list(range(0, 28))
 	tileCoordinatesY = list(range(0, 15))
@@ -167,9 +169,8 @@ def runEditor():
 	brush = ACCEPTED_TILES[currentBrushIndex]
 	extras = pg.image.load("assets/extras.png").convert_alpha()
 	extras = modules.sheets.Spritesheet(extras,16,16)
-	wallSet = game.ROOMTILEDATA[currentRoom]["wall set"]
-	propSet = game.ROOMTILEDATA[currentRoom]["prop set"]
-	allroomData = game.readJsonFile("rooms.json")
+	wallSet = allroomData["rooms"][currentRoom]["wall set"]
+	propSet = allroomData["rooms"][currentRoom]["prop set"]
 	itembrush = 2
 	itemVer = False
 	helpMenu = True
@@ -204,18 +205,38 @@ def runEditor():
 		keys = pg.key.get_pressed()
 		if (keys[pg.K_l] and can_pressbutton):
 			roomIndex += 1
-			if (roomIndex > len(allrooms)-1):
+			if (roomIndex > len(allroomData["roomList"])-1):
 				roomIndex = 0
-			currentRoom = allrooms[roomIndex]
-			roomLayout = list(game.ROOMTILEDATA[currentRoom].values())[3:18]
-			roomItems = game.ROOMTILEDATA[currentRoom]["items"]
-			roomItemCoordinates = game.ROOMTILEDATA[currentRoom]["itemCoordinates"]
+			currentRoom = allroomData["roomList"][roomIndex]
+			roomLayout = list(allroomData["rooms"][currentRoom].values())[3:18]
+			roomItems = allroomData["rooms"][currentRoom]["items"]
+			roomItemCoordinates = allroomData["rooms"][currentRoom]["itemCoordinates"]
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 		elif (keys[pg.K_h] and can_pressbutton and hudView):
 			helpMenu = not helpMenu
 			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+		elif (keys[pg.K_n] and can_pressbutton):
+			can_pressbutton = False
+			roomLayout = []
+			for row in range(15):
+				roomLayout.append("                           ")
+			roomItems = []
+			roomItemCoordinates = []
+			currentRoom = "".join(random.choices(alphabet, k=10))
+			allroomData["rooms"][currentRoom] = {}
+			allroomData["rooms"][currentRoom]["wall set"] = 0
+			allroomData["rooms"][currentRoom]["prop set"] = 0
+			allroomData["rooms"][currentRoom]["theme"] = game.DARKBLUE
+			for row in range(15):
+				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
+			allroomData["rooms"][currentRoom]["items"] = roomItems
+			allroomData["rooms"][currentRoom]["itemCoordinates"] = roomItemCoordinates
+			allroomData["roomList"].append(currentRoom)
+			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+			roomIndex = allroomData["roomList"].index(currentRoom)
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_i] and can_pressbutton):
 			current_tool = "i"
