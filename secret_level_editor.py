@@ -59,14 +59,23 @@ def recieveInput(command, givenX = 0, givenY = 0, brush = "a", tileOption = "b",
 	else:
 		return 1
 
-def customRoomRenderer(tileLayer, roomLayout, frame):
+def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
+	"""extraView parameter controls what extra information can be displayed with tiles
+	extraView = 0 means that all tiles will be displayed except for the @ tile(just like normal gameplay)
+	extraView = 1 means that @ tile will be displayed along with all tiles
+	extraView = 2 means that @ tile will be displayed, wall indicators
+	"""
 	alphabet = "abcdefghijklmnopqrstuvwxyz"
+	wallLetters = "abde"
 	ANIMATED = "f"
 	wallSet = game.ROOMTILEDATA[currentRoom]["wall set"]
 	propSet = game.ROOMTILEDATA[currentRoom]["prop set"]
 	drawx, drawy = (0, 0)
 	extras = pg.image.load("assets/extras.png").convert_alpha()
 	extras = modules.sheets.Spritesheet(extras,16,16)
+	wallDisplay = pg.Surface((48,48))
+	wallDisplay.fill(game.ORANGE)
+	wallDisplay.set_alpha(100)
 	for row in roomLayout:
 		for column in row:
 			if ((not column == " ")):
@@ -74,23 +83,38 @@ def customRoomRenderer(tileLayer, roomLayout, frame):
 					tileLayer.blit(pg.transform.scale(game.proptileSpritesheets[propSet].load_frame(int(column)), (48,48)), (drawx, drawy))
 				elif (column == "#"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(0), (48,48)), (drawx, drawy))
+					if (extraView == 2):
+						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "_"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(1), (48,48)), (drawx, drawy))
+					if (extraView == 2):
+						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "-"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(2), (48,48)), (drawx, drawy))
+					if (extraView == 2):
+						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "+"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(3), (48,48)), (drawx, drawy))
+					if (extraView == 2):
+						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "="):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(4), (48,48)), (drawx, drawy))
+					if (extraView == 2):
+						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "^"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), (drawx, drawy))
+					if (extraView == 2):
+						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "@"):
-					tileLayer.blit(pg.transform.scale(playerAsset.load_frame(0), (48,48)), (drawx, drawy))
+					if (extraView > 0):
+						tileLayer.blit(pg.transform.scale(playerAsset.load_frame(0), (48,48)), (drawx, drawy))
 				elif (column in alphabet):
 					if (column in ANIMATED):
 						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column), frame), (48,48)), (drawx, drawy))
 					else:
 						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column)), (48,48)), (drawx, drawy))
+					if (column in wallLetters and extraView == 2):
+						tileLayer.blit(wallDisplay, (drawx, drawy))
 				else:
 					tileLayer.blit(pg.transform.scale(game.MISSINGTEXTURE, (48,48)), (drawx, drawy))
 			drawx += 48
@@ -109,7 +133,7 @@ def runEditor():
 	global brush
 	global roomItems
 	global roomItemCoordinates
-	commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[h]: Toggle this Help Menu"]
+	commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[h]: Toggle this Help Menu"]
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
@@ -149,6 +173,7 @@ def runEditor():
 	itembrush = 2
 	itemVer = False
 	helpMenu = True
+	hudView = 1
 	while True:
 		helpMenu_index = 0
 		helpMenu_drawy = 20
@@ -188,7 +213,7 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
-		elif (keys[pg.K_h] and can_pressbutton):
+		elif (keys[pg.K_h] and can_pressbutton and hudView):
 			helpMenu = not helpMenu
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
@@ -206,10 +231,16 @@ def runEditor():
 			itemVer = not itemVer
 			if (itemVer):
 				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("ITEM MODE"), game.BRIGHTYELLOW)
-				commandList = ["[b]: Paint Item", "[q]: Change Item Brush", "[i]: Itempicker",  "[l]: Switch room","[x]: Switch to Tile Mode","[e]: Erase Item","[r]: Change Item with up/down arrow keys","[s]: Save Room","[h]: Toggle this Help Menu"]
+				commandList = ["[b]: Paint Item", "[q]: Change Item Brush", "[i]: Itempicker",  "[l]: Switch room","[x]: Switch to Tile Mode","[e]: Erase Item","[r]: Change Item with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[h]: Toggle this Help Menu"]
 			else:
 				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
-				commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[h]: Toggle this Help Menu"]
+				commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[h]: Toggle this Help Menu"]
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+		elif (keys[pg.K_v] and can_pressbutton):
+			hudView += 1
+			if (hudView > 2):
+				hudView = 0
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_r] and can_pressbutton):
@@ -306,7 +337,7 @@ def runEditor():
 					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush, itembrush=itembrush, itemVersion=itemVer)
 				elif (current_tool == "p" or current_tool == "e" or current_tool == "g"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush, itembrush=itembrush, itemVersion=itemVer)
-		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame)
+		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
 		if (display_saveText):
 			EDITORHUDLAYER.blit(saveText, saveTextRect)
 		EDITORHUDLAYER.blit(currentModeText, currentModeText_Rect)
@@ -325,7 +356,8 @@ def runEditor():
 			EDITORHUDLAYER.blit(helpText, helpText_Rect)
 		EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
-		game.screen.blit(EDITORHUDLAYER, (0, 0))
+		if (hudView):
+			game.screen.blit(EDITORHUDLAYER, (0, 0))
 		if (not clicked):
 			game.screen.blit(game.CURSOR, pg.mouse.get_pos())
 		else:
