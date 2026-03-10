@@ -461,7 +461,8 @@ def game():
 			},
 			"visible":True,
 			"hit animation":False,
-			"apply knockback":False
+			"apply knockback":False,
+			"reverse knockback":False
 		})
 	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0})
 	#rect creation
@@ -554,6 +555,10 @@ def game():
 				else:
 					#print("fail")
 					SFX["failedSlash"].play()
+					Player.customAttributes["apply knockback"] = True
+					Player.customAttributes["reverse knockback"] = True
+					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
+					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 					if (debugMode == 2):
 						test_text, test_text_rect = createText((100, 20), text = "fail", color=BRIGHTYELLOW)
 				attack_qte_success = False
@@ -566,6 +571,7 @@ def game():
 			elif (event.type == PLAYER_HITSTOP):
 				Player.customAttributes["hit animation"] = False
 				Player.customAttributes["apply knockback"] = False
+				Player.customAttributes["reverse knockback"] = False
 			elif (event.type == PLAYER_HITSTART):
 				Player.customAttributes["hit animation"] = True
 		#detect key presses
@@ -690,8 +696,12 @@ def game():
 
 		if (Player.customAttributes["apply knockback"] and not Player.customAttributes["hit animation"]):
 			directional_vector = goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
-			Player.coordinates[0] += directional_vector[0]
-			Player.coordinates[1] += directional_vector[1]
+			if (Player.customAttributes["reverse knockback"]):
+				Player.coordinates[0] -= directional_vector[0]
+				Player.coordinates[1] -= directional_vector[1]
+			else:
+				Player.coordinates[0] += directional_vector[0]
+				Player.coordinates[1] += directional_vector[1]
 
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
