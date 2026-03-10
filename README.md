@@ -26,8 +26,11 @@ here's a to-do list of tasks:
 | Player Attack |  :ballot_box_with_check: |
 | Player Health System |  :ballot_box_with_check: |
 | Inventory |  :ballot_box_with_check: |
+| Room Editor |  :ballot_box_with_check: |
+| Room Exits and Entrances | :x: |
 | Enemies | :x: |
 | Game Over Screen | :x: |
+| Player Stats | :x: |
 ## Gameplay Footage
 here's some footage from development
 ![alpha gameplay](assets/externalAssets/alpha-footage.gif)
