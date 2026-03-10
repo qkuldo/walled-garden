@@ -462,7 +462,8 @@ def game():
 			"visible":True,
 			"hit animation":False,
 			"apply knockback":False,
-			"reverse knockback":False
+			"reverse knockback":False,
+			"attempted qte":False
 		})
 	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0})
 	#rect creation
@@ -552,7 +553,7 @@ def game():
 					pg.time.set_timer(ENDSWORD_PLAYERMOVEMENT, 100, 1)
 					playerSword.customAttributes["visible"] = True
 					playerSword.customAttributes["moving"] = True
-				else:
+				elif (Player.customAttributes["attempted qte"] and not attack_qte_success):
 					#print("fail")
 					SFX["failedSlash"].play()
 					Player.customAttributes["apply knockback"] = True
@@ -564,6 +565,7 @@ def game():
 				attack_qte_success = False
 				attack_qte_ongoing_attack = False
 				attack_qte_active = False
+				Player.customAttributes["attempted qte"] = False
 			elif (event.type == ENDSWORD_VISIBILITY):
 				playerSword.customAttributes["visible"] = False
 			elif (event.type == ENDSWORD_PLAYERMOVEMENT):
@@ -633,11 +635,13 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 				playerSword.customAttributes["offset"] = 40
+				Player.customAttributes["attempted qte"] = True
 				playerSword.angle = face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
 				attack_qte_success = False
 				on_attack_button_cooldown = True
 				timedRect_fill = False
+				Player.customAttributes["attempted qte"] = True
 				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
