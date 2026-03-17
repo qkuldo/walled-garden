@@ -296,10 +296,10 @@ def hitboxInbound(rect):
 	else:
 		return False
 
-def complexMove(Sprite, movement_line,operation,currentRoomData):
-	collideChecker = Sprite.siMove(movement_line,operation)
+def complexMove(Sprite, movement_line,operation,currentRoomData, divider=1):
+	collideChecker = Sprite.siMove(movement_line,operation, divider)
 	if (collideChecker.collidelist(currentRoomData["collisionBoxes"]) == -1 and hitboxInbound(collideChecker)):
-		Sprite.move(movement_line,operation)
+		Sprite.move(movement_line,operation,divider)
 
 def animateLoop(Sprite, startFrame, endFrame):
 	#loops animation on certain start and end frames
@@ -463,7 +463,8 @@ def game():
 			"hit animation":False,
 			"apply knockback":False,
 			"reverse knockback":False,
-			"attempted qte":False
+			"attempted qte":False,
+			"speed divider":1
 		})
 	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0})
 	#rect creation
@@ -544,6 +545,7 @@ def game():
 				attack_qte_active = True
 				pg.time.set_timer(ATTACK_QTE_END, 1000, 1)
 			elif (event.type == ATTACK_QTE_END):
+				Player.customAttributes["speed divider"] = 1
 				if (attack_qte_success):
 					if (debugMode == 2):
 						test_text, test_text_rect = createText((100, 20), text = "success", color=BRIGHTYELLOW)
@@ -600,33 +602,33 @@ def game():
 				debugMode = 0
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"])):
-			if (not attack_qte_ongoing_attack):
-				if (keys[pg.K_w] or keys[pg.K_UP]):
-					complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData)
-					Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
-					#Player.angle = DIRECTION_ANGLES["up"]
-				elif (keys[pg.K_s] or keys[pg.K_DOWN]):
-					complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData)
-					Player.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
-					#Player.angle = DIRECTION_ANGLES["down"]
-				if (keys[pg.K_a] or keys[pg.K_LEFT]):
-					complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData)
-					Player.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
-					#Player.angle = DIRECTION_ANGLES["left"]
-				elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
-					complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData)
-					Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
-					#Player.angle = DIRECTION_ANGLES["right"]
-				if (keys[pg.K_LSHIFT]):
-					goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
-					target_angle += 4
-					TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
-					TARGETRECT.center = Player.customAttributes["target pos"]
-					INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
+			if (keys[pg.K_w] or keys[pg.K_UP]):
+				complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
+				Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
+				#Player.angle = DIRECTION_ANGLES["up"]
+			elif (keys[pg.K_s] or keys[pg.K_DOWN]):
+				complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
+				Player.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
+				#Player.angle = DIRECTION_ANGLES["down"]
+			if (keys[pg.K_a] or keys[pg.K_LEFT]):
+				complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
+				Player.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
+				#Player.angle = DIRECTION_ANGLES["left"]
+			elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
+				complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
+				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
+				#Player.angle = DIRECTION_ANGLES["right"]
+			if (keys[pg.K_LSHIFT]):
+				goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
+				target_angle += 4
+				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
+				TARGETRECT.center = Player.customAttributes["target pos"]
+				INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
 			if (keys[pg.K_LSHIFT] and keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None):
 				attack_qte_ongoing_attack = True
 				attack_qte_success = False
 				timedRect_fill = True
+				Player.customAttributes["speed divider"] = 3
 				pg.time.set_timer(ATTACK_QTE_START, 1000, 1)
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active):
 				attack_qte_success = True
@@ -647,6 +649,8 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 		#update stuff
+		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
+			goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 		if (switchFrame and (not specialPickupVisible)):
 			if (Player.customAttributes["hit animation"]):
 				Player.customAttributes["visible"] = not Player.customAttributes["visible"]
@@ -802,6 +806,12 @@ def game():
 					else:
 						SFX["itemCollect"].play()
 
+		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
+			target_angle += 2
+			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
+			TARGETRECT.center = Player.customAttributes["target pos"]
+			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
+
 		if (Player.customAttributes["visible"]):
 			if (not specialPickupVisible):
 				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
@@ -816,11 +826,6 @@ def game():
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
 			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle)[0]-playerSword.customAttributes["offset"], Player.hitbox.center[1]-goto_angle(35,playerSword.angle)[1]-(TILESIZE/5)))
 
-		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
-			target_angle += 2
-			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
-			TARGETRECT.center = Player.customAttributes["target pos"]
-			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
 
 		if (specialPickupVisible):
 			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
