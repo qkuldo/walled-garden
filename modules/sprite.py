@@ -13,30 +13,30 @@ class Sprite:
 		self.hitbox = pg.Rect(hitboxLocation,hitboxScale)
 		self.moved = False
 		self.angle = angle
-	def siMove(self,movement_line,operation):
+	def siMove(self,movement_line,operation, divider=1):
 		#to check for collisions
 		dummy = self.createDummy()
 		if (operation == 1):
 			if (movement_line == 1):
-				dummy.y += self.speed
+				dummy.y += self.speed/divider
 			elif (movement_line == 0):
-				dummy.x += self.speed
+				dummy.x += self.speed/divider
 		elif (operation == -1):
 			if (movement_line == 1):
-				dummy.y -= self.speed
+				dummy.y -= self.speed/divider
 			elif (movement_line == 0):
-				dummy.x -= self.speed
+				dummy.x -= self.speed/divider
 		return dummy
 	def createDummy(self):
 		#to check for collisions for non-default movement
 		dummy = self.hitbox.copy()
 		return dummy
-	def move(self, movement_line, operation):
+	def move(self, movement_line, operation, divider=1):
 		#movement_line is 0 for x, 1 for y, operation is 1 for positive, -1 for negative
 		if (operation == 1):
-			self.coordinates[movement_line] += self.speed
+			self.coordinates[movement_line] += self.speed/divider
 		elif (operation == -1):
-			self.coordinates[movement_line] -= self.speed
+			self.coordinates[movement_line] -= self.speed/divider
 		self.moved = True
 	def draw(self, frame, layer, offset = (0,0), frameRow = 0, angleOffset = 0,flipX=False, flipY=False):
 		drawCoordinates = (self.coordinates[0]+offset[0],self.coordinates[1]+offset[1])
