@@ -54,7 +54,7 @@
           11
         ]
       ],
-      "exits": []
+      "exits": [0]
     },
     "spawnSpot": {
       "wall set": 0,
@@ -88,11 +88,17 @@
           13
         ]
       ],
-      "exits": []
+      "exits": [0]
     }
   },
   "roomList": [
     "test",
     "spawnSpot"
+  ],
+  "exitData": [
+    {
+      "spawnSpot":[14,0],
+      "test":[15,0]
+    }
   ]
 }

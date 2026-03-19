@@ -79,8 +79,9 @@ def readJsonFile(path):
 	return data
 
 def readAllJsonData():
-	global DIALOGDATA, ITEMDATA, ROOMTILEDATA
+	global DIALOGDATA, ITEMDATA, ROOMTILEDATA, EXITDATA
 	ROOMTILEDATA = readJsonFile("rooms.json")["rooms"]
+	EXITDATA = readJsonFile("rooms.json")["exitData"]
 	DIALOGDATA = readJsonFile("dialog.json")
 	ITEMDATA = readJsonFile("itemData.json")
 	assert len(ITEMDATA["ITEM TYPES"]) == len(ITEMDATA["ITEM ASSETS"]), "<qkuldo>there's an inequality in the itemData.json file between the item types and item assets.</qkuldo>"
@@ -126,6 +127,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 	drawx, drawy = 0, 0
 	playerSpawn = [0,0]
 	collisionBoxes = []
+	exits = []
 	items = []
 	for row in roomLayout:
 		for column in row:
@@ -170,6 +172,10 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 			itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
 			if (len(itemAssets) >= itemID):
 				addItem(items, itemID, itemCoordinate, itemAssets)
+		for exit in range(0, len(ROOMTILEDATA[roomToLoad]["exits"])):
+			exitID = ROOMTILEDATA[roomToLoad]["exits"][item]
+			exitCoordinate = findTilePixelLocation(EXITDATA[exit][roomToLoad][0],EXITDATA[exit][roomToLoad][0])
+			exits.append(pg.Rect(exitCoordinate,(TILESIZE,TILESIZE)))
 		currentRoomData = {
 			"wall set index":wallSet,
 			"prop set index":propSet,
@@ -178,6 +184,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 			"roomLayout":roomLayout,
 			"collisionBoxes":collisionBoxes,
 			"items":items,
+			"exits":exits
 		}
 		return currentRoomData
 
