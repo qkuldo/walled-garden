@@ -97,8 +97,9 @@
   ],
   "exitData": [
     {
-      "spawnSpot":[14,0],
-      "test":[15,0]
+      "spawnSpot":[0,14],
+      "test":[0,13],
+      "involved rooms":["spawnSpot","test"]
     }
   ]
 }
