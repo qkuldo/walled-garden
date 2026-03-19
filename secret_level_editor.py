@@ -171,6 +171,7 @@ def runEditor():
 	extras = modules.sheets.Spritesheet(extras,16,16)
 	wallSet = allroomData["rooms"][currentRoom]["wall set"]
 	propSet = allroomData["rooms"][currentRoom]["prop set"]
+	exits = allroomData["rooms"][currentRoom]["exits"]
 	itembrush = 2
 	itemVer = False
 	helpMenu = True
@@ -229,6 +230,7 @@ def runEditor():
 			allroomData["rooms"][currentRoom] = {}
 			allroomData["rooms"][currentRoom]["wall set"] = 0
 			allroomData["rooms"][currentRoom]["prop set"] = 0
+			allroomData["rooms"][currentRoom]["exits"] = []
 			allroomData["rooms"][currentRoom]["theme"] = game.DARKBLUE
 			for row in range(15):
 				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
