@@ -177,6 +177,8 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 				addItem(items, itemID, itemCoordinate, itemAssets)
 		for exit in range(0, len(ROOMTILEDATA[roomToLoad]["exits"])):
 			exitID = ROOMTILEDATA[roomToLoad]["exits"][exit]
+			assert exitID <= len(EXITDATA)-1, f"<qkuldo>searching for an exit({exitID}) that doesn't exist</qkuldo>"
+			assert roomToLoad in EXITDATA[exitID].keys(), f"<qkuldo>this exit({exitID}) is not related to this room({roomToLoad})</qkuldo>"
 			exitCoordinate = findTilePixelLocation(EXITDATA[exitID][roomToLoad][0],EXITDATA[exitID][roomToLoad][1])
 			exitTo = list(EXITDATA[exitID]["involved rooms"]).index(roomToLoad)
 			#below code switches exitTo from the index of the current room to the index of the next room
