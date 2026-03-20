@@ -375,7 +375,6 @@ def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDT
 			elif (abs(distance_fromTarget[1]) != distance_fromTarget[1]):
 				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
 	if (checkCollision):
-		assert len(collisionList) > 0, "<qkuldo>Cannot detect collisions with walls if there are no walls</qkuldo>"
 		spriteDummy = Sprite.createDummy()
 		spriteDummy.x += directional_vector[0]
 		spriteDummy.y += directional_vector[1]
