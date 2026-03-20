@@ -230,12 +230,12 @@ def runEditor():
 			allroomData["rooms"][currentRoom] = {}
 			allroomData["rooms"][currentRoom]["wall set"] = 0
 			allroomData["rooms"][currentRoom]["prop set"] = 0
-			allroomData["rooms"][currentRoom]["exits"] = []
 			allroomData["rooms"][currentRoom]["theme"] = game.DARKBLUE
 			for row in range(15):
 				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
 			allroomData["rooms"][currentRoom]["items"] = roomItems
 			allroomData["rooms"][currentRoom]["itemCoordinates"] = roomItemCoordinates
+			allroomData["rooms"][currentRoom]["exits"] = []
 			allroomData["roomList"].append(currentRoom)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 			roomIndex = allroomData["roomList"].index(currentRoom)
