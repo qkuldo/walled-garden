@@ -168,6 +168,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 		drawx = 0
 	if (loadAll):
 		exitReturns = []
+		inExit = []
 		for item in range(0, len(ROOMTILEDATA[roomToLoad]["items"])):
 			itemID = ROOMTILEDATA[roomToLoad]["items"][item]
 			itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
@@ -184,6 +185,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 				exitTo = 1
 			exitTo = EXITDATA[exitID]["involved rooms"][exitTo]
 			exitReturns.append(exitTo)
+			inExit.append(False)
 			exits.append(pg.Rect(exitCoordinate,(TILESIZE,TILESIZE)))
 		currentRoomData = {
 			"wall set index":wallSet,
@@ -194,7 +196,8 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 			"collisionBoxes":collisionBoxes,
 			"items":items,
 			"exits":exits,
-			"exit returns":exitReturns
+			"exit returns":exitReturns,
+			"contained exits":inExit
 		}
 		return currentRoomData
 
@@ -425,7 +428,6 @@ def game():
 	attack_qte_success = None
 	attack_qte_ongoing_attack = False
 	ATTACK_BUTTON_COOLDOWN = pg.event.custom_type()
-	EXITCOOLDOWN = pg.event.custom_type()
 	on_attack_button_cooldown = False
 	#define other variables
 	drawHud = False
@@ -453,7 +455,6 @@ def game():
 	target_angle = 0
 	roomFrame = 0
 	roomAccumulateFrames = 0
-	exitRoom = True
 	current_room = "spawnSpot"
 	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets)
 	#define sprites
@@ -597,8 +598,6 @@ def game():
 				Player.customAttributes["reverse knockback"] = False
 			elif (event.type == PLAYER_HITSTART):
 				Player.customAttributes["hit animation"] = True
-			elif (event.type == EXITCOOLDOWN):
-				exitRoom = True
 		#detect key presses
 		keys = pg.key.get_pressed()
 		if (drawHud):
@@ -828,11 +827,15 @@ def game():
 						SFX["itemCollect"].play()
 
 		for exit in currentRoomData["exits"]:
-			if (exit.colliderect(Player.hitbox) and keys[pg.K_SPACE] and exitRoom):
+			if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
 				current_room = currentRoomData["exit returns"][currentRoomData["exits"].index(exit)]
 				currentRoomData = loadRoom(current_room,TILELAYER,itemAssets)
-				exitRoom = False
-				pg.time.set_timer(EXITCOOLDOWN, 800, 1)
+				for exitIndex in range(0, len(currentRoomData["exits"])):
+					if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
+						currentRoomData["contained exits"][exitIndex] = True
+				break
+			elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
+				currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
 
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
 			target_angle += 2
