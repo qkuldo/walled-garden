@@ -169,6 +169,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 	if (loadAll):
 		exitReturns = []
 		inExit = []
+		toCoordinates = []
 		for item in range(0, len(ROOMTILEDATA[roomToLoad]["items"])):
 			itemID = ROOMTILEDATA[roomToLoad]["items"][item]
 			itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
@@ -184,6 +185,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 			else:
 				exitTo = 1
 			exitTo = EXITDATA[exitID]["involved rooms"][exitTo]
+			toCoordinates.append(EXITDATA[exitID][roomToLoad])
 			exitReturns.append(exitTo)
 			inExit.append(False)
 			exits.append(pg.Rect(exitCoordinate,(TILESIZE,TILESIZE)))
@@ -197,7 +199,8 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 			"items":items,
 			"exits":exits,
 			"exit returns":exitReturns,
-			"contained exits":inExit
+			"contained exits":inExit,
+			"exit tp coordinates":toCoordinates
 		}
 		return currentRoomData
 
@@ -829,7 +832,10 @@ def game():
 		for exit in currentRoomData["exits"]:
 			if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
 				current_room = currentRoomData["exit returns"][currentRoomData["exits"].index(exit)]
+				givenExitData = currentRoomData["exits"][:]
 				currentRoomData = loadRoom(current_room,TILELAYER,itemAssets)
+				Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
+				Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 				for exitIndex in range(0, len(currentRoomData["exits"])):
 					if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
 						currentRoomData["contained exits"][exitIndex] = True

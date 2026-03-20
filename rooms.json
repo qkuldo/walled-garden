@@ -90,9 +90,7 @@
           13
         ]
       ],
-      "exits": [
-        0
-      ]
+      "exits": [1]
     },
     "open field ramp": {
       "wall set": 0,
@@ -118,17 +116,18 @@
       "13": "                           ",
       "14": "                           ",
       "items": [],
-      "itemCoordinates": []
-      "exits": [],
+      "itemCoordinates": [],
+      "exits": [1]
     }
   },
   "roomList": [
     "test",
     "spawnSpot",
-    "fjbrtsdnmh"
+    "open field ramp"
   ],
   "exitData": [
     {
+      "_note":"test exit",
       "spawnSpot": [
         0,
         14
@@ -140,6 +139,20 @@
       "involved rooms": [
         "spawnSpot",
         "test"
+      ]
+    },
+    {
+      "spawnSpot": [
+        10,
+        14
+      ],
+      "open field ramp": [
+        10,
+        0
+      ],
+      "involved rooms": [
+        "spawnSpot",
+        "open field ramp"
       ]
     }
   ]
