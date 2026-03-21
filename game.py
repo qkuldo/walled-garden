@@ -105,7 +105,7 @@ def goto_angle(velocity,angle):
 	direction = pg.Vector2(0, velocity).rotate(-angle)
 	return direction
 
-def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
+def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems=[]):
 	#loadRoom function needs only to be used when loading a new room
 	alphabet = "abcdefghijklmnopqrstuvwxyz"
 	wallLetters = "abde"
@@ -171,10 +171,11 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 		inExit = []
 		toCoordinates = []
 		for item in range(0, len(ROOMTILEDATA[roomToLoad]["items"])):
-			itemID = ROOMTILEDATA[roomToLoad]["items"][item]
-			itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
-			if (len(itemAssets) >= itemID):
-				addItem(items, itemID, itemCoordinate, itemAssets)
+			if (not item in inactiveItems):
+				itemID = ROOMTILEDATA[roomToLoad]["items"][item]
+				itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
+				if (len(itemAssets) >= itemID):
+					addItem(items, itemID, itemCoordinate, itemAssets)
 		for exit in range(0, len(ROOMTILEDATA[roomToLoad]["exits"])):
 			exitID = ROOMTILEDATA[roomToLoad]["exits"][exit]
 			assert exitID <= len(EXITDATA)-1, f"<qkuldo>searching for an exit({exitID}) that doesn't exist</qkuldo>"
@@ -395,6 +396,13 @@ def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDT
 	else:
 		return directional_vector
 
+def unpack_nestedDict(inputArray, key):
+	"""returns a set with all the values with parameter 'key' in a nested array 'inputDict'"""
+	output = set()
+	for nestedDict in inputArray:
+		output.add(nestedDict[key])
+	return output
+
 def game():
 	#find and make assets
 	itemAssets = ITEMDATA["ITEM ASSETS"]
@@ -460,7 +468,19 @@ def game():
 	roomFrame = 0
 	roomAccumulateFrames = 0
 	current_room = "spawnSpot"
-	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets)
+	#cache stores data that should be saved
+	cache = {
+		"item inactivators":{}
+	}
+	#temp cache stores data only needed for the current session
+	temp_cache = {
+		"item timers":{}
+	}
+	if (not current_room in list(cache["item inactivators"].keys())):
+		cache["item inactivators"][current_room] = set()
+	if (not current_room in list(temp_cache["item timers"].keys())):
+		temp_cache["item timers"][current_room] = []
+	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 	#define sprites
 	#directionalFrames custom attribute is written as a list for compatibility with DIRECTION_IDS constant dict
 	Player = modules.interactables.Sprite(playerAsset,currentRoomData["playerSpawn"],5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
@@ -516,6 +536,7 @@ def game():
 		clearLayer(INFOLAYER)
 		clearLayer(DEBUGLAYER)
 		#set stuff
+		current_time = pg.time.get_ticks()
 		timedRect.bottomleft = Player.hitbox.topright
 		timedRectBG.bottomleft = Player.hitbox.topright
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
@@ -537,6 +558,8 @@ def game():
 
 		switchFrame = False
 		current_time = pg.time.get_ticks()
+		#cache important data
+		cache["player"] = Player.customAttributes
 		#handle events
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
@@ -800,7 +823,8 @@ def game():
 					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 
-		for item in currentRoomData["items"]:
+		for itemIndex in range(0, len(currentRoomData["items"])):
+			item = currentRoomData["items"][itemIndex]
 			if (item.customAttributes["active"]):
 				item.update()
 				if (switchFrame and item.customAttributes["oscillate"] == 0):
@@ -814,6 +838,14 @@ def game():
 				item.draw(0, SPRITELAYER, (0,item.customAttributes["fromGroundOffset"]))
 				if (item.hitbox.colliderect(Player.hitbox)):
 					item.customAttributes["active"] = False
+					if (ITEMDATA["RESPAWN RATES"][item.customAttributes["itemID"]] != -1):
+						temp_cache["item timers"][current_room].append({
+								"item index":itemIndex,
+								"time":ITEMDATA["RESPAWN RATES"][item.customAttributes["itemID"]],
+								"start time":pg.time.get_ticks()
+							})
+					else:
+						cache["item inactivators"][current_room].add(itemIndex)
 					if (item.customAttributes["itemID"] in Player.customAttributes["inventory"]):
 						Player.customAttributes["inventory"][item.customAttributes["itemID"]] += 1
 					else:
@@ -834,7 +866,11 @@ def game():
 			if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
 				current_room = currentRoomData["exit returns"][currentRoomData["exits"].index(exit)]
 				givenExitData = currentRoomData["exits"][:]
-				currentRoomData = loadRoom(current_room,TILELAYER,itemAssets)
+				if (not current_room in list(cache["item inactivators"].keys())):
+					cache["item inactivators"][current_room] = set()
+				if (not current_room in list(temp_cache["item timers"].keys())):
+					temp_cache["item timers"][current_room] = []
+				currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 				Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
 				Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 				for exitIndex in range(0, len(currentRoomData["exits"])):
@@ -843,6 +879,11 @@ def game():
 				break
 			elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
 				currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
+
+		for timer in temp_cache["item timers"][current_room]:
+			if (current_time-timer["start time"] >= timer["time"]):
+				temp_cache["item timers"][current_room].remove(timer)
+			continue
 
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
 			target_angle += 2
