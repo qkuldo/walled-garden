@@ -404,23 +404,29 @@ def unpack_nestedDict(inputArray, key):
 	return output
 
 
-def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGHT//2), mode=0, circleRadius=600, radiusDecrease=10):
+def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGHT//2), mode=0, circleRadius=600, radiusChange=10):
 	"""if mode is 0, this function causes a tunnel transition animation with the circle getting smaller, if mode is 1 the circle gets bigger"""
 	mask = initDrawLayer().convert_alpha()
 	END_TRANSITION = pg.event.custom_type()
 	pg.time.set_timer(END_TRANSITION, duration)
 	break_signal = False
-	masked = background.copy().convert_alpha()
+	if (mode == 1):
+		circleRadius = 0
 	while True:
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
 				terminate()
 			elif (event.type == END_TRANSITION):
 				break_signal = True
-		clearLayer(mask)
+		screen.fill("black")
 		mask.fill("black")
-		circleRadius -= radiusDecrease
-		pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
+		masked = background.copy().convert_alpha()
+		if (mode == 1):
+			circleRadius += radiusChange
+			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
+		else:
+			circleRadius -= radiusChange
+			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
 		masked.blit(mask)
 		screen.blit(masked)
 		pg.draw.circle(screen, (7,5,35), center, circleRadius+5, width=10)
@@ -901,8 +907,8 @@ def game():
 		if (not specialPickupVisible):
 			for exit in currentRoomData["exits"]:
 				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
-					PREVTILELAYER = TILELAYER.copy()
-					PREVTILELAYER.blit(SPRITELAYER, (0,0))
+					PREVCOMBINELAYER = TILELAYER.copy()
+					PREVCOMBINELAYER.blit(SPRITELAYER, (0,0))
 					current_room = currentRoomData["exit returns"][currentRoomData["exits"].index(exit)]
 					givenExitData = currentRoomData["exits"][:]
 					if (not current_room in list(cache["item inactivators"].keys())):
@@ -910,14 +916,18 @@ def game():
 					if (not current_room in list(temp_cache["item timers"].keys())):
 						temp_cache["item timers"][current_room] = []
 					transition = True
-					roomTransition(PREVTILELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusDecrease=15)
+					roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15)
 					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
 					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 					for exitIndex in range(0, len(currentRoomData["exits"])):
 						if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
 							currentRoomData["contained exits"][exitIndex] = True
-					clearLayer(TILELAYER)
+					CURRENTCOMBINELAYER = initDrawLayer().convert_alpha()
+					loadRoom(current_room,CURRENTCOMBINELAYER,itemAssets,False,roomFrame)
+					Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
+					CURRENTCOMBINELAYER.blit(SPRITELAYER, (0,0))
+					roomTransition(CURRENTCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15, mode=1)
 					loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
 					break
 				elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
@@ -933,7 +943,6 @@ def game():
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 			TARGETRECT.center = Player.customAttributes["target pos"]
 			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
-
 
 		if (playerSword.customAttributes["visible"]):
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
@@ -966,6 +975,8 @@ def game():
 		BASELAYER.blit(DEBUGLAYER, (0,0))
 		if ((not specialPickupVisible) and (not transition)):
 			screen.blit(BASELAYER, (0,0))
+		elif (transition):
+			pass
 		elif (specialPickupVisible):
 			CAMERALAYER.blit(pg.transform.scale(BASELAYER, (SCREENWIDTH, SCREENHEIGHT)), (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]))
 			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)).get_rect()
@@ -973,7 +984,7 @@ def game():
 			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)), CAMERA_ZOOMED_RECT)
 
 		if (keys[pg.K_o] and debugMode == 3):
-			roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusDecrease=15)
+			roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusChange=15)
 		if ((not specialPickupVisible) and (not clicked)):
 			screen.blit(CURSOR, pg.mouse.get_pos())
 		elif ((not specialPickupVisible) and clicked):
