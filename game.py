@@ -411,7 +411,10 @@ def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGH
 	pg.time.set_timer(END_TRANSITION, duration)
 	break_signal = False
 	if (mode == 1):
+		maxCircleRadius = circleRadius
 		circleRadius = 0
+	else:
+		maxCircleRadius = 0
 	while True:
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
@@ -420,14 +423,16 @@ def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGH
 				break_signal = True
 		screen.fill("black")
 		mask.fill("black")
-		masked = background.copy().convert_alpha()
-		if (mode == 1):
+		if (mode == 1 and circleRadius < maxCircleRadius):
+			masked = background.copy().convert_alpha()
 			circleRadius += radiusChange
 			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
-		else:
+			masked.blit(mask)
+		elif (mode == 0):
+			masked = background.copy().convert_alpha()
 			circleRadius -= radiusChange
 			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
-		masked.blit(mask)
+			masked.blit(mask)
 		screen.blit(masked)
 		pg.draw.circle(screen, (7,5,35), center, circleRadius+5, width=10)
 
@@ -572,7 +577,6 @@ def game():
 		timedRect.bottomleft = Player.hitbox.topright
 		timedRectBG.bottomleft = Player.hitbox.topright
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
-		transition = False
 
 		playerHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
@@ -915,8 +919,7 @@ def game():
 						cache["item inactivators"][current_room] = set()
 					if (not current_room in list(temp_cache["item timers"].keys())):
 						temp_cache["item timers"][current_room] = []
-					transition = True
-					roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15)
+					roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2000, circleRadius=300, radiusChange=15)
 					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
 					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
@@ -928,7 +931,8 @@ def game():
 					Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 					CURRENTCOMBINELAYER.blit(SPRITELAYER, (0,0))
 					roomTransition(CURRENTCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15, mode=1)
-					loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
+					clearLayer(TILELAYER)
+					clearLayer(SPRITELAYER)
 					break
 				elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
 					currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
@@ -973,10 +977,8 @@ def game():
 		if (drawHud):
 			BASELAYER.blit(HUDLAYER,(0,0))
 		BASELAYER.blit(DEBUGLAYER, (0,0))
-		if ((not specialPickupVisible) and (not transition)):
+		if ((not specialPickupVisible)):
 			screen.blit(BASELAYER, (0,0))
-		elif (transition):
-			pass
 		elif (specialPickupVisible):
 			CAMERALAYER.blit(pg.transform.scale(BASELAYER, (SCREENWIDTH, SCREENHEIGHT)), (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]))
 			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)).get_rect()
