@@ -423,6 +423,7 @@ def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGH
 		pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
 		masked.blit(mask)
 		screen.blit(masked)
+		pg.draw.circle(screen, (7,5,35), center, circleRadius+5, width=10)
 
 		pg.display.flip()
 		clock.tick(FPS)
@@ -888,26 +889,39 @@ def game():
 					else:
 						SFX["itemCollect"].play()
 
-		for exit in currentRoomData["exits"]:
-			if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
-				PREVTILELAYER = TILELAYER.copy()
-				current_room = currentRoomData["exit returns"][currentRoomData["exits"].index(exit)]
-				givenExitData = currentRoomData["exits"][:]
-				if (not current_room in list(cache["item inactivators"].keys())):
-					cache["item inactivators"][current_room] = set()
-				if (not current_room in list(temp_cache["item timers"].keys())):
-					temp_cache["item timers"][current_room] = []
-				transition = True
-				roomTransition(PREVTILELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusDecrease=15)
-				currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
-				Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
-				Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
-				for exitIndex in range(0, len(currentRoomData["exits"])):
-					if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
-						currentRoomData["contained exits"][exitIndex] = True
-				break
-			elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
-				currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
+		if (Player.customAttributes["visible"]):
+			if (not specialPickupVisible):
+				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
+				#if (playerSword.customAttributes["visible"]):
+				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
+				#else:
+				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
+			else:
+				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
+		if (not specialPickupVisible):
+			for exit in currentRoomData["exits"]:
+				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
+					PREVTILELAYER = TILELAYER.copy()
+					PREVTILELAYER.blit(SPRITELAYER, (0,0))
+					current_room = currentRoomData["exit returns"][currentRoomData["exits"].index(exit)]
+					givenExitData = currentRoomData["exits"][:]
+					if (not current_room in list(cache["item inactivators"].keys())):
+						cache["item inactivators"][current_room] = set()
+					if (not current_room in list(temp_cache["item timers"].keys())):
+						temp_cache["item timers"][current_room] = []
+					transition = True
+					roomTransition(PREVTILELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusDecrease=15)
+					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
+					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
+					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
+					for exitIndex in range(0, len(currentRoomData["exits"])):
+						if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
+							currentRoomData["contained exits"][exitIndex] = True
+					clearLayer(TILELAYER)
+					loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
+					break
+				elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
+					currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
 
 		for timer in temp_cache["item timers"][current_room]:
 			if (current_time-timer["start time"] >= timer["time"]):
@@ -920,15 +934,6 @@ def game():
 			TARGETRECT.center = Player.customAttributes["target pos"]
 			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
 
-		if (Player.customAttributes["visible"]):
-			if (not specialPickupVisible):
-				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
-				#if (playerSword.customAttributes["visible"]):
-				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
-				#else:
-				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
-			else:
-				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
 
 		if (playerSword.customAttributes["visible"]):
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
