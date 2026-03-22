@@ -933,6 +933,9 @@ def game():
 					roomTransition(CURRENTCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15, mode=1)
 					clearLayer(TILELAYER)
 					clearLayer(SPRITELAYER)
+					playerSword.customAttributes["moving"] = False
+					playerSword.customAttributes["visible"] = False
+					playerSword.customAttributes["offset"] = 0
 					break
 				elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
 					currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
