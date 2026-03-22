@@ -565,7 +565,7 @@ def game():
 		timedRect.bottomleft = Player.hitbox.topright
 		timedRectBG.bottomleft = Player.hitbox.topright
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
-		transition = 0
+		transition = False
 
 		playerHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
@@ -897,14 +897,14 @@ def game():
 					cache["item inactivators"][current_room] = set()
 				if (not current_room in list(temp_cache["item timers"].keys())):
 					temp_cache["item timers"][current_room] = []
+				transition = True
+				roomTransition(PREVTILELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusDecrease=15)
 				currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
-				roomTransition(PREVTILELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusDecrease=15)
 				Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
 				Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 				for exitIndex in range(0, len(currentRoomData["exits"])):
 					if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
 						currentRoomData["contained exits"][exitIndex] = True
-				transition = 1
 				break
 			elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
 				currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
@@ -959,16 +959,13 @@ def game():
 		if (drawHud):
 			BASELAYER.blit(HUDLAYER,(0,0))
 		BASELAYER.blit(DEBUGLAYER, (0,0))
-		if ((not specialPickupVisible)):
+		if ((not specialPickupVisible) and (not transition)):
 			screen.blit(BASELAYER, (0,0))
 		elif (specialPickupVisible):
 			CAMERALAYER.blit(pg.transform.scale(BASELAYER, (SCREENWIDTH, SCREENHEIGHT)), (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]))
 			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)).get_rect()
 			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
 			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)), CAMERA_ZOOMED_RECT)
-
-		if (transition == 2):
-			roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusDecrease=15)
 
 		if (keys[pg.K_o] and debugMode == 3):
 			roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusDecrease=15)
