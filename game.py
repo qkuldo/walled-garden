@@ -919,7 +919,7 @@ def game():
 						cache["item inactivators"][current_room] = set()
 					if (not current_room in list(temp_cache["item timers"].keys())):
 						temp_cache["item timers"][current_room] = []
-					roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2000, circleRadius=300, radiusChange=15)
+					roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2500, circleRadius=600, radiusChange=15)
 					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
 					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
