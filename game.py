@@ -939,6 +939,14 @@ def game():
 					playerSword.customAttributes["moving"] = False
 					playerSword.customAttributes["visible"] = False
 					playerSword.customAttributes["offset"] = 0
+					attack_qte_success = True
+					on_attack_button_cooldown = False
+					timedRect_fill = False
+					Player.customAttributes["attempted qte"] = True
+					timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
+					pg.time.set_timer(ATTACK_QTE_START, 0)
+					pg.time.set_timer(ATTACK_QTE_END, 1, 1)
+					pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 0)
 					break
 				elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
 					currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
