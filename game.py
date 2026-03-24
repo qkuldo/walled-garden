@@ -759,6 +759,7 @@ def game():
 					roomFrame = 0
 				roomAccumulateFrames = 0
 			clearLayer(TILELAYER)
+			TILELAYER.fill((0,0,15))
 			loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
 		elif (specialPickupVisible):
 			Player.customAttributes["currentFrame"] = 0
@@ -927,6 +928,7 @@ def game():
 						if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
 							currentRoomData["contained exits"][exitIndex] = True
 					CURRENTCOMBINELAYER = initDrawLayer().convert_alpha()
+					CURRENTCOMBINELAYER.fill((0,0,15))
 					loadRoom(current_room,CURRENTCOMBINELAYER,itemAssets,False,roomFrame)
 					Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 					CURRENTCOMBINELAYER.blit(SPRITELAYER, (0,0))
