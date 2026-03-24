@@ -372,6 +372,7 @@ def runEditor():
 					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush, itembrush=itembrush, itemVersion=itemVer)
 				elif (current_tool == "p" or current_tool == "e" or current_tool == "g"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush, itembrush=itembrush, itemVersion=itemVer)
+		ROOMLAYER.fill((0,0,15))
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
 		if (display_saveText):
 			EDITORHUDLAYER.blit(saveText, saveTextRect)

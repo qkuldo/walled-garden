@@ -90,7 +90,9 @@
           13
         ]
       ],
-      "exits": [1]
+      "exits": [
+        1
+      ]
     },
     "open field ramp": {
       "wall set": 0,
@@ -117,7 +119,9 @@
       "14": "                           ",
       "items": [],
       "itemCoordinates": [],
-      "exits": [1]
+      "exits": [
+        1
+      ]
     }
   },
   "roomList": [
@@ -127,7 +131,7 @@
   ],
   "exitData": [
     {
-      "_note":"test exit",
+      "_note": "test exit",
       "spawnSpot": [
         0,
         14

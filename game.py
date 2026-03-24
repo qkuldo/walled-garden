@@ -12,6 +12,7 @@ BRIGHTYELLOW = (255,228,3)
 BLUE = (7,5,129)
 PALEBLUE = (24, 23, 87)
 DARKBLUE = (7,5,35)
+DARKESTBLUE = (0,0,15)
 ORANGE = (255,126,71)
 BASEIMGPATH = "assets/"
 TILESIZE = 48
@@ -759,7 +760,7 @@ def game():
 					roomFrame = 0
 				roomAccumulateFrames = 0
 			clearLayer(TILELAYER)
-			TILELAYER.fill((0,0,15))
+			TILELAYER.fill(DARKESTBLUE)
 			loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
 		elif (specialPickupVisible):
 			Player.customAttributes["currentFrame"] = 0
