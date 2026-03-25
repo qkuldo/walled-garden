@@ -942,10 +942,11 @@ def game():
 					attack_qte_success = True
 					on_attack_button_cooldown = False
 					timedRect_fill = False
+					attack_qte_ongoing_attack = False
 					Player.customAttributes["attempted qte"] = True
 					timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 					pg.time.set_timer(ATTACK_QTE_START, 0)
-					pg.time.set_timer(ATTACK_QTE_END, 1, 1)
+					pg.time.set_timer(ATTACK_QTE_END, 0)
 					pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 0)
 					break
 				elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
