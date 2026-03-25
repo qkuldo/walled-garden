@@ -938,6 +938,7 @@ def game():
 					clearLayer(SPRITELAYER)
 					playerSword.customAttributes["moving"] = False
 					playerSword.customAttributes["visible"] = False
+					Player.customAttributes["speed divider"] = 1
 					playerSword.customAttributes["offset"] = 0
 					attack_qte_success = True
 					on_attack_button_cooldown = False
