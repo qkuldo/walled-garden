@@ -192,7 +192,9 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 			toCoordinates.append(EXITDATA[exitID][roomToLoad])
 			exitReturns.append(exitTo)
 			inExit.append(False)
-			exits.append(pg.Rect(exitCoordinate,(TILESIZE,TILESIZE)))
+			exitBox = pg.Rect(exitCoordinate,(TILESIZE,TILESIZE))
+			exitBox = pg.Rect(exitBox.center, (TILESIZE//10, TILESIZE//10))
+			exits.append(exitBox)
 		currentRoomData = {
 			"wall set index":wallSet,
 			"prop set index":propSet,
