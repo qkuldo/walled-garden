@@ -93,27 +93,27 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 					tileLayer.blit(pg.transform.scale(game.proptileSpritesheets[propSet].load_frame(int(column)), (48,48)), (drawx, drawy))
 				elif (column == "#"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(0), (48,48)), (drawx, drawy))
-					if (extraView == 2):
+					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "_"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(1), (48,48)), (drawx, drawy))
-					if (extraView == 2):
+					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "-"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(2), (48,48)), (drawx, drawy))
-					if (extraView == 2):
+					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "+"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(3), (48,48)), (drawx, drawy))
-					if (extraView == 2):
+					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "="):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(4), (48,48)), (drawx, drawy))
-					if (extraView == 2):
+					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "^"):
 					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), (drawx, drawy))
-					if (extraView == 2):
+					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "@"):
 					if (extraView > 0):
@@ -123,7 +123,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column), frame), (48,48)), (drawx, drawy))
 					else:
 						tileLayer.blit(pg.transform.scale(extras.load_frame(alphabet.index(column)), (48,48)), (drawx, drawy))
-					if (column in wallLetters and extraView == 2):
+					if (column in wallLetters and (extraView == 2 or extraView == 3)):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				else:
 					tileLayer.blit(pg.transform.scale(game.MISSINGTEXTURE, (48,48)), (drawx, drawy))
@@ -136,7 +136,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 		if (len(game.ITEMDATA["ITEM ASSETS"]) >= itemID):
 			itemSurface = pg.transform.scale(pg.image.load(game.ITEMDATA["ITEM ASSETS"][itemID]), (48,48)).convert_alpha()
 			tileLayer.blit(itemSurface, itemCoordinate)
-	if (extraView == 2):
+	if (extraView == 2 or extraView == 3):
 		displayRect = pg.Rect(0,0, 4, 4)
 		fakeDisplayRect = pg.Rect(0,0, 24, 24)
 		for exit in roomExits:
@@ -298,7 +298,7 @@ def runEditor():
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_v] and can_pressbutton):
 			hudView += 1
-			if (hudView > 2):
+			if (hudView > 3):
 				hudView = 0
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
@@ -399,23 +399,24 @@ def runEditor():
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush, itembrush=itembrush, itemVersion=itemVer)
 		ROOMLAYER.fill((0,0,15))
 		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
-		if (display_saveText):
-			EDITORHUDLAYER.blit(saveText, saveTextRect)
-		EDITORHUDLAYER.blit(currentModeText, currentModeText_Rect)
-		EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
-		if (helpMenu):
+		if (hudView != 3):
+			EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
+			if (display_saveText):
+				EDITORHUDLAYER.blit(saveText, saveTextRect)
+			EDITORHUDLAYER.blit(currentModeText, currentModeText_Rect)
+			EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
+		if (helpMenu and hudView != 3):
 			for text in commandList:
 				helpText, helpText_Rect = game.createText((1100, helpMenu_drawy), 2, text, game.ORANGE)
 				helpMenu_index += 1
 				helpMenu_drawy += 20
 				helpText_Rect.midright = (game.SCREENWIDTH,helpText_Rect.midright[1])
 				EDITORHUDLAYER.blit(helpText, helpText_Rect)
-		else:
+		elif (hudView != 3):
 			#helpText text is now equal to the "toggle this help menu" element in commandList
 			helpText, helpText_Rect = game.createText((1100, helpMenu_drawy), 2, commandList[-1], game.ORANGE)
 			helpText_Rect.midright = (game.SCREENWIDTH,helpText_Rect.midright[1])
 			EDITORHUDLAYER.blit(helpText, helpText_Rect)
-		EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
 		if (hudView):
 			game.screen.blit(EDITORHUDLAYER, (0, 0))
