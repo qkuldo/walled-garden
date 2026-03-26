@@ -15,6 +15,8 @@ currentRoom = "test"
 allroomData = game.readJsonFile("rooms.json")
 roomLayout = list(allroomData["rooms"][currentRoom].values())[3:18]
 roomItems = allroomData["rooms"][currentRoom]["items"]
+roomExits = allroomData["rooms"][currentRoom]["exits"]
+allExits = allroomData["exitData"]
 roomItemCoordinates = allroomData["rooms"][currentRoom]["itemCoordinates"]
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 
@@ -78,6 +80,12 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 	wallDisplay = pg.Surface((48,48))
 	wallDisplay.fill(game.ORANGE)
 	wallDisplay.set_alpha(100)
+	exitDisplay = pg.Surface((4,4))
+	exitDisplay.fill((7,240,5))
+	exitDisplay.set_alpha(100)
+	exitDisplay_fake = pg.Surface((24,24))
+	exitDisplay_fake.fill(game.BLUE)
+	exitDisplay_fake.set_alpha(100)
 	for row in roomLayout:
 		for column in row:
 			if ((not column == " ")):
@@ -128,6 +136,19 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 		if (len(game.ITEMDATA["ITEM ASSETS"]) >= itemID):
 			itemSurface = pg.transform.scale(pg.image.load(game.ITEMDATA["ITEM ASSETS"][itemID]), (48,48)).convert_alpha()
 			tileLayer.blit(itemSurface, itemCoordinate)
+	if (extraView == 2):
+		displayRect = pg.Rect(0,0, 4, 4)
+		fakeDisplayRect = pg.Rect(0,0, 24, 24)
+		for exit in roomExits:
+			exitCoordinate = game.findTilePixelLocation(allExits[exit][currentRoom][0],allExits[exit][currentRoom][1])
+			posRect = pg.Rect(exitCoordinate, (48, 48))
+			displayRect.center = posRect.center
+			fakeDisplayRect.center = posRect.center
+			IDtext, IDtext_rect = game.createText(posRect.center, text=str(exit))
+			IDtext.set_alpha(50)
+			tileLayer.blit(IDtext, IDtext_rect)
+			tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
+			tileLayer.blit(exitDisplay, displayRect)
 
 def runEditor():
 	global currentRoom
@@ -135,6 +156,7 @@ def runEditor():
 	global brush
 	global roomItems
 	global roomItemCoordinates
+	global roomExits
 	commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[h]: Toggle this Help Menu"]
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
@@ -212,6 +234,7 @@ def runEditor():
 			roomLayout = list(allroomData["rooms"][currentRoom].values())[3:18]
 			roomItems = allroomData["rooms"][currentRoom]["items"]
 			roomItemCoordinates = allroomData["rooms"][currentRoom]["itemCoordinates"]
+			roomExits = allroomData["rooms"][currentRoom]["exits"]
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
@@ -225,6 +248,7 @@ def runEditor():
 			for row in range(15):
 				roomLayout.append("                           ")
 			roomItems = []
+			roomExits = []
 			roomItemCoordinates = []
 			currentRoom = "".join(random.choices(alphabet, k=10))
 			allroomData["rooms"][currentRoom] = {}
@@ -292,6 +316,7 @@ def runEditor():
 			for row in range(15):
 				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
 			allroomData["rooms"][currentRoom]["items"] = roomItems
+			allroomData["rooms"][currentRoom]["exits"] = roomExits
 			allroomData["rooms"][currentRoom]["itemCoordinates"] = roomItemCoordinates
 			with open('rooms.json', 'w') as roomFile:
 				json.dump(allroomData, roomFile, indent=2)
