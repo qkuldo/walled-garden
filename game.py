@@ -904,14 +904,11 @@ def game():
 						SFX["itemCollect"].play()
 
 		if (Player.customAttributes["visible"]):
-			if (not specialPickupVisible):
-				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
-				#if (playerSword.customAttributes["visible"]):
-				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
-				#else:
-				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
-			else:
-				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
+			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
+			#if (playerSword.customAttributes["visible"]):
+			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
+			#else:
+			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
 		if (not specialPickupVisible):
 			for exit in currentRoomData["exits"]:
 				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
