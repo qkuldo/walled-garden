@@ -492,11 +492,13 @@ def game():
 	specialPickupFade = False
 	timedRect_fillRate = 1
 	timedRect_fill = False
-	ZOOM_LEVEL = 2
+	zoom_level = 1
 	SIMOVE_SUB = -1
 	SIMOVE_ADD = 1
 	SIMOVE_Y = 1
 	SIMOVE_X = 0
+	cameraMove_Percentx = 0.01
+	cameraMove_Percenty = 0.01
 	clicked = False
 	INVENTORYBUTTONS = []
 	INVENTORY_ITEMS = []
@@ -506,6 +508,7 @@ def game():
 	ITEMTYPE_YMARGIN = 10
 	HEALTHBAR_COORDINATES = (85,55)
 	target_angle = 0
+	screenCoordinates = (0, 0)
 	roomFrame = 0
 	roomAccumulateFrames = 0
 	current_room = "spawnSpot"
@@ -585,9 +588,14 @@ def game():
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
 		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
+		player_CenterOffset = (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1])
 
 		playerSword.hitbox.center = Player.hitbox.center
 		playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle)[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle)[1])
+		if (not specialPickupVisible):
+			screenCoordinates = (0, 0)
+			cameraMove_Percentx = 0.01
+			cameraMove_Percenty = 0.01
 		#below line is pretty trippy ngl
 		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
 
@@ -896,6 +904,7 @@ def game():
 						itemText = ITEMIDS[item.customAttributes["itemID"]]
 						specialPickupText, specialPickupTextRect = createText((0,0), text = f"You got a {itemText}!", color=BRIGHTYELLOW)
 						specialPickupVisible = True
+						zoom_level = 1
 						pg.time.set_timer(SPECIALPICKUPSTAY, 2700)
 						pg.time.set_timer(START_FADEOUT,1890)
 						specialItem.fill((0,0,0,0))
@@ -995,10 +1004,17 @@ def game():
 		if ((not specialPickupVisible)):
 			screen.blit(BASELAYER, (0,0))
 		elif (specialPickupVisible):
-			CAMERALAYER.blit(pg.transform.scale(BASELAYER, (SCREENWIDTH, SCREENHEIGHT)), (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]))
-			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)).get_rect()
+			if (zoom_level < 2):
+				zoom_level += 0.05
+			if (cameraMove_Percentx < 1):
+				cameraMove_Percentx += 0.001
+				cameraMove_Percenty += 0.002
+			screenCoordinates = (screenCoordinates[0]+(player_CenterOffset[0]-screenCoordinates[0])*cameraMove_Percentx,screenCoordinates[1]+(player_CenterOffset[1]-screenCoordinates[1])*(cameraMove_Percenty))
+			CAMERALAYER.blit(BASELAYER, screenCoordinates)
+			#CAMERALAYER.blit(BASELAYER)
+			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
 			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
-			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)), CAMERA_ZOOMED_RECT)
+			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
 
 		if (keys[pg.K_o] and debugMode == 3):
 			roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusChange=15)
