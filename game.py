@@ -1004,11 +1004,17 @@ def game():
 		if ((not specialPickupVisible)):
 			screen.blit(BASELAYER, (0,0))
 		elif (specialPickupVisible):
-			if (zoom_level < 2):
-				zoom_level += 0.05
-			if (cameraMove_Percentx < 1):
-				cameraMove_Percentx += 0.001
-				cameraMove_Percenty += 0.002
+			if (not specialPickupFade):
+				if (zoom_level < 2):
+					zoom_level += 0.05
+				if (cameraMove_Percentx < 1):
+					cameraMove_Percentx += 0.001
+					cameraMove_Percenty += 0.002
+			else:
+				if (zoom_level > 1):
+					zoom_level -= 0.05
+				cameraMove_Percentx -= 0.001
+				cameraMove_Percenty -= 0.002
 			screenCoordinates = (screenCoordinates[0]+(player_CenterOffset[0]-screenCoordinates[0])*cameraMove_Percentx,screenCoordinates[1]+(player_CenterOffset[1]-screenCoordinates[1])*(cameraMove_Percenty))
 			CAMERALAYER.blit(BASELAYER, screenCoordinates)
 			#CAMERALAYER.blit(BASELAYER)
