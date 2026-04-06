@@ -1007,15 +1007,16 @@ def game():
 			if (not specialPickupFade):
 				if (zoom_level < 2):
 					zoom_level += 0.05
-				if (cameraMove_Percentx < 1):
-					cameraMove_Percentx += 0.001
-					cameraMove_Percenty += 0.002
+				if (cameraMove_Percentx < 0.5):
+					cameraMove_Percentx += 0.01
+					cameraMove_Percenty += 0.02
 			else:
 				if (zoom_level > 1):
 					zoom_level -= 0.05
-				cameraMove_Percentx -= 0.001
-				cameraMove_Percenty -= 0.002
-			screenCoordinates = (screenCoordinates[0]+(player_CenterOffset[0]-screenCoordinates[0])*cameraMove_Percentx,screenCoordinates[1]+(player_CenterOffset[1]-screenCoordinates[1])*(cameraMove_Percenty))
+				if (cameraMove_Percentx > 0):
+					cameraMove_Percentx -= 0.02
+					cameraMove_Percenty -= 0.04
+			screenCoordinates = ((cameraMove_Percentx * player_CenterOffset[0]),(cameraMove_Percenty * player_CenterOffset[1]))
 			CAMERALAYER.blit(BASELAYER, screenCoordinates)
 			#CAMERALAYER.blit(BASELAYER)
 			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
