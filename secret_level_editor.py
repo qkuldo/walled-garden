@@ -72,6 +72,10 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 	"""
 	wallLetters = "abde"
 	ANIMATED = "f"
+	disabledExits = []
+	for exit in allroomData["exitData"]:
+		if (currentRoom in exit["involved rooms"] and not allExits.index(exit) in roomExits):
+			disabledExits.append(allExits.index(exit))
 	wallSet = allroomData["rooms"][currentRoom]["wall set"]
 	propSet = allroomData["rooms"][currentRoom]["prop set"]
 	drawx, drawy = (0, 0)
@@ -86,6 +90,9 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 	exitDisplay_fake = pg.Surface((24,24))
 	exitDisplay_fake.fill(game.BLUE)
 	exitDisplay_fake.set_alpha(100)
+	disabled_exitDisplay_fake = pg.Surface((24,24))
+	disabled_exitDisplay_fake.fill((25,25,25))
+	disabled_exitDisplay_fake.set_alpha(100)
 	for row in roomLayout:
 		for column in row:
 			if ((not column == " ")):
@@ -139,7 +146,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 	if (extraView == 2 or extraView == 3):
 		displayRect = pg.Rect(0,0, 4, 4)
 		fakeDisplayRect = pg.Rect(0,0, 24, 24)
-		for exit in roomExits:
+		for exit in roomExits + disabledExits:
 			exitCoordinate = game.findTilePixelLocation(allExits[exit][currentRoom][0],allExits[exit][currentRoom][1])
 			posRect = pg.Rect(exitCoordinate, (48, 48))
 			displayRect.center = posRect.center
@@ -147,7 +154,10 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 			IDtext, IDtext_rect = game.createText(posRect.center, text=str(exit))
 			IDtext.set_alpha(50)
 			tileLayer.blit(IDtext, IDtext_rect)
-			tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
+			if (exit in disabledExits):
+				tileLayer.blit(disabled_exitDisplay_fake, fakeDisplayRect)
+			else:
+				tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
 			tileLayer.blit(exitDisplay, displayRect)
 
 def runEditor():
