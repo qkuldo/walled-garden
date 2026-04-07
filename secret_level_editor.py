@@ -4,6 +4,7 @@ import pygame as pg
 import modules
 import random
 import json
+import copy
 ACCEPTED_TILES = "abcdefghijklmnopqrstuvwxyz0123456789#_-+=^@"
 WALL_LETTERS = "abde"
 alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -73,9 +74,17 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 	wallLetters = "abde"
 	ANIMATED = "f"
 	disabledExits = []
+	oneWayExits = []
+	roomExits_noOneWay = copy.deepcopy(roomExits)
 	for exit in allroomData["exitData"]:
 		if (currentRoom in exit["involved rooms"] and not allExits.index(exit) in roomExits):
 			disabledExits.append(allExits.index(exit))
+		elif (currentRoom in exit["involved rooms"]):
+			otherRoom = copy.deepcopy(exit["involved rooms"])
+			otherRoom.remove(currentRoom)
+			if (not allExits.index(exit) in allroomData["rooms"][otherRoom[0]]["exits"]):
+				oneWayExits.append(allExits.index(exit))
+				roomExits_noOneWay.remove(allExits.index(exit))
 	wallSet = allroomData["rooms"][currentRoom]["wall set"]
 	propSet = allroomData["rooms"][currentRoom]["prop set"]
 	drawx, drawy = (0, 0)
@@ -93,6 +102,9 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 	disabled_exitDisplay_fake = pg.Surface((24,24))
 	disabled_exitDisplay_fake.fill((25,25,25))
 	disabled_exitDisplay_fake.set_alpha(100)
+	oneWay_exitDisplay_fake = pg.Surface((24,24))
+	oneWay_exitDisplay_fake.fill((150,50,50))
+	oneWay_exitDisplay_fake.set_alpha(100)
 	for row in roomLayout:
 		for column in row:
 			if ((not column == " ")):
@@ -146,7 +158,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 	if (extraView == 2 or extraView == 3):
 		displayRect = pg.Rect(0,0, 4, 4)
 		fakeDisplayRect = pg.Rect(0,0, 24, 24)
-		for exit in roomExits + disabledExits:
+		for exit in roomExits_noOneWay + disabledExits + oneWayExits:
 			exitCoordinate = game.findTilePixelLocation(allExits[exit][currentRoom][0],allExits[exit][currentRoom][1])
 			posRect = pg.Rect(exitCoordinate, (48, 48))
 			displayRect.center = posRect.center
@@ -156,6 +168,8 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 			tileLayer.blit(IDtext, IDtext_rect)
 			if (exit in disabledExits):
 				tileLayer.blit(disabled_exitDisplay_fake, fakeDisplayRect)
+			elif (exit in oneWayExits):
+				tileLayer.blit(oneWay_exitDisplay_fake, fakeDisplayRect)
 			else:
 				tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
 			tileLayer.blit(exitDisplay, displayRect)
