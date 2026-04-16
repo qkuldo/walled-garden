@@ -155,7 +155,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 		if (len(game.ITEMDATA["ITEM ASSETS"]) >= itemID):
 			itemSurface = pg.transform.scale(pg.image.load(game.ITEMDATA["ITEM ASSETS"][itemID]), (48,48)).convert_alpha()
 			tileLayer.blit(itemSurface, itemCoordinate)
-	if (extraView == 2 or extraView == 3):
+	if (extraView > 0):
 		displayRect = pg.Rect(0,0, 4, 4)
 		fakeDisplayRect = pg.Rect(0,0, 24, 24)
 		for exit in roomExits_noOneWay + disabledExits + oneWayExits:
