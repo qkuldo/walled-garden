@@ -174,6 +174,23 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 				tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
 			tileLayer.blit(exitDisplay, displayRect)
 
+def makeExitLoop(toggleEvent):
+	allowLoopTerminate = False
+	while True:
+		for event in pg.event.get():
+			if (event.type == pg.QUIT):
+				game.terminate()
+			elif (event.type == toggleEvent):
+				allowLoopTerminate = True
+		keys = pg.key.get_pressed()
+		if (keys[pg.K_ESCAPE] and allowLoopTerminate):
+			break
+		pg.display.flip()
+		game.clock.tick(game.FPS)
+	pg.time.set_timer(toggleEvent, 500, 1)
+	return False #will be used for main button check flag
+
+
 def runEditor():
 	global currentRoom
 	global roomLayout
@@ -187,6 +204,7 @@ def runEditor():
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
 	SAVECOOLDOWN = pg.event.custom_type()
+	EXITEDITORCOOLDOWN = pg.event.custom_type()
 	can_pressbutton = True
 	display_saveText = False
 	pg.time.set_timer(ANIMATIONSWITCHEVENT, 360)
@@ -376,6 +394,9 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
+		if (keys[pg.K_ESCAPE] and can_pressbutton):
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN)
 		if (mouseRect.y > 48):
 			tileshowing_pos = tileBoxList[mouseRect.collidelist(tileBoxList)].topleft
 		else:
