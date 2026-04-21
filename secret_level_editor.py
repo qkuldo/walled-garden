@@ -174,7 +174,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 				tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
 			tileLayer.blit(exitDisplay, displayRect)
 
-def makeExitLoop(toggleEvent):
+def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE):
 	allowLoopTerminate = False
 	while True:
 		for event in pg.event.get():
@@ -183,7 +183,7 @@ def makeExitLoop(toggleEvent):
 			elif (event.type == toggleEvent):
 				allowLoopTerminate = True
 		keys = pg.key.get_pressed()
-		if (keys[pg.K_ESCAPE] and allowLoopTerminate):
+		if (keys[togglekey] and allowLoopTerminate):
 			break
 		pg.display.flip()
 		game.clock.tick(game.FPS)
@@ -198,7 +198,7 @@ def runEditor():
 	global roomItems
 	global roomItemCoordinates
 	global roomExits
-	commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[h]: Toggle this Help Menu"]
+	commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[left shift]: Edit Exits","[h]: Toggle this Help Menu"]
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
@@ -394,9 +394,9 @@ def runEditor():
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
-		if (keys[pg.K_ESCAPE] and can_pressbutton):
+		if (keys[pg.K_LSHIFT] and can_pressbutton):
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN)
+			can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN, pg.K_LSHIFT)
 		if (mouseRect.y > 48):
 			tileshowing_pos = tileBoxList[mouseRect.collidelist(tileBoxList)].topleft
 		else:
