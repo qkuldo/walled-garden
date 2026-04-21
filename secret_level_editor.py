@@ -174,17 +174,36 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 				tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
 			tileLayer.blit(exitDisplay, displayRect)
 
-def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE):
+def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game.SCREENWIDTH, game.SCREENHEIGHT))):
 	allowLoopTerminate = False
+	clicked = False
+	blueBoxRect = pg.Rect(0,0, game.SCREENWIDTH, game.SCREENHEIGHT//3+(48*2))
+	titleText, titleTextRect = game.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
+	placeholderText, placeholderRect = game.createText((game.SCREENWIDTH//2, 180), font=2, text="nothing here yet...", color=game.BRIGHTYELLOW)
+	lilGuyDecorator = pg.transform.scale(playerAsset.load_frame(0), (48,48))
 	while True:
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
 				game.terminate()
 			elif (event.type == toggleEvent):
 				allowLoopTerminate = True
+			elif (event.type == pg.MOUSEBUTTONDOWN):
+				clicked = True
+			elif (event.type == pg.MOUSEBUTTONUP):
+				clicked = False
 		keys = pg.key.get_pressed()
 		if (keys[togglekey] and allowLoopTerminate):
 			break
+		game.screen.blit(roomLayout, (0,0))
+		pg.draw.rect(game.screen, game.BLUE, blueBoxRect)
+		game.screen.blit(titleText, titleTextRect)
+		game.screen.blit(placeholderText, placeholderRect)
+		game.screen.blit(lilGuyDecorator, (titleTextRect.topleft[0]-48,titleTextRect.topleft[1]))
+		game.screen.blit(lilGuyDecorator, titleTextRect.topright)
+		if (not clicked):
+			game.screen.blit(game.CURSOR, pg.mouse.get_pos())
+		else:
+			game.screen.blit(game.CURSORCLICKED, pg.mouse.get_pos())
 		pg.display.flip()
 		game.clock.tick(game.FPS)
 	pg.time.set_timer(toggleEvent, 500, 1)
@@ -395,8 +414,10 @@ def runEditor():
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
 		if (keys[pg.K_LSHIFT] and can_pressbutton):
+			ROOMLAYER.fill((0,0,15))
+			customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN, pg.K_LSHIFT)
+			can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN, pg.K_LSHIFT, ROOMLAYER)
 		if (mouseRect.y > 48):
 			tileshowing_pos = tileBoxList[mouseRect.collidelist(tileBoxList)].topleft
 		else:
