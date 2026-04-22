@@ -554,7 +554,7 @@ def game():
 			"attempted qte":False,
 			"speed divider":1
 		})
-	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0})
+	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	#rect creation
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
@@ -731,7 +731,11 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
-				playerSword.customAttributes["offset"] = 40
+				playerSword.customAttributes["offset"] = random.choice((-40,40))
+				if (playerSword.customAttributes["offset"] == 40):
+					playerSword.customAttributes["negativeSUB"] = True
+				else:
+					playerSword.customAttributes["negativeSUB"] = False					
 				Player.customAttributes["attempted qte"] = True
 				playerSword.angle = face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
@@ -791,8 +795,11 @@ def game():
 
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 		if (playerSword.customAttributes["visible"]):
-			if (playerSword.customAttributes["offset"] > 0):
-				playerSword.customAttributes["offset"] -= 4
+			if (playerSword.customAttributes["offset"] != 0):
+				if (playerSword.customAttributes["negativeSUB"] == True):
+					playerSword.customAttributes["offset"] -= 4
+				else:
+					playerSword.customAttributes["offset"] += 4
 			if (playerSword.customAttributes["moving"]):
 				directional_vector = goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"])
 				Player.coordinates[0] += directional_vector[0]
