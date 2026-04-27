@@ -105,6 +105,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 	oneWay_exitDisplay_fake = pg.Surface((24,24))
 	oneWay_exitDisplay_fake.fill((150,50,50))
 	oneWay_exitDisplay_fake.set_alpha(100)
+	exitSelectors = []
 	for row in roomLayout:
 		for column in row:
 			if ((not column == " ")):
@@ -161,6 +162,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 		for exit in roomExits_noOneWay + disabledExits + oneWayExits:
 			exitCoordinate = game.findTilePixelLocation(allExits[exit][currentRoom][0],allExits[exit][currentRoom][1])
 			posRect = pg.Rect(exitCoordinate, (48, 48))
+			exitSelectors.append(posRect)
 			displayRect.center = posRect.center
 			fakeDisplayRect.center = posRect.center
 			IDtext, IDtext_rect = game.createText(posRect.center, text=str(exit))
@@ -173,6 +175,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 			else:
 				tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
 			tileLayer.blit(exitDisplay, displayRect)
+	return exitSelectors #check for selecting exits to edit
 
 def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game.SCREENWIDTH, game.SCREENHEIGHT)),fromRoomIndex=0):
 	allowLoopTerminate = False
@@ -259,7 +262,7 @@ def runEditor():
 	global roomItemCoordinates
 	global roomExits
 	global BUTTONPRESSCOOLDOWN
-	commandList = ["qkuldo's very futuristic modern ","high-tech room editor","[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[left shift]: Edit Exits","[h]: Toggle this Help Menu"]
+	commandList = ["qkuldo's very futuristic modern ","high-tech room editor","[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[t]: Exit Select","[left shift]: Edit Exits","[h]: Toggle this Help Menu"]
 	ROOMLAYER = game.initDrawLayer()
 	EDITORHUDLAYER = game.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
@@ -301,6 +304,7 @@ def runEditor():
 	itemVer = False
 	helpMenu = True
 	hudView = 1
+	exitHover = pg.Rect(0,0, 24, 24)
 	while True:
 		helpMenu_index = 0
 		helpMenu_drawy = 20
@@ -398,10 +402,10 @@ def runEditor():
 			itemVer = not itemVer
 			if (itemVer):
 				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("ITEM MODE"), game.BRIGHTYELLOW)
-				commandList = ["[b]: Paint Item", "[q]: Change Item Brush", "[i]: Itempicker",  "[l]: Switch room","[x]: Switch to Tile Mode","[e]: Erase Item","[r]: Change Item with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[h]: Toggle this Help Menu"]
+				commandList = ["[b]: Paint Item", "[q]: Change Item Brush", "[i]: Itempicker",  "[l]: Switch room","[x]: Switch to Tile Mode","[e]: Erase Item","[r]: Change Item with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[t]: Exit Select","[left shift]: Edit Exits","[h]: Toggle this Help Menu"]
 			else:
 				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
-				commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[h]: Toggle this Help Menu"]
+				commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[t]: Exit Select","[left shift]: Edit Exits","[h]: Toggle this Help Menu"]
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_v] and can_pressbutton):
@@ -434,6 +438,11 @@ def runEditor():
 			display_saveText = True
 			pg.time.set_timer(SAVECOOLDOWN, 1000, 1)
 			game.SFX["closeMenu"].play()
+		elif (keys[pg.K_t] and can_pressbutton):
+			current_tool = "t"
+			can_pressbutton = False
+			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using EXIT SELECT"), game.BLUE)
 		if (keys[pg.K_UP] and can_pressbutton and current_tool == "r"):
 			if (not itemVer):
 				currentBrushIndex += 1
@@ -497,6 +506,15 @@ def runEditor():
 		elif (itemVer and (current_tool == "r" or current_tool == "p")):
 			itemSurface = pg.transform.scale(pg.image.load(game.ITEMDATA["ITEM ASSETS"][itembrush]), (48,48)).convert_alpha()
 			EDITORHUDLAYER.blit(itemSurface, tileshowing_pos)
+		if (current_tool == "t"):
+			for exitSelector in exitSelectors:
+				if (exitSelector.colliderect(mouseRect)):
+					tempAlphaChange = game.initDrawLayer()
+					exitHover.center = exitSelector.center
+					pg.draw.rect(tempAlphaChange, game.ORANGE, exitHover)
+					tempAlphaChange.set_alpha(150)
+					EDITORHUDLAYER.blit(tempAlphaChange)
+					break
 		if (clicked):
 			if (mouseRect.y > 48):
 				if (current_tool == "i"):
@@ -511,7 +529,7 @@ def runEditor():
 				elif (current_tool == "p" or current_tool == "e" or current_tool == "g"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush, itembrush=itembrush, itemVersion=itemVer)
 		ROOMLAYER.fill((0,0,15))
-		customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
+		exitSelectors = customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
 		if (hudView != 3):
 			EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
 			if (display_saveText):
