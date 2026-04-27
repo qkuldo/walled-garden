@@ -195,6 +195,8 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 	if (len(data) == 0):
 		toRoomIndex = 0
 		leftSlotSwitch, rightSlotSwitch = True, True
+		exitIDText, exitIDRect = game.createText((game.SCREENWIDTH//2, 120), text=str(len(allExits))+" if saved", color=game.BRIGHTYELLOW)
+		noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text="", color=game.BRIGHTYELLOW)
 	else:
 		involvedRooms = data["involved rooms"].copy()
 		involvedRooms.remove(allroomData["roomList"][fromRoomIndex])
@@ -204,6 +206,8 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 			leftSlotSwitch = True
 		if (allExits.index(data) in allroomData["rooms"][allroomData["roomList"][toRoomIndex]]["exits"]):
 			rightSlotSwitch = True
+		exitIDText, exitIDRect = game.createText((game.SCREENWIDTH//2, 100), text=str(allExits.index(data)), color=game.BRIGHTYELLOW)
+		noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text=data["_note"], color=game.BRIGHTYELLOW)
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
 	leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
 	rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
@@ -216,6 +220,12 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 			rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
 		else:
 			rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="[]", color=game.BRIGHTYELLOW)
+		if (leftSlotSwitch and rightSlotSwitch):
+			statusText, statusRect = game.createText((game.SCREENWIDTH//2, 300), text="Two-way exit", color=game.BRIGHTYELLOW)
+		elif (leftSlotSwitch or rightSlotSwitch):
+			statusText, statusRect = game.createText((game.SCREENWIDTH//2, 300), text="One-way exit", color=game.BRIGHTYELLOW)
+		else:
+			statusText, statusRect = game.createText((game.SCREENWIDTH//2, 300), text="Disabled exit", color=game.BRIGHTYELLOW)
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		roomSlotLeft = allroomData["roomList"][fromRoomIndex]
 		roomSlotRight = allroomData["roomList"][toRoomIndex]
@@ -276,6 +286,9 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 		game.screen.blit(rightSlotText, rightSlotRect)
 		game.screen.blit(leftSlotSwitchText, leftSlotSwitchRect)
 		game.screen.blit(rightSlotSwitchText, rightSlotSwitchRect)
+		game.screen.blit(exitIDText, exitIDRect)
+		game.screen.blit(noteText, noteRect)
+		game.screen.blit(statusText, statusRect)
 		game.screen.blit(lilGuyDecorator, (titleTextRect.topleft[0]-48,titleTextRect.topleft[1]))
 		game.screen.blit(lilGuyDecorator, titleTextRect.topright)
 		if (not clicked):
