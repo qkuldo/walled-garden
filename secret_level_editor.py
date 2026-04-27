@@ -175,9 +175,10 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1):
 			else:
 				tileLayer.blit(exitDisplay_fake, fakeDisplayRect)
 			tileLayer.blit(exitDisplay, displayRect)
-	return exitSelectors #check for selecting exits to edit
+	return exitSelectors, roomExits_noOneWay + disabledExits + oneWayExits #check for selecting exits to edit
 
-def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game.SCREENWIDTH, game.SCREENHEIGHT)),fromRoomIndex=0):
+def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game.SCREENWIDTH, game.SCREENHEIGHT)),fromRoomIndex=0, data=[]):
+	#data parameter is for editing premade exits, and is just the exit data.
 	allowLoopTerminate = False
 	clicked = False
 	blueBoxRect = pg.Rect(0,0, game.SCREENWIDTH, game.SCREENHEIGHT//3+(48*2))
@@ -191,9 +192,30 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 	# -1    | none
 	#  0    | left room slot
 	#  1    | right room slot
-	toRoomIndex = 0
+	if (len(data) == 0):
+		toRoomIndex = 0
+		leftSlotSwitch, rightSlotSwitch = True, True
+	else:
+		involvedRooms = data["involved rooms"].copy()
+		involvedRooms.remove(allroomData["roomList"][fromRoomIndex])
+		toRoomIndex = allroomData["roomList"].index(involvedRooms[0])
+		leftSlotSwitch, rightSlotSwitch = False, False
+		if (allExits.index(data) in allroomData["rooms"][allroomData["roomList"][fromRoomIndex]]["exits"]):
+			leftSlotSwitch = True
+		if (allExits.index(data) in allroomData["rooms"][allroomData["roomList"][toRoomIndex]]["exits"]):
+			rightSlotSwitch = True
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
+	leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
+	rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
 	while True:
+		if (leftSlotSwitch):
+			leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
+		else:
+			leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="[]", color=game.BRIGHTYELLOW)
+		if (rightSlotSwitch):
+			rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
+		else:
+			rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="[]", color=game.BRIGHTYELLOW)
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		roomSlotLeft = allroomData["roomList"][fromRoomIndex]
 		roomSlotRight = allroomData["roomList"][toRoomIndex]
@@ -236,12 +258,24 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 				selection = 0
 			elif (mouseRect.colliderect(rightSlotRect)):
 				selection = 1
+			elif (mouseRect.colliderect(leftSlotSwitchRect) and can_pressbutton):
+				game.SFX["equipItem"].play()
+				leftSlotSwitch = not leftSlotSwitch
+				can_pressbutton = False
+				pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			elif (mouseRect.colliderect(rightSlotSwitchRect) and can_pressbutton):
+				game.SFX["equipItem"].play()
+				rightSlotSwitch = not rightSlotSwitch
+				can_pressbutton = False
+				pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		game.screen.blit(roomLayout, (0,0))
 		pg.draw.rect(game.screen, game.BLUE, blueBoxRect)
 		game.screen.blit(titleText, titleTextRect)
 		game.screen.blit(toText, toRect)
 		game.screen.blit(leftSlotText, leftSlotRect)
 		game.screen.blit(rightSlotText, rightSlotRect)
+		game.screen.blit(leftSlotSwitchText, leftSlotSwitchRect)
+		game.screen.blit(rightSlotSwitchText, rightSlotSwitchRect)
 		game.screen.blit(lilGuyDecorator, (titleTextRect.topleft[0]-48,titleTextRect.topleft[1]))
 		game.screen.blit(lilGuyDecorator, titleTextRect.topright)
 		if (not clicked):
@@ -473,7 +507,17 @@ def runEditor():
 			ROOMLAYER.fill((0,0,15))
 			customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN, pg.K_LSHIFT, ROOMLAYER, roomIndex)
+			exitID = 0
+			if (current_tool == "t"):
+				for exitSelector in exitSelectors:
+					if (exitSelector.colliderect(mouseRect)):
+						exitID = knownExits[exitSelectors.index(exitSelector)]
+						can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN, pg.K_LSHIFT, ROOMLAYER, roomIndex, allExits[exitID])
+						break
+				if (can_pressbutton):
+					can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN, pg.K_LSHIFT, ROOMLAYER, roomIndex)
+			else:
+				can_pressbutton = makeExitLoop(BUTTONPRESSCOOLDOWN, pg.K_LSHIFT, ROOMLAYER, roomIndex)
 		if (mouseRect.y > 48):
 			tileshowing_pos = tileBoxList[mouseRect.collidelist(tileBoxList)].topleft
 		else:
@@ -515,6 +559,8 @@ def runEditor():
 					tempAlphaChange.set_alpha(150)
 					EDITORHUDLAYER.blit(tempAlphaChange)
 					break
+		ROOMLAYER.fill((0,0,15))
+		exitSelectors, knownExits = customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
 		if (clicked):
 			if (mouseRect.y > 48):
 				if (current_tool == "i"):
@@ -528,8 +574,6 @@ def runEditor():
 					brush = recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush, itembrush=itembrush, itemVersion=itemVer)
 				elif (current_tool == "p" or current_tool == "e" or current_tool == "g"):
 					recieveInput(current_tool, tileBoxList[mouseRect.collidelist(tileBoxList)].x//48, 0, brush, itembrush=itembrush, itemVersion=itemVer)
-		ROOMLAYER.fill((0,0,15))
-		exitSelectors = customRoomRenderer(ROOMLAYER, roomLayout, roomFrame, hudView)
 		if (hudView != 3):
 			EDITORHUDLAYER.blit(currentToolText, currentToolText_Rect)
 			if (display_saveText):
