@@ -183,6 +183,11 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 	lilGuyDecorator = pg.transform.scale(playerAsset.load_frame(0), (48,48))
 	can_pressbutton = True
 	selection = 0
+	#selection table:
+	# value | button
+	# -1    | none
+	#  0    | left room slot
+	#  1    | right room slot
 	toRoomIndex = 0
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
 	while True:
@@ -220,12 +225,12 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 					toRoomIndex = 0
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-		if (clicked and mouseRect.colliderect(leftSlotRect)):
-			selection = 0
-		elif (clicked and mouseRect.colliderect(rightSlotRect)):
-			selection = 1
-		elif (clicked):
-			selection = 2
+		if (clicked):
+			selection = -1
+			if (mouseRect.colliderect(leftSlotRect)):
+				selection = 0
+			elif (mouseRect.colliderect(rightSlotRect)):
+				selection = 1
 		game.screen.blit(roomLayout, (0,0))
 		pg.draw.rect(game.screen, game.BLUE, blueBoxRect)
 		game.screen.blit(titleText, titleTextRect)
