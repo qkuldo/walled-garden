@@ -214,15 +214,17 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 		keys = pg.key.get_pressed()
 		if (keys[togglekey] and allowLoopTerminate):
 			break
-		if (keys[pg.K_l] and can_pressbutton and selection < 2):
+		if (keys[pg.K_l] and can_pressbutton):
 			if (selection == 0):
 				fromRoomIndex += 1
 				if (fromRoomIndex > len(allroomData["roomList"])-1):
 					fromRoomIndex = 0
+				game.SFX["equipItem"].play()
 			elif (selection == 1):
 				toRoomIndex += 1
 				if (toRoomIndex > len(allroomData["roomList"])-1):
 					toRoomIndex = 0
+				game.SFX["equipItem"].play()
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		if (clicked):
@@ -328,6 +330,7 @@ def runEditor():
 				saveTextAlpha = 255
 		keys = pg.key.get_pressed()
 		if (keys[pg.K_l] and can_pressbutton):
+			game.SFX["equipItem"].play()
 			roomIndex += 1
 			if (roomIndex > len(allroomData["roomList"])-1):
 				roomIndex = 0
@@ -340,10 +343,12 @@ def runEditor():
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 		elif (keys[pg.K_h] and can_pressbutton and hudView):
+			game.SFX["equipItem"].play()
 			helpMenu = not helpMenu
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_n] and can_pressbutton):
+			game.SFX["equipItem"].play()
 			can_pressbutton = False
 			roomLayout = []
 			for row in range(15):
@@ -366,6 +371,7 @@ def runEditor():
 			roomIndex = allroomData["roomList"].index(currentRoom)
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_d] and can_pressbutton):
+			game.SFX["equipItem"].play()
 			if (len(allroomData["rooms"]) > 1):
 				allroomData["rooms"].pop(currentRoom)
 				allroomData["roomList"].remove(currentRoom)
@@ -388,6 +394,7 @@ def runEditor():
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
 		elif (keys[pg.K_x] and can_pressbutton):
+			game.SFX["equipItem"].play()
 			itemVer = not itemVer
 			if (itemVer):
 				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("ITEM MODE"), game.BRIGHTYELLOW)
