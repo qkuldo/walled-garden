@@ -193,24 +193,36 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 	#  0    | left room slot
 	#  1    | right room slot
 	if (len(data) == 0):
+		leftSlotPos = (0,0)
+		rightSlotPos = (0,0)
 		toRoomIndex = 0
 		leftSlotSwitch, rightSlotSwitch = True, True
-		exitIDText, exitIDRect = game.createText((game.SCREENWIDTH//2, 120), text=str(len(allExits))+" if saved", color=game.BRIGHTYELLOW)
+		exitID = len(allExits)
+		exitIDText, exitIDRect = game.createText((game.SCREENWIDTH//2, 120), text=str(exitID)+" if saved", color=game.BRIGHTYELLOW)
 		noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text="", color=game.BRIGHTYELLOW)
 	else:
 		involvedRooms = data["involved rooms"].copy()
 		involvedRooms.remove(allroomData["roomList"][fromRoomIndex])
 		toRoomIndex = allroomData["roomList"].index(involvedRooms[0])
 		leftSlotSwitch, rightSlotSwitch = False, False
+		leftSlotPos = data[allroomData["roomList"][fromRoomIndex]]
+		rightSlotPos = data[allroomData["roomList"][toRoomIndex]]
 		if (allExits.index(data) in allroomData["rooms"][allroomData["roomList"][fromRoomIndex]]["exits"]):
 			leftSlotSwitch = True
 		if (allExits.index(data) in allroomData["rooms"][allroomData["roomList"][toRoomIndex]]["exits"]):
 			rightSlotSwitch = True
-		exitIDText, exitIDRect = game.createText((game.SCREENWIDTH//2, 100), text=str(allExits.index(data)), color=game.BRIGHTYELLOW)
+		exitID = allExits.index(data)
+		exitIDText, exitIDRect = game.createText((game.SCREENWIDTH//2, 100), text=str(exitID), color=game.BRIGHTYELLOW)
 		noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text=data["_note"], color=game.BRIGHTYELLOW)
+	saveText, saveRect = game.createText((game.SCREENWIDTH//2, 240), text="SAVE(not yet)", color=game.BRIGHTYELLOW)
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
+	leftSlotPosText, leftSlotPosRect = game.createText((game.SCREENWIDTH//3, 220), text=str(leftSlotPos), color=game.BRIGHTYELLOW)
+	rightSlotPosText, rightSlotPosRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 220), text=str(rightSlotPos), color=game.BRIGHTYELLOW)
 	leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
 	rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
+	cachedLocations = []
+	cachedLocations.append(copy.copy(fromRoomIndex))
+	cachedLocations.append(copy.copy(toRoomIndex))
 	while True:
 		if (leftSlotSwitch):
 			leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
@@ -278,6 +290,10 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 				rightSlotSwitch = not rightSlotSwitch
 				can_pressbutton = False
 				pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
+			elif (mouseRect.colliderect(saveRect) and can_pressbutton):
+				game.SFX["equipItem"].play()
+				can_pressbutton = False
+				pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		game.screen.blit(roomLayout, (0,0))
 		pg.draw.rect(game.screen, game.BLUE, blueBoxRect)
 		game.screen.blit(titleText, titleTextRect)
@@ -286,9 +302,12 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, roomLayout=pg.Surface((game
 		game.screen.blit(rightSlotText, rightSlotRect)
 		game.screen.blit(leftSlotSwitchText, leftSlotSwitchRect)
 		game.screen.blit(rightSlotSwitchText, rightSlotSwitchRect)
+		game.screen.blit(rightSlotPosText, rightSlotPosRect)
+		game.screen.blit(leftSlotPosText, leftSlotPosRect)
 		game.screen.blit(exitIDText, exitIDRect)
 		game.screen.blit(noteText, noteRect)
 		game.screen.blit(statusText, statusRect)
+		game.screen.blit(saveText, saveRect)
 		game.screen.blit(lilGuyDecorator, (titleTextRect.topleft[0]-48,titleTextRect.topleft[1]))
 		game.screen.blit(lilGuyDecorator, titleTextRect.topright)
 		if (not clicked):
