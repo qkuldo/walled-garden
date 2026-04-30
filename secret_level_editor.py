@@ -227,7 +227,7 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
 			noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text=data["_note"], color=game.BRIGHTYELLOW)
 		else:
 			noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text="", color=game.BRIGHTYELLOW)
-	saveText, saveRect = game.createText((game.SCREENWIDTH//2, 240), text="SAVE(not yet)", color=game.BRIGHTYELLOW)
+	saveText, saveRect = game.createText((game.SCREENWIDTH//2, 240), text="SAVE", color=game.BRIGHTYELLOW)
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
 	leftSlotPosText, leftSlotPosRect = game.createText((game.SCREENWIDTH//3, 120), text=str(leftSlotPos), color=game.BRIGHTYELLOW)
 	rightSlotPosText, rightSlotPosRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 120), text=str(rightSlotPos), color=game.BRIGHTYELLOW)
@@ -339,6 +339,14 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
 				data_tosave[allroomData["roomList"][fromRoomIndex]] = leftSlotPos
 				data_tosave[allroomData["roomList"][toRoomIndex]] = rightSlotPos
 				data_tosave["involved rooms"] = [allroomData["roomList"][fromRoomIndex],allroomData["roomList"][toRoomIndex]]
+				if (exitID in allroomData["rooms"][allroomData["roomList"][fromRoomIndex]]["exits"] and not leftSlotSwitch):
+					allroomData["rooms"][allroomData["roomList"][fromRoomIndex]]["exits"].remove(exitID)
+				elif (not exitID in allroomData["rooms"][allroomData["roomList"][fromRoomIndex]]["exits"]):
+					allroomData["rooms"][allroomData["roomList"][fromRoomIndex]]["exits"].append(exitID)
+				if (exitID in allroomData["rooms"][allroomData["roomList"][toRoomIndex]]["exits"] and not rightSlotSwitch):
+					allroomData["rooms"][allroomData["roomList"][toRoomIndex]]["exits"].remove(exitID)
+				elif (not exitID in allroomData["rooms"][allroomData["roomList"][toRoomIndex]]["exits"]):
+					allroomData["rooms"][allroomData["roomList"][toRoomIndex]]["exits"].append(exitID)
 				if (exitID < len(allroomData["exitData"])):
 					allroomData["exitData"].pop(exitID)
 					allroomData["exitData"].insert(exitID, data_tosave)

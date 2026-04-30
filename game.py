@@ -108,6 +108,11 @@ def goto_angle(velocity,angle):
 
 def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems=[]):
 	#loadRoom function needs only to be used when loading a new room
+	oneWayExits = []
+	for exit in EXITDATA:
+		if (roomname in exit["involved rooms"]):
+			if (not EXITDATA.index(exit) in ROOMTILEDATA[roomname]["exits"]):
+				oneWayExits.append(EXITDATA.index(exit))
 	alphabet = "abcdefghijklmnopqrstuvwxyz"
 	wallLetters = "abde"
 	animatedTiles = "f"
@@ -195,6 +200,19 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 			exitBox = pg.Rect(exitCoordinate,(TILESIZE,TILESIZE))
 			exitBox = pg.Rect(exitBox.center, (TILESIZE//10, TILESIZE//10))
 			exits.append(exitBox)
+			exitIDs.append(exitID)
+		for exitID in oneWayExits:
+			assert exitID <= len(EXITDATA)-1, f"<qkuldo>searching for an exit({exitID}) that doesn't exist</qkuldo>"
+			assert roomToLoad in EXITDATA[exitID].keys(), f"<qkuldo>this exit({exitID}) is not related to this room({roomToLoad})</qkuldo>"
+			exitTo = list(EXITDATA[exitID]["involved rooms"]).index(roomToLoad)
+			if (exitTo > 0):
+				exitTo = 0
+			else:
+				exitTo = 1
+			exitTo = EXITDATA[exitID]["involved rooms"][exitTo]
+			exitCoordinate = findTilePixelLocation(EXITDATA[exitID][exitTo][0],EXITDATA[exitID][exitTo][1])
+			toCoordinates.append(EXITDATA[exitID][roomToLoad])
+			exitReturns.append(exitTo)
 			exitIDs.append(exitID)
 		currentRoomData = {
 			"wall set index":wallSet,
@@ -513,7 +531,7 @@ def game():
 	screenCoordinates = (0, 0)
 	roomFrame = 0
 	roomAccumulateFrames = 0
-	current_room = "spawnSpot"
+	current_room = "test"
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
