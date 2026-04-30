@@ -171,14 +171,14 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 		exitReturns = []
 		inExit = []
 		toCoordinates = []
+		exitIDs = []
 		for item in range(0, len(ROOMTILEDATA[roomToLoad]["items"])):
 			if (not item in inactiveItems):
 				itemID = ROOMTILEDATA[roomToLoad]["items"][item]
 				itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
 				if (len(itemAssets) >= itemID):
 					addItem(items, itemID, itemCoordinate, itemAssets)
-		for exit in range(0, len(ROOMTILEDATA[roomToLoad]["exits"])):
-			exitID = ROOMTILEDATA[roomToLoad]["exits"][exit]
+		for exitID in ROOMTILEDATA[roomToLoad]["exits"]:
 			assert exitID <= len(EXITDATA)-1, f"<qkuldo>searching for an exit({exitID}) that doesn't exist</qkuldo>"
 			assert roomToLoad in EXITDATA[exitID].keys(), f"<qkuldo>this exit({exitID}) is not related to this room({roomToLoad})</qkuldo>"
 			exitCoordinate = findTilePixelLocation(EXITDATA[exitID][roomToLoad][0],EXITDATA[exitID][roomToLoad][1])
@@ -195,6 +195,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 			exitBox = pg.Rect(exitCoordinate,(TILESIZE,TILESIZE))
 			exitBox = pg.Rect(exitBox.center, (TILESIZE//10, TILESIZE//10))
 			exits.append(exitBox)
+			exitIDs.append(exitID)
 		currentRoomData = {
 			"wall set index":wallSet,
 			"prop set index":propSet,
@@ -206,7 +207,8 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 			"exits":exits,
 			"exit returns":exitReturns,
 			"contained exits":inExit,
-			"exit tp coordinates":toCoordinates
+			"exit tp coordinates":toCoordinates,
+			"exit IDs":exitIDs
 		}
 		return currentRoomData
 
@@ -928,6 +930,7 @@ def game():
 		if (not specialPickupVisible):
 			for exit in currentRoomData["exits"]:
 				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
+					exitID = currentRoomData["exit IDs"][currentRoomData["exits"].index(exit)]
 					PREVCOMBINELAYER = TILELAYER.copy()
 					PREVCOMBINELAYER.blit(SPRITELAYER, (0,0))
 					current_room = currentRoomData["exit returns"][currentRoomData["exits"].index(exit)]
@@ -938,7 +941,7 @@ def game():
 						temp_cache["item timers"][current_room] = []
 					roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2500, circleRadius=600, radiusChange=15)
 					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
-					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][givenExitData.index(exit)][0],currentRoomData["exit tp coordinates"][givenExitData.index(exit)][1]))
+					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][0],currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][1]))
 					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 					for exitIndex in range(0, len(currentRoomData["exits"])):
 						if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):

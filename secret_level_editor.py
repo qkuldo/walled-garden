@@ -181,7 +181,9 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1, room=None):
 			tileLayer.blit(exitDisplay, displayRect)
 	return exitSelectors, roomExits_noOneWay + disabledExits + oneWayExits #check for selecting exits to edit
 
-def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data=[]):
+def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
+	global allroomData
+	global allExits
 	#data parameter is for editing premade exits, and is just the exit data.
 	allowLoopTerminate = False
 	clicked = False
@@ -330,6 +332,21 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data=[]):
 				can_pressbutton = False
 				pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			elif (mouseRect.colliderect(saveRect) and can_pressbutton and currentMode == 0):
+				data_tosave = {}
+				if (data != {}):
+					if ("_note" in data):
+						data_tosave["_note"] = data["_note"]
+				data_tosave[allroomData["roomList"][fromRoomIndex]] = leftSlotPos
+				data_tosave[allroomData["roomList"][toRoomIndex]] = rightSlotPos
+				data_tosave["involved rooms"] = [allroomData["roomList"][fromRoomIndex],allroomData["roomList"][toRoomIndex]]
+				if (exitID < len(allroomData["exitData"])):
+					allroomData["exitData"].pop(exitID)
+					allroomData["exitData"].insert(exitID, data_tosave)
+				else:
+					allroomData["exitData"].append(data_tosave)
+				allExits = allroomData["exitData"]
+				with open('rooms.json', 'w') as roomFile:
+					json.dump(allroomData, roomFile, indent=2)
 				game.SFX["equipItem"].play()
 				can_pressbutton = False
 				pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
