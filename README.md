@@ -27,7 +27,7 @@ here's a to-do list of tasks:
 | Player Health System |  :ballot_box_with_check: |
 | Inventory |  :ballot_box_with_check: |
 | Room Editor |  :ballot_box_with_check: |
-| Room Exits and Entrances | :x: |
+| Room Exits and Entrances | :ballot_box_with_check: |
 | Enemies | :x: |
 | Game Over Screen | :x: |
 | Player Stats | :x: |
