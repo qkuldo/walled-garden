@@ -12,6 +12,7 @@ BRIGHTYELLOW = (255,228,3)
 BLUE = (7,5,129)
 PALEBLUE = (24, 23, 87)
 DARKBLUE = (7,5,35)
+DARKESTBLUE = (0,0,15)
 ORANGE = (255,126,71)
 BASEIMGPATH = "assets/"
 TILESIZE = 48
@@ -79,8 +80,9 @@ def readJsonFile(path):
 	return data
 
 def readAllJsonData():
-	global DIALOGDATA, ITEMDATA, ROOMTILEDATA
+	global DIALOGDATA, ITEMDATA, ROOMTILEDATA, EXITDATA
 	ROOMTILEDATA = readJsonFile("rooms.json")["rooms"]
+	EXITDATA = readJsonFile("rooms.json")["exitData"]
 	DIALOGDATA = readJsonFile("dialog.json")
 	ITEMDATA = readJsonFile("itemData.json")
 	assert len(ITEMDATA["ITEM TYPES"]) == len(ITEMDATA["ITEM ASSETS"]), "<qkuldo>there's an inequality in the itemData.json file between the item types and item assets.</qkuldo>"
@@ -104,8 +106,13 @@ def goto_angle(velocity,angle):
 	direction = pg.Vector2(0, velocity).rotate(-angle)
 	return direction
 
-def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
+def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems=[]):
 	#loadRoom function needs only to be used when loading a new room
+	oneWayExits = []
+	for exit in EXITDATA:
+		if (roomname in exit["involved rooms"]):
+			if (not EXITDATA.index(exit) in ROOMTILEDATA[roomname]["exits"]):
+				oneWayExits.append(EXITDATA.index(exit))
 	alphabet = "abcdefghijklmnopqrstuvwxyz"
 	wallLetters = "abde"
 	animatedTiles = "f"
@@ -126,6 +133,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 	drawx, drawy = 0, 0
 	playerSpawn = [0,0]
 	collisionBoxes = []
+	exits = []
 	items = []
 	for row in roomLayout:
 		for column in row:
@@ -165,11 +173,47 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 		drawy += TILESIZE
 		drawx = 0
 	if (loadAll):
+		exitReturns = []
+		inExit = []
+		toCoordinates = []
+		exitIDs = []
 		for item in range(0, len(ROOMTILEDATA[roomToLoad]["items"])):
-			itemID = ROOMTILEDATA[roomToLoad]["items"][item]
-			itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
-			if (len(itemAssets) >= itemID):
-				addItem(items, itemID, itemCoordinate, itemAssets)
+			if (not item in inactiveItems):
+				itemID = ROOMTILEDATA[roomToLoad]["items"][item]
+				itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
+				if (len(itemAssets) >= itemID):
+					addItem(items, itemID, itemCoordinate, itemAssets)
+		for exitID in ROOMTILEDATA[roomToLoad]["exits"]:
+			assert exitID <= len(EXITDATA)-1, f"<qkuldo>searching for an exit({exitID}) that doesn't exist</qkuldo>"
+			assert roomToLoad in EXITDATA[exitID].keys(), f"<qkuldo>this exit({exitID}) is not related to this room({roomToLoad})</qkuldo>"
+			exitCoordinate = findTilePixelLocation(EXITDATA[exitID][roomToLoad][0],EXITDATA[exitID][roomToLoad][1])
+			exitTo = list(EXITDATA[exitID]["involved rooms"]).index(roomToLoad)
+			#below code switches exitTo from the index of the current room to the index of the next room
+			if (exitTo > 0):
+				exitTo = 0
+			else:
+				exitTo = 1
+			exitTo = EXITDATA[exitID]["involved rooms"][exitTo]
+			toCoordinates.append(EXITDATA[exitID][roomToLoad])
+			exitReturns.append(exitTo)
+			inExit.append(False)
+			exitBox = pg.Rect(exitCoordinate,(TILESIZE,TILESIZE))
+			exitBox = pg.Rect(exitBox.center, (TILESIZE//10, TILESIZE//10))
+			exits.append(exitBox)
+			exitIDs.append(exitID)
+		for exitID in oneWayExits:
+			assert exitID <= len(EXITDATA)-1, f"<qkuldo>searching for an exit({exitID}) that doesn't exist</qkuldo>"
+			assert roomToLoad in EXITDATA[exitID].keys(), f"<qkuldo>this exit({exitID}) is not related to this room({roomToLoad})</qkuldo>"
+			exitTo = list(EXITDATA[exitID]["involved rooms"]).index(roomToLoad)
+			if (exitTo > 0):
+				exitTo = 0
+			else:
+				exitTo = 1
+			exitTo = EXITDATA[exitID]["involved rooms"][exitTo]
+			exitCoordinate = findTilePixelLocation(EXITDATA[exitID][exitTo][0],EXITDATA[exitID][exitTo][1])
+			toCoordinates.append(EXITDATA[exitID][roomToLoad])
+			exitReturns.append(exitTo)
+			exitIDs.append(exitID)
 		currentRoomData = {
 			"wall set index":wallSet,
 			"prop set index":propSet,
@@ -178,6 +222,11 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0):
 			"roomLayout":roomLayout,
 			"collisionBoxes":collisionBoxes,
 			"items":items,
+			"exits":exits,
+			"exit returns":exitReturns,
+			"contained exits":inExit,
+			"exit tp coordinates":toCoordinates,
+			"exit IDs":exitIDs
 		}
 		return currentRoomData
 
@@ -352,7 +401,6 @@ def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDT
 			elif (abs(distance_fromTarget[1]) != distance_fromTarget[1]):
 				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
 	if (checkCollision):
-		assert len(collisionList) > 0, "<qkuldo>Cannot detect collisions with walls if there are no walls</qkuldo>"
 		spriteDummy = Sprite.createDummy()
 		spriteDummy.x += directional_vector[0]
 		spriteDummy.y += directional_vector[1]
@@ -370,6 +418,51 @@ def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDT
 			return (0, 0)
 	else:
 		return directional_vector
+
+def unpack_nestedDict(inputArray, key):
+	"""returns a set with all the values with parameter 'key' in a nested array 'inputDict'"""
+	output = set()
+	for nestedDict in inputArray:
+		output.add(nestedDict[key])
+	return output
+
+
+def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGHT//2), mode=0, circleRadius=600, radiusChange=10):
+	"""if mode is 0, this function causes a tunnel transition animation with the circle getting smaller, if mode is 1 the circle gets bigger"""
+	mask = initDrawLayer().convert_alpha()
+	END_TRANSITION = pg.event.custom_type()
+	pg.time.set_timer(END_TRANSITION, duration)
+	break_signal = False
+	if (mode == 1):
+		maxCircleRadius = circleRadius
+		circleRadius = 0
+	else:
+		maxCircleRadius = 0
+	while True:
+		for event in pg.event.get():
+			if (event.type == pg.QUIT):
+				terminate()
+			elif (event.type == END_TRANSITION):
+				break_signal = True
+		screen.fill("black")
+		mask.fill("black")
+		if (mode == 1 and circleRadius < maxCircleRadius):
+			masked = background.copy().convert_alpha()
+			circleRadius += radiusChange
+			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
+			masked.blit(mask)
+		elif (mode == 0):
+			masked = background.copy().convert_alpha()
+			circleRadius -= radiusChange
+			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
+			masked.blit(mask)
+		screen.blit(masked)
+		pg.draw.circle(screen, (7,5,35), center, circleRadius+5, width=10)
+
+		pg.display.flip()
+		clock.tick(FPS)
+		if (break_signal):
+			break
 
 def game():
 	#find and make assets
@@ -419,11 +512,13 @@ def game():
 	specialPickupFade = False
 	timedRect_fillRate = 1
 	timedRect_fill = False
-	ZOOM_LEVEL = 2
+	zoom_level = 1
 	SIMOVE_SUB = -1
 	SIMOVE_ADD = 1
 	SIMOVE_Y = 1
 	SIMOVE_X = 0
+	cameraMove_Percentx = 0.01
+	cameraMove_Percenty = 0.01
 	clicked = False
 	INVENTORYBUTTONS = []
 	INVENTORY_ITEMS = []
@@ -433,10 +528,23 @@ def game():
 	ITEMTYPE_YMARGIN = 10
 	HEALTHBAR_COORDINATES = (85,55)
 	target_angle = 0
+	screenCoordinates = (0, 0)
 	roomFrame = 0
 	roomAccumulateFrames = 0
 	current_room = "spawnSpot"
-	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets)
+	#cache stores data that should be saved
+	cache = {
+		"item inactivators":{}
+	}
+	#temp cache stores data only needed for the current session
+	temp_cache = {
+		"item timers":{}
+	}
+	if (not current_room in list(cache["item inactivators"].keys())):
+		cache["item inactivators"][current_room] = set()
+	if (not current_room in list(temp_cache["item timers"].keys())):
+		temp_cache["item timers"][current_room] = []
+	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 	#define sprites
 	#directionalFrames custom attribute is written as a list for compatibility with DIRECTION_IDS constant dict
 	Player = modules.interactables.Sprite(playerAsset,currentRoomData["playerSpawn"],5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
@@ -466,7 +574,7 @@ def game():
 			"attempted qte":False,
 			"speed divider":1
 		})
-	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0})
+	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	#rect creation
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
@@ -483,7 +591,6 @@ def game():
 	while running:
 		#cleanup
 
-		BASELAYER.fill(BGCOLOR)
 		screen.fill(BGCOLOR)
 		clearLayer(SPRITELAYER)
 		clearLayer(CAMERALAYER)
@@ -492,6 +599,7 @@ def game():
 		clearLayer(INFOLAYER)
 		clearLayer(DEBUGLAYER)
 		#set stuff
+		current_time = pg.time.get_ticks()
 		timedRect.bottomleft = Player.hitbox.topright
 		timedRectBG.bottomleft = Player.hitbox.topright
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
@@ -500,9 +608,14 @@ def game():
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
 		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
+		player_CenterOffset = (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1])
 
 		playerSword.hitbox.center = Player.hitbox.center
 		playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle)[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle)[1])
+		if (not specialPickupVisible):
+			screenCoordinates = (0, 0)
+			cameraMove_Percentx = 0.01
+			cameraMove_Percenty = 0.01
 		#below line is pretty trippy ngl
 		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
 
@@ -513,6 +626,8 @@ def game():
 
 		switchFrame = False
 		current_time = pg.time.get_ticks()
+		#cache important data
+		cache["player"] = Player.customAttributes
 		#handle events
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
@@ -636,7 +751,11 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
-				playerSword.customAttributes["offset"] = 40
+				playerSword.customAttributes["offset"] = random.choice((-40,40))
+				if (playerSword.customAttributes["offset"] == 40):
+					playerSword.customAttributes["negativeSUB"] = True
+				else:
+					playerSword.customAttributes["negativeSUB"] = False					
 				Player.customAttributes["attempted qte"] = True
 				playerSword.angle = face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
@@ -675,6 +794,7 @@ def game():
 					roomFrame = 0
 				roomAccumulateFrames = 0
 			clearLayer(TILELAYER)
+			TILELAYER.fill(DARKESTBLUE)
 			loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
 		elif (specialPickupVisible):
 			Player.customAttributes["currentFrame"] = 0
@@ -695,8 +815,11 @@ def game():
 
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 		if (playerSword.customAttributes["visible"]):
-			if (playerSword.customAttributes["offset"] > 0):
-				playerSword.customAttributes["offset"] -= 4
+			if (playerSword.customAttributes["offset"] != 0):
+				if (playerSword.customAttributes["negativeSUB"] == True):
+					playerSword.customAttributes["offset"] -= 4
+				else:
+					playerSword.customAttributes["offset"] += 4
 			if (playerSword.customAttributes["moving"]):
 				directional_vector = goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"])
 				Player.coordinates[0] += directional_vector[0]
@@ -776,7 +899,8 @@ def game():
 					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 
-		for item in currentRoomData["items"]:
+		for itemIndex in range(0, len(currentRoomData["items"])):
+			item = currentRoomData["items"][itemIndex]
 			if (item.customAttributes["active"]):
 				item.update()
 				if (switchFrame and item.customAttributes["oscillate"] == 0):
@@ -790,6 +914,14 @@ def game():
 				item.draw(0, SPRITELAYER, (0,item.customAttributes["fromGroundOffset"]))
 				if (item.hitbox.colliderect(Player.hitbox)):
 					item.customAttributes["active"] = False
+					if (ITEMDATA["RESPAWN RATES"][item.customAttributes["itemID"]] != -1):
+						temp_cache["item timers"][current_room].append({
+								"item index":itemIndex,
+								"time":ITEMDATA["RESPAWN RATES"][item.customAttributes["itemID"]],
+								"start time":pg.time.get_ticks()
+							})
+					else:
+						cache["item inactivators"][current_room].add(itemIndex)
 					if (item.customAttributes["itemID"] in Player.customAttributes["inventory"]):
 						Player.customAttributes["inventory"][item.customAttributes["itemID"]] += 1
 					else:
@@ -799,6 +931,7 @@ def game():
 						itemText = ITEMIDS[item.customAttributes["itemID"]]
 						specialPickupText, specialPickupTextRect = createText((0,0), text = f"You got a {itemText}!", color=BRIGHTYELLOW)
 						specialPickupVisible = True
+						zoom_level = 1
 						pg.time.set_timer(SPECIALPICKUPSTAY, 2700)
 						pg.time.set_timer(START_FADEOUT,1890)
 						specialItem.fill((0,0,0,0))
@@ -806,21 +939,66 @@ def game():
 					else:
 						SFX["itemCollect"].play()
 
+		if (Player.customAttributes["visible"]):
+			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
+			#if (playerSword.customAttributes["visible"]):
+			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
+			#else:
+			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
+		if (not specialPickupVisible):
+			for exit in currentRoomData["exits"]:
+				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
+					exitID = currentRoomData["exit IDs"][currentRoomData["exits"].index(exit)]
+					PREVCOMBINELAYER = TILELAYER.copy()
+					PREVCOMBINELAYER.blit(SPRITELAYER, (0,0))
+					current_room = currentRoomData["exit returns"][currentRoomData["exits"].index(exit)]
+					givenExitData = currentRoomData["exits"][:]
+					if (not current_room in list(cache["item inactivators"].keys())):
+						cache["item inactivators"][current_room] = set()
+					if (not current_room in list(temp_cache["item timers"].keys())):
+						temp_cache["item timers"][current_room] = []
+					roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2500, circleRadius=600, radiusChange=15)
+					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
+					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][0],currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][1]))
+					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
+					for exitIndex in range(0, len(currentRoomData["exits"])):
+						if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
+							currentRoomData["contained exits"][exitIndex] = True
+					CURRENTCOMBINELAYER = initDrawLayer().convert_alpha()
+					CURRENTCOMBINELAYER.fill((0,0,15))
+					loadRoom(current_room,CURRENTCOMBINELAYER,itemAssets,False,roomFrame)
+					Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
+					CURRENTCOMBINELAYER.blit(SPRITELAYER, (0,0))
+					roomTransition(CURRENTCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15, mode=1)
+					clearLayer(TILELAYER)
+					clearLayer(SPRITELAYER)
+					playerSword.customAttributes["moving"] = False
+					playerSword.customAttributes["visible"] = False
+					Player.customAttributes["speed divider"] = 1
+					playerSword.customAttributes["offset"] = 0
+					attack_qte_success = True
+					on_attack_button_cooldown = False
+					timedRect_fill = False
+					attack_qte_ongoing_attack = False
+					Player.customAttributes["attempted qte"] = True
+					timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
+					pg.time.set_timer(ATTACK_QTE_START, 0)
+					pg.time.set_timer(ATTACK_QTE_END, 0)
+					pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 0)
+					break
+				elif (currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] and not exit.colliderect(Player.hitbox)):
+					currentRoomData["contained exits"][currentRoomData["exits"].index(exit)] = False
+
+		for timer in temp_cache["item timers"][current_room]:
+			if (current_time-timer["start time"] >= timer["time"]):
+				temp_cache["item timers"][current_room].remove(timer)
+			continue
+
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
 			target_angle += 2
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 			TARGETRECT.center = Player.customAttributes["target pos"]
 			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
-
-		if (Player.customAttributes["visible"]):
-			if (not specialPickupVisible):
-				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
-				#if (playerSword.customAttributes["visible"]):
-				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
-				#else:
-				#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
-			else:
-				Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-20, -10), frameRow = Player.customAttributes["frameRow"])
 
 		if (playerSword.customAttributes["visible"]):
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
@@ -838,6 +1016,8 @@ def game():
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
 
+		BASELAYER.fill(BGCOLOR)
+
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
 			BASELAYER.blit(TILELAYER,(0,0))
 			BASELAYER.blit(SPRITELAYER, (0,0))
@@ -851,12 +1031,28 @@ def game():
 		BASELAYER.blit(DEBUGLAYER, (0,0))
 		if ((not specialPickupVisible)):
 			screen.blit(BASELAYER, (0,0))
-		else:
-			CAMERALAYER.blit(pg.transform.scale(BASELAYER, (SCREENWIDTH, SCREENHEIGHT)), (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]))
-			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)).get_rect()
+		elif (specialPickupVisible):
+			if (not specialPickupFade):
+				if (zoom_level < 2):
+					zoom_level += 0.05
+				if (cameraMove_Percentx < 0.5):
+					cameraMove_Percentx += 0.01
+					cameraMove_Percenty += 0.02
+			else:
+				if (zoom_level > 1):
+					zoom_level -= 0.05
+				if (cameraMove_Percentx > 0):
+					cameraMove_Percentx -= 0.02
+					cameraMove_Percenty -= 0.04
+			screenCoordinates = ((cameraMove_Percentx * player_CenterOffset[0]),(cameraMove_Percenty * player_CenterOffset[1]))
+			CAMERALAYER.blit(BASELAYER, screenCoordinates)
+			#CAMERALAYER.blit(BASELAYER)
+			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
 			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
-			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*ZOOM_LEVEL, SCREENHEIGHT*ZOOM_LEVEL)), CAMERA_ZOOMED_RECT)
+			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
 
+		if (keys[pg.K_o] and debugMode == 3):
+			roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusChange=15)
 		if ((not specialPickupVisible) and (not clicked)):
 			screen.blit(CURSOR, pg.mouse.get_pos())
 		elif ((not specialPickupVisible) and clicked):

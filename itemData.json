@@ -8,5 +8,10 @@
 		"assets/missing.png",
 		"assets/items/ceremonial-sword.png",
 		"assets/items/berry.png"
+	],
+	"RESPAWN RATES":[
+		-1,
+		-1,
+		600000
 	]
 }

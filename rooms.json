@@ -53,6 +53,9 @@
           11,
           11
         ]
+      ],
+      "exits": [
+        0
       ]
     },
     "spawnSpot": {
@@ -86,11 +89,75 @@
           13,
           13
         ]
+      ],
+      "exits": [
+        1
+      ]
+    },
+    "open field ramp": {
+      "wall set": 0,
+      "prop set": 0,
+      "theme": [
+        7,
+        5,
+        129
+      ],
+      "0": "                           ",
+      "1": "                           ",
+      "2": "                           ",
+      "3": "                           ",
+      "4": "                           ",
+      "5": "                           ",
+      "6": "                           ",
+      "7": "                           ",
+      "8": "                           ",
+      "9": "                           ",
+      "10": "                           ",
+      "11": "                           ",
+      "12": "                           ",
+      "13": "                           ",
+      "14": "                           ",
+      "items": [],
+      "itemCoordinates": [],
+      "exits": [
+        1
       ]
     }
   },
   "roomList": [
     "test",
-    "spawnSpot"
+    "spawnSpot",
+    "open field ramp"
+  ],
+  "exitData": [
+    {
+      "_note": "test exit",
+      "test": [
+        0,
+        13
+      ],
+      "open field ramp": [
+        0,
+        14
+      ],
+      "involved rooms": [
+        "test",
+        "open field ramp"
+      ]
+    },
+    {
+      "spawnSpot": [
+        13,
+        14
+      ],
+      "open field ramp": [
+        13,
+        0
+      ],
+      "involved rooms": [
+        "spawnSpot",
+        "open field ramp"
+      ]
+    }
   ]
 }
