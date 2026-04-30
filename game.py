@@ -531,7 +531,7 @@ def game():
 	screenCoordinates = (0, 0)
 	roomFrame = 0
 	roomAccumulateFrames = 0
-	current_room = "test"
+	current_room = "spawnSpot"
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
