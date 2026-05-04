@@ -1,4 +1,4 @@
-import random, sys, json, os, time, math
+import random, sys, json, os, time, math, copy
 import pygame as pg
 import modules
 FPS = 30
@@ -553,7 +553,8 @@ def game():
 			"facingDirection":DIRECTION_IDS["left"],
 			"directionalFrames":[{"startFrame":0, "endFrame":2}, {"startFrame":3, "endFrame":5}, {"startFrame":6, "endFrame":8}, {"startFrame":9, "endFrame":11}],
 			"inventory":{},
-			"target pos":[SCREENWIDTH/2, SCREENHEIGHT/2],
+			"target pos":None,
+			"targeting":False,
 			"stats":{
 				"health":20,
 				"max health":20,
@@ -586,6 +587,7 @@ def game():
 	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
 	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
 	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
+	PLACEHOLDERTARGETLOCK = [SCREENWIDTH/2, SCREENHEIGHT/2]
 	#set timers
 	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
 	while running:
@@ -733,17 +735,24 @@ def game():
 				complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 				#Player.angle = DIRECTION_ANGLES["right"]
-			if (keys[pg.K_LSHIFT]):
+			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+				Player.customAttributes["target pos"] = PLACEHOLDERTARGETLOCK #this is a placeholder
+				Player.customAttributes["targeting"] = True
 				goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 				TARGETRECT.center = Player.customAttributes["target pos"]
 				INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
-			if (keys[pg.K_LSHIFT] and keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None):
+			elif (not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+				Player.customAttributes["targeting"] = False
+				Player.customAttributes["target pos"] = None
+			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None):
 				attack_qte_ongoing_attack = True
 				attack_qte_success = False
 				timedRect_fill = True
 				Player.customAttributes["speed divider"] = 3
+				if (not Player.customAttributes["targeting"]):
+					Player.customAttributes["target pos"] = copy.copy(mouseRect.center)
 				pg.time.set_timer(ATTACK_QTE_START, 1000, 1)
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active):
 				attack_qte_success = True
@@ -994,7 +1003,7 @@ def game():
 				temp_cache["item timers"][current_room].remove(timer)
 			continue
 
-		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
+		if ((attack_qte_ongoing_attack or playerSword.customAttributes["visible"]) and Player.customAttributes["targeting"]):
 			target_angle += 2
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 			TARGETRECT.center = Player.customAttributes["target pos"]
