@@ -248,7 +248,7 @@ def terminate():
 	sys.exit()
 
 def setup():
-	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT_BOLD,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT_BOLD, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, MEDIUMDISPLAYFONT_BOLD, HPBARDESIGN
+	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT_BOLD,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT_BOLD, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, MEDIUMDISPLAYFONT_BOLD, HPBARDESIGN, LOCKEDUNTARGET
 	pg.init()
 	pg.mixer.init()
 	clock = pg.time.Clock()
@@ -273,6 +273,8 @@ def setup():
 	TARGET = pg.transform.scale(TARGET, (TILESIZE,TILESIZE))
 	LOCKEDTARGET = pg.image.load("assets/locked_target.png").convert_alpha()
 	LOCKEDTARGET = pg.transform.scale(LOCKEDTARGET, (TILESIZE,TILESIZE))
+	LOCKEDUNTARGET = pg.image.load("assets/locked_untarget.png").convert_alpha()
+	LOCKEDUNTARGET = pg.transform.scale(LOCKEDUNTARGET, (TILESIZE//1.5,TILESIZE//1.5))
 	HPBARDESIGN = pg.image.load("assets/healthbarDesign.png")
 	HPBARDESIGN = pg.transform.scale(HPBARDESIGN, (TILESIZE*2, TILESIZE*2))
 	TARGETRECT = TARGET.get_rect()
@@ -885,12 +887,6 @@ def game():
 		else:
 			INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((500,520), text = DEBUGTEXT)
 
-		if (timedRect_fill):
-			timedRect.width += timedRect_fillRate
-			pg.draw.rect(INFOLAYER, DARKBLUE, timedRectBG)
-			pg.draw.rect(INFOLAYER, BLUE, timedRectBG,3)
-		#draw circle function below is for testing purposes
-		pg.draw.rect(INFOLAYER, BRIGHTYELLOW, timedRect)
 
 		if (debugMode > 0):
 			DEBUGLAYER.blit(test_text, test_text_rect)
@@ -1008,6 +1004,16 @@ def game():
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 			TARGETRECT.center = Player.customAttributes["target pos"]
 			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
+		elif (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
+			UNTARGETRECT = pg.transform.rotate(LOCKEDUNTARGET, face_target(Player.hitbox.center, Player.customAttributes["target pos"])).get_rect()
+			UNTARGETRECT.center = (Player.hitbox.center[0]-goto_angle(30,face_target(Player.hitbox.center, Player.customAttributes["target pos"]))[0],Player.hitbox.center[1]-goto_angle(30,face_target(Player.hitbox.center, Player.customAttributes["target pos"]))[1])
+			INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, face_target(Player.hitbox.center, Player.customAttributes["target pos"])), UNTARGETRECT)
+		if (timedRect_fill):
+			timedRect.width += timedRect_fillRate
+			pg.draw.rect(INFOLAYER, DARKBLUE, timedRectBG)
+			pg.draw.rect(INFOLAYER, BLUE, timedRectBG,3)
+		#draw circle function below is for testing purposes
+		pg.draw.rect(INFOLAYER, BRIGHTYELLOW, timedRect)
 
 		if (playerSword.customAttributes["visible"]):
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
