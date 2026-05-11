@@ -886,6 +886,7 @@ def game():
 					else:
 						raise Exception("<qkuldo>the item is classified as a weapon but is not in the list of weapons</qkuldo>")
 					SFX["equipItem"].play()
+					playerSword.asset = pg.transform.scale(weaponAssets[MOUSE_HOVER_ID], (TILESIZE,TILESIZE))
 			HUDLAYER.blit(INVENTORY_DESCLAYER, (0, 0))
 		else:
 			INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((500,520), text = DEBUGTEXT)
