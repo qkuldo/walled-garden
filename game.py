@@ -765,8 +765,8 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
-				playerSword.customAttributes["offset"] = random.choice((-40,40))
-				if (playerSword.customAttributes["offset"] == 40):
+				playerSword.customAttributes["offset"] = random.choice((-60,60))
+				if (playerSword.customAttributes["offset"] == 60):
 					playerSword.customAttributes["negativeSUB"] = True
 				else:
 					playerSword.customAttributes["negativeSUB"] = False					
@@ -831,9 +831,9 @@ def game():
 		if (playerSword.customAttributes["visible"]):
 			if (playerSword.customAttributes["offset"] != 0):
 				if (playerSword.customAttributes["negativeSUB"] == True):
-					playerSword.customAttributes["offset"] -= 4
+					playerSword.customAttributes["offset"] -= 6
 				else:
-					playerSword.customAttributes["offset"] += 4
+					playerSword.customAttributes["offset"] += 6
 			if (playerSword.customAttributes["moving"]):
 				directional_vector = goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=1.3)
 				Player.coordinates[0] += directional_vector[0]
@@ -1007,7 +1007,7 @@ def game():
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 			TARGETRECT.center = Player.customAttributes["target pos"]
 			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
-		elif (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
+		elif (attack_qte_ongoing_attack and not playerSword.customAttributes["visible"]):
 			UNTARGETRECT = pg.transform.rotate(LOCKEDUNTARGET, face_target(Player.hitbox.center, Player.customAttributes["target pos"])).get_rect()
 			UNTARGETRECT.center = (Player.hitbox.center[0]-goto_angle(30,face_target(Player.hitbox.center, Player.customAttributes["target pos"]))[0],Player.hitbox.center[1]-goto_angle(30,face_target(Player.hitbox.center, Player.customAttributes["target pos"]))[1])
 			INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, face_target(Player.hitbox.center, Player.customAttributes["target pos"])), UNTARGETRECT)
