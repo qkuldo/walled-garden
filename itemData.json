@@ -13,5 +13,10 @@
 		-1,
 		-1,
 		600000
+	],
+	"WEAPON USE":[
+		"assets/missing.png",
+		"assets/items/weapon use/ceremonial-sword.png",
+		"assets/missing.png"
 	]
 }

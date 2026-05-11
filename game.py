@@ -469,8 +469,11 @@ def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGH
 def game():
 	#find and make assets
 	itemAssets = ITEMDATA["ITEM ASSETS"]
+	weaponAssets = ITEMDATA["WEAPON USE"]
 	for assetPath in itemAssets:
 		itemAssets[itemAssets.index(assetPath)] = pg.image.load(assetPath).convert_alpha()
+	for assetPath in weaponAssets:
+		weaponAssets[weaponAssets.index(assetPath)] = pg.image.load(assetPath).convert_alpha()
 	playerAsset = pg.image.load("assets/player.png").convert_alpha()
 	playerAsset = modules.sheets.Spritesheet(playerAsset, 16, 16)
 	playerPortrait = pg.image.load("assets/playerPortrait.png").convert()
@@ -577,7 +580,7 @@ def game():
 			"attempted qte":False,
 			"speed divider":1
 		})
-	playerSword = modules.interactables.Sprite(pg.transform.rotate(pg.transform.scale(itemAssets[1], (TILESIZE*2,TILESIZE*2)), 45), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
+	playerSword = modules.interactables.Sprite(pg.transform.scale(weaponAssets[1], (TILESIZE,TILESIZE)), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	#rect creation
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
@@ -593,6 +596,7 @@ def game():
 	#set timers
 	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
 	while running:
+		#playerSword.angle += 5
 		#cleanup
 
 		screen.fill(BGCOLOR)
@@ -615,7 +619,6 @@ def game():
 		player_CenterOffset = (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1])
 
 		playerSword.hitbox.center = Player.hitbox.center
-		playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle)[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle)[1])
 		if (not specialPickupVisible):
 			screenCoordinates = (0, 0)
 			cameraMove_Percentx = 0.01
@@ -1016,8 +1019,9 @@ def game():
 		pg.draw.rect(INFOLAYER, BRIGHTYELLOW, timedRect)
 
 		if (playerSword.customAttributes["visible"]):
-			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"], offset=(-playerSword.customAttributes["offset"],-(TILESIZE/5)))
-			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle)[0]-playerSword.customAttributes["offset"], Player.hitbox.center[1]-goto_angle(35,playerSword.angle)[1]-(TILESIZE/5)))
+			playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
+			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"])
+			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[1]))
 
 
 		if (specialPickupVisible):
