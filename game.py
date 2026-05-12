@@ -1077,14 +1077,16 @@ def game():
 			if (not specialPickupFade):
 				if (zoom_level < 2):
 					zoom_level += 0.05
-				if (cameraMove_Percentx < 0.5):
-					cameraMove_Percentx += 0.01
+				if (cameraMove_Percentx <= 1):
+					cameraMove_Percentx += 0.02
+				if (cameraMove_Percenty <= 1):
 					cameraMove_Percenty += 0.02
 			else:
 				if (zoom_level > 1):
 					zoom_level -= 0.05
-				if (cameraMove_Percentx > 0):
-					cameraMove_Percentx -= 0.02
+				if (cameraMove_Percentx >= 0):
+					cameraMove_Percentx -= 0.04
+				if (cameraMove_Percenty >= 0):
 					cameraMove_Percenty -= 0.04
 			screenCoordinates = ((cameraMove_Percentx * player_CenterOffset[0]),(cameraMove_Percenty * player_CenterOffset[1]))
 			CAMERALAYER.blit(BASELAYER, screenCoordinates)
