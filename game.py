@@ -506,6 +506,7 @@ def game():
 	attack_qte_success = None
 	attack_qte_ongoing_attack = False
 	ATTACK_BUTTON_COOLDOWN = pg.event.custom_type()
+	CLICKCOOLDOWNFINISH = pg.event.custom_type()
 	on_attack_button_cooldown = False
 	#define other variables
 	drawHud = False
@@ -537,6 +538,7 @@ def game():
 	roomFrame = 0
 	roomAccumulateFrames = 0
 	current_room = "spawnSpot"
+	clickInCooldown = False
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -700,6 +702,8 @@ def game():
 				Player.customAttributes["reverse knockback"] = False
 			elif (event.type == PLAYER_HITSTART):
 				Player.customAttributes["hit animation"] = True
+			if (event.type == CLICKCOOLDOWNFINISH):
+				clickInCooldown = False
 		#detect key presses
 		keys = pg.key.get_pressed()
 		if (drawHud):
@@ -876,17 +880,30 @@ def game():
 				if (MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()):
 					HUDLAYER.blit(WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT)
 				#equip weapon
-				if (ITEMTYPEIDS[itemType] == "weapon" and clicked and not MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()):
-					if (MOUSE_HOVER_ID in ITEMWEAPONS["sword"]):
-						Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] = MOUSE_HOVER_ID
-					elif (MOUSE_HOVER_ID in ITEMWEAPONS["shield"]):
-						Player.customAttributes["stats"]["equipment"]["WEAPONS"]["shield"] = MOUSE_HOVER_ID
-					elif (MOUSE_HOVER_ID in ITEMWEAPONS["bow"]):
-						Player.customAttributes["stats"]["equipment"]["WEAPONS"]["bow"] = MOUSE_HOVER_ID
-					else:
-						raise Exception("<qkuldo>the item is classified as a weapon but is not in the list of weapons</qkuldo>")
-					SFX["equipItem"].play()
-					playerSword.asset = pg.transform.scale(weaponAssets[MOUSE_HOVER_ID], (TILESIZE,TILESIZE))
+				if (clicked and not clickInCooldown):
+					clickInCooldown = True
+					pg.time.set_timer(CLICKCOOLDOWNFINISH, 500, 1)
+					if (ITEMTYPEIDS[itemType] == "weapon" and not MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()):
+						if (MOUSE_HOVER_ID in ITEMWEAPONS["sword"]):
+							Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] = MOUSE_HOVER_ID
+						elif (MOUSE_HOVER_ID in ITEMWEAPONS["shield"]):
+							Player.customAttributes["stats"]["equipment"]["WEAPONS"]["shield"] = MOUSE_HOVER_ID
+						elif (MOUSE_HOVER_ID in ITEMWEAPONS["bow"]):
+							Player.customAttributes["stats"]["equipment"]["WEAPONS"]["bow"] = MOUSE_HOVER_ID
+						else:
+							raise Exception("<qkuldo>the item is classified as a weapon but is not in the list of weapons</qkuldo>")
+						SFX["equipItem"].play()
+						playerSword.asset = pg.transform.scale(weaponAssets[MOUSE_HOVER_ID], (TILESIZE,TILESIZE))
+					elif (ITEMTYPEIDS[itemType] == "weapon" and clicked and MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()):
+						if (MOUSE_HOVER_ID in ITEMWEAPONS["sword"]):
+							Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] = None
+						elif (MOUSE_HOVER_ID in ITEMWEAPONS["shield"]):
+							Player.customAttributes["stats"]["equipment"]["WEAPONS"]["shield"] = None
+						elif (MOUSE_HOVER_ID in ITEMWEAPONS["bow"]):
+							Player.customAttributes["stats"]["equipment"]["WEAPONS"]["bow"] = None
+						else:
+							raise Exception("<qkuldo>the item is classified as a weapon but is not in the list of weapons</qkuldo>")
+						playerSword.asset = pg.transform.scale(weaponAssets[0], (TILESIZE,TILESIZE))
 			HUDLAYER.blit(INVENTORY_DESCLAYER, (0, 0))
 		else:
 			INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((500,520), text = DEBUGTEXT)
