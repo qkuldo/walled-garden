@@ -592,7 +592,7 @@ def game():
 	#testText, textTestRect = createText((SCREENWIDTH/2,SCREENHEIGHT/2))
 	specialPickupText, specialPickupTextRect = createText((0,0), text = DEBUGTEXT)
 	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
-	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
+	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "LEFT CLICK TO EQUIP WEAPON", color=BRIGHTYELLOW, font = 1)
 	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
 	PLACEHOLDERTARGETLOCK = [SCREENWIDTH/2, SCREENHEIGHT/2]
 	#set timers
@@ -876,14 +876,19 @@ def game():
 						INVENTORY_ITEM_DESCRIPTION, INVENTORY_ITEM_DESC_RECT = createText((300,starty), font=1, text = line)
 						INVENTORY_DESCLAYER.blit(INVENTORY_ITEM_DESCRIPTION, INVENTORY_ITEM_DESC_RECT)
 						starty += 15
-				#display equipped text if item is equipped
-				if (MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()):
+				isWeapon = ITEMTYPEIDS[itemType] == "weapon"
+				isEquipped = MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()
+				if (isWeapon and not isEquipped):
+					WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "LEFT CLICK TO EQUIP WEAPON", color=BRIGHTYELLOW, font = 1)
+				elif (isWeapon and isEquipped):
+					WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
+				if (ITEMTYPEIDS[itemType] == "weapon"):
 					HUDLAYER.blit(WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT)
 				#equip weapon
 				if (clicked and not clickInCooldown):
 					clickInCooldown = True
 					pg.time.set_timer(CLICKCOOLDOWNFINISH, 500, 1)
-					if (ITEMTYPEIDS[itemType] == "weapon" and not MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()):
+					if (isWeapon and not isEquipped):
 						if (MOUSE_HOVER_ID in ITEMWEAPONS["sword"]):
 							Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] = MOUSE_HOVER_ID
 						elif (MOUSE_HOVER_ID in ITEMWEAPONS["shield"]):
@@ -894,7 +899,7 @@ def game():
 							raise Exception("<qkuldo>the item is classified as a weapon but is not in the list of weapons</qkuldo>")
 						SFX["equipItem"].play()
 						playerSword.asset = pg.transform.scale(weaponAssets[MOUSE_HOVER_ID], (TILESIZE,TILESIZE))
-					elif (ITEMTYPEIDS[itemType] == "weapon" and clicked and MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()):
+					elif (isWeapon and isEquipped):
 						if (MOUSE_HOVER_ID in ITEMWEAPONS["sword"]):
 							Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] = None
 						elif (MOUSE_HOVER_ID in ITEMWEAPONS["shield"]):
