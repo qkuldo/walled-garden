@@ -1,0 +1,203 @@
+import pygame as pg
+import json, sys, os
+import modules.sprite as sprite
+import modules.spritesheet as sheets
+SCREENWIDTH = 1280
+SCREENHEIGHT = 720
+BASEIMGPATH = "assets/"
+TILESIZE = 48
+pg.font.init()
+BIGDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 30)
+SMALLDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 15)
+MEDIUMDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 25)
+def loadImages(path):
+	"""returns a list of pygame surfaces of .png images within the folder corresponding to the path parameter and a list of all .png filenames without the file extension"""
+	images = []
+	aseExtension = ".ase"
+	fullpath = BASEIMGPATH + path
+	imageNames = []
+	for img_name in os.listdir(fullpath):
+		#code until continue block is for checking and ignoring .ase files from libresprite
+		root, extension = os.path.splitext(fullpath + img_name)
+		if (extension == aseExtension):
+			continue
+		images.append(pg.image.load(fullpath + img_name).convert_alpha())
+		imageNames.append(img_name)
+		#print(img_name + " loaded in")
+	assert len(images) == len(imageNames), f"there are not enough names for images or there are not enough images for names. why? find out urself. also {len(images)} images {len(imageNames)} names.  </qkuldo>"
+	return images, imageNames
+def loadTileSpritesheets(walltileSpritesheets, proptileSpritesheets):
+	tileImages,tileNames = loadImages("tiles/")
+	wallbunchID, propbunchID = "walltile", "proptile"
+	for tilebunch in tileImages:
+		if (wallbunchID in tileNames[tileImages.index(tilebunch)]):
+			walltileSpritesheets.append(sheets.Spritesheet(tilebunch,16,16))
+		elif (propbunchID in tileNames[tileImages.index(tilebunch)]):
+			proptileSpritesheets.append(sheets.Spritesheet(tilebunch,16,16))
+		else:
+			raise Exception("<qkuldo> one of the tile sheets is not properly named. pls use walltile prefix for walls and proptile prefix for props. goodbye! </qkuldo>")
+	#print("tile spritesheets successfully loaded")
+def readJsonFile(path):
+	#loads path file with json.load
+	with open(path, "r") as file:
+		#more rhyme!
+		data = json.load(file)
+		file.close()
+	return data
+def addItem(itemList, itemID, coordinates, assets):
+	"""Appends item sprites to a list
+	itemList - list sprite is appended to
+	itemID - the index in ITEMIDS
+	coordinates - where the coordinate attribute of the sprite will be
+	assets - the list of all item assets
+	"""
+	itemList.append(sprite.Sprite(assets[itemID], coordinates, 0, spriteScale=[TILESIZE,TILESIZE], hitboxScale=[TILESIZE,TILESIZE], customAttributes = {
+					"itemID":itemID,
+					"fromGroundOffset":0,
+					"oscillate":0,
+					"active":True
+				}))
+def goto_angle(velocity,angle):
+	# Calculates a directional vector based on velocity and angle.`
+	direction = pg.Vector2(0, velocity).rotate(-angle)
+	return direction
+def findTilePixelLocation(tileRow, tileColumn):
+	#converts tile coordinates to pixel coordinates
+	#tile = roomLayout[str(tileRow)][tileColumn]
+	tileX = tileRow*TILESIZE
+	tileY = tileColumn*TILESIZE
+	return (tileX,tileY)
+def findPixelTileLocation(x, y):
+	#converts pixel coordinates to tile coordinates
+	pixelX = int(x//TILESIZE)
+	pixelY = int(y//TILESIZE)
+	return (pixelX,pixelY)
+def terminate():
+	pg.quit()
+	sys.exit()
+def initDrawLayer():
+	layer = pg.Surface((SCREENWIDTH,SCREENHEIGHT),pg.SRCALPHA).convert_alpha()
+	return layer
+def clearLayer(layer):
+	#use this for tilelayer before loading a new room after exiting a previous room
+	layer.fill((0,0,0,0))
+def hitboxInbound(rect):
+	"""checks if given rect is outside of the screen borders
+	returns False if not out of bounds, returns True otherwise
+	"""
+	if (rect.midbottom[1] < SCREENHEIGHT and rect.midtop[1] > 0 and rect.midleft[0] > 0 and rect.midright[0] < SCREENWIDTH):
+		return True
+	else:
+		return False
+def complexMove(Sprite, movement_line,operation,currentRoomData, divider=1):
+	collideChecker = Sprite.siMove(movement_line,operation, divider)
+	if (collideChecker.collidelist(currentRoomData["collisionBoxes"]) == -1 and hitboxInbound(collideChecker)):
+		Sprite.move(movement_line,operation,divider)
+def animateLoop(Sprite, startFrame, endFrame):
+	#loops animation on certain start and end frames
+	if (Sprite.customAttributes["currentFrame"] > endFrame or Sprite.customAttributes["currentFrame"] < startFrame):
+		Sprite.customAttributes["currentFrame"] = startFrame
+	if (Sprite.customAttributes["currentFrame"] < endFrame):
+		Sprite.customAttributes["currentFrame"] += 1
+	else:
+		Sprite.customAttributes["currentFrame"] = startFrame
+def createText(center, font = 0, text = "hello there", color=(255,255,255)):
+	if (font == 0):
+		textSurface = BIGDISPLAYFONT_BOLD.render(text, False, color)
+	elif (font == 1):
+		textSurface = SMALLDISPLAYFONT_BOLD.render(text, False, color)
+	elif (font == 2):
+		textSurface = MEDIUMDISPLAYFONT_BOLD.render(text, False, color)
+	textRect = textSurface.get_rect()
+	textRect.center = center
+	return (textSurface, textRect)
+def face_target(person_pos,targetpos,face=True):
+	out_dir = (targetpos[0]-person_pos[0],targetpos[1]-person_pos[1])
+	length = math.hypot(*out_dir)
+	if (length == 0.0):
+		out_dir = (0,1)
+	else:
+		out_dir = (out_dir[0]/length, out_dir[1]/length)
+	if (face):
+		angle = math.degrees(math.atan2(-out_dir[0],-out_dir[1]))
+	else:
+		angle = math.degrees(math.atan2(out_dir[0],out_dir[1]))
+	return angle
+def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDTH/2, SCREENHEIGHT/2), checkCollision=False, collisionList=(), setDir = True):
+	#goto_angle that also sets the "facingDirection" custom attribute of sprite if setDir is True
+	#returns the initial goto_angle call if checkCollision is False, else returns (0,0) if collision checks with any rect in collisionList parameter fail
+	directional_vector = -goto_angle(Sprite.speed*speed_multiplier, angle)
+	if (setDir):
+		distance_fromTarget = (Sprite.coordinates[0]-targetPos[0], Sprite.coordinates[1]-targetPos[1])
+		assert "facingDirection" in Sprite.customAttributes.keys(), "<qkuldo>Sprite incompatible with function due to the lack of the facingDirection custom attribute. Use goto_angle instead if this is intended.</qkuldo>"
+		if (abs(distance_fromTarget[0]) > abs(distance_fromTarget[1])):
+			if (abs(distance_fromTarget[0]) == distance_fromTarget[0]):
+				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
+			elif (abs(distance_fromTarget[0]) != distance_fromTarget[0]):
+				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
+		else:
+			if (abs(distance_fromTarget[1]) == distance_fromTarget[1]):
+				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
+			elif (abs(distance_fromTarget[1]) != distance_fromTarget[1]):
+				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
+	if (checkCollision):
+		spriteDummy = Sprite.createDummy()
+		spriteDummy.x += directional_vector[0]
+		spriteDummy.y += directional_vector[1]
+		if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
+			return directional_vector
+		else:
+			spriteDummy = Sprite.createDummy()
+			spriteDummy.x += directional_vector[0]
+			if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
+				return (directional_vector[0],0)
+			spriteDummy = Sprite.createDummy()
+			spriteDummy.y += directional_vector[1]
+			if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
+				return (0,directional_vector[1])
+			return (0, 0)
+	else:
+		return directional_vector
+def unpack_nestedDict(inputArray, key):
+	"""returns a set with all the values with parameter 'key' in a nested array 'inputDict'"""
+	output = set()
+	for nestedDict in inputArray:
+		output.add(nestedDict[key])
+	return output
+def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGHT//2), mode=0, circleRadius=600, radiusChange=10):
+	"""if mode is 0, this function causes a tunnel transition animation with the circle getting smaller, if mode is 1 the circle gets bigger"""
+	mask = initDrawLayer().convert_alpha()
+	END_TRANSITION = pg.event.custom_type()
+	pg.time.set_timer(END_TRANSITION, duration)
+	break_signal = False
+	if (mode == 1):
+		maxCircleRadius = circleRadius
+		circleRadius = 0
+	else:
+		maxCircleRadius = 0
+	while True:
+		for event in pg.event.get():
+			if (event.type == pg.QUIT):
+				terminate()
+			elif (event.type == END_TRANSITION):
+				break_signal = True
+		screen.fill("black")
+		mask.fill("black")
+		if (mode == 1 and circleRadius < maxCircleRadius):
+			masked = background.copy().convert_alpha()
+			circleRadius += radiusChange
+			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
+			masked.blit(mask)
+		elif (mode == 0):
+			masked = background.copy().convert_alpha()
+			circleRadius -= radiusChange
+			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
+			masked.blit(mask)
+		screen.blit(masked)
+		pg.draw.circle(screen, (7,5,35), center, circleRadius+5, width=10)
+
+		pg.display.flip()
+		clock.tick(FPS)
+		if (break_signal):
+			break
+#quit that font thing

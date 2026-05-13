@@ -13,13 +13,15 @@ game.readAllJsonData()
 commandActivators = ["p", "q","e","i"]
 brush = "a"
 currentRoom = "test"
-allroomData = game.readJsonFile("rooms.json")
+allroomData = modules.helper.readJsonFile("rooms.json")
 roomLayout = list(allroomData["rooms"][currentRoom].values())[3:18]
 roomItems = allroomData["rooms"][currentRoom]["items"]
 roomExits = allroomData["rooms"][currentRoom]["exits"]
 allExits = allroomData["exitData"]
 roomItemCoordinates = allroomData["rooms"][currentRoom]["itemCoordinates"]
 alphabet = "abcdefghijklmnopqrstuvwxyz"
+walltileSpritesheets = []
+proptileSpritesheets = []
 
 def levelGet():
 	for tile in roomLayout:
@@ -114,29 +116,29 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1, room=None):
 		for column in row:
 			if ((not column == " ")):
 				if (column.isdigit()):
-					tileLayer.blit(pg.transform.scale(game.proptileSpritesheets[propSet].load_frame(int(column)), (48,48)), (drawx, drawy))
+					tileLayer.blit(pg.transform.scale(proptileSpritesheets[propSet].load_frame(int(column)), (48,48)), (drawx, drawy))
 				elif (column == "#"):
-					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(0), (48,48)), (drawx, drawy))
+					tileLayer.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(0), (48,48)), (drawx, drawy))
 					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "_"):
-					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(1), (48,48)), (drawx, drawy))
+					tileLayer.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(1), (48,48)), (drawx, drawy))
 					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "-"):
-					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(2), (48,48)), (drawx, drawy))
+					tileLayer.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(2), (48,48)), (drawx, drawy))
 					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "+"):
-					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(3), (48,48)), (drawx, drawy))
+					tileLayer.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(3), (48,48)), (drawx, drawy))
 					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "="):
-					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(4), (48,48)), (drawx, drawy))
+					tileLayer.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(4), (48,48)), (drawx, drawy))
 					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "^"):
-					tileLayer.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), (drawx, drawy))
+					tileLayer.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(5), (48,48)), (drawx, drawy))
 					if (extraView == 2 or extraView == 3):
 						tileLayer.blit(wallDisplay, (drawx, drawy))
 				elif (column == "@"):
@@ -156,7 +158,7 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1, room=None):
 		drawx = 0
 	for item in range(0, len(roomItems)):
 		itemID = roomItems[item]
-		itemCoordinate = game.findTilePixelLocation(roomItemCoordinates[item][0],roomItemCoordinates[item][1])
+		itemCoordinate = modules.helper.findTilePixelLocation(roomItemCoordinates[item][0],roomItemCoordinates[item][1])
 		if (len(game.ITEMDATA["ITEM ASSETS"]) >= itemID):
 			itemSurface = pg.transform.scale(pg.image.load(game.ITEMDATA["ITEM ASSETS"][itemID]), (48,48)).convert_alpha()
 			tileLayer.blit(itemSurface, itemCoordinate)
@@ -164,12 +166,12 @@ def customRoomRenderer(tileLayer, roomLayout, frame, extraView=1, room=None):
 		displayRect = pg.Rect(0,0, 4, 4)
 		fakeDisplayRect = pg.Rect(0,0, 24, 24)
 		for exit in roomExits_noOneWay + disabledExits + oneWayExits:
-			exitCoordinate = game.findTilePixelLocation(allExits[exit][room][0],allExits[exit][room][1])
+			exitCoordinate = modules.helper.findTilePixelLocation(allExits[exit][room][0],allExits[exit][room][1])
 			posRect = pg.Rect(exitCoordinate, (48, 48))
 			exitSelectors.append(posRect)
 			displayRect.center = posRect.center
 			fakeDisplayRect.center = posRect.center
-			IDtext, IDtext_rect = game.createText(posRect.center, text=str(exit))
+			IDtext, IDtext_rect = modules.helper.createText(posRect.center, text=str(exit))
 			IDtext.set_alpha(50)
 			tileLayer.blit(IDtext, IDtext_rect)
 			if (exit in disabledExits):
@@ -188,12 +190,12 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
 	allowLoopTerminate = False
 	clicked = False
 	blueBoxRect = pg.Rect(0,0, game.SCREENWIDTH, game.SCREENHEIGHT//3+(48*2))
-	titleText, titleTextRect = game.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
-	toText, toRect = game.createText((game.SCREENWIDTH//2, 180), font=2, text="to", color=game.BRIGHTYELLOW)
+	titleText, titleTextRect = modules.helper.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
+	toText, toRect = modules.helper.createText((game.SCREENWIDTH//2, 180), font=2, text="to", color=game.BRIGHTYELLOW)
 	lilGuyDecorator = pg.transform.scale(playerAsset.load_frame(0), (48,48))
 	can_pressbutton = True
 	selection = 0
-	roomLayout = game.initDrawLayer()
+	roomLayout = modules.helper.initDrawLayer()
 	customRoomRenderer(roomLayout, list(allroomData["rooms"][allroomData["roomList"][fromRoomIndex]].values())[3:18], 0, 1, allroomData["roomList"][fromRoomIndex])
 	#selection table:
 	# value | button
@@ -208,8 +210,8 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
 		toRoomIndex = 0
 		leftSlotSwitch, rightSlotSwitch = True, True
 		exitID = len(allExits)
-		exitIDText, exitIDRect = game.createText((game.SCREENWIDTH//2, 120), text=str(exitID)+" if saved", color=game.BRIGHTYELLOW)
-		noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text="", color=game.BRIGHTYELLOW)
+		exitIDText, exitIDRect = modules.helper.createText((game.SCREENWIDTH//2, 120), text=str(exitID)+" if saved", color=game.BRIGHTYELLOW)
+		noteText, noteRect = modules.helper.createText((game.SCREENWIDTH//2, 130), text="", color=game.BRIGHTYELLOW)
 	else:
 		involvedRooms = data["involved rooms"].copy()
 		involvedRooms.remove(allroomData["roomList"][fromRoomIndex])
@@ -222,17 +224,17 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
 		if (allExits.index(data) in allroomData["rooms"][allroomData["roomList"][toRoomIndex]]["exits"]):
 			rightSlotSwitch = True
 		exitID = allExits.index(data)
-		exitIDText, exitIDRect = game.createText((game.SCREENWIDTH//2, 100), text=str(exitID), color=game.BRIGHTYELLOW)
+		exitIDText, exitIDRect = modules.helper.createText((game.SCREENWIDTH//2, 100), text=str(exitID), color=game.BRIGHTYELLOW)
 		if ("_note" in data):
-			noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text=data["_note"], color=game.BRIGHTYELLOW)
+			noteText, noteRect = modules.helper.createText((game.SCREENWIDTH//2, 130), text=data["_note"], color=game.BRIGHTYELLOW)
 		else:
-			noteText, noteRect = game.createText((game.SCREENWIDTH//2, 130), text="", color=game.BRIGHTYELLOW)
-	saveText, saveRect = game.createText((game.SCREENWIDTH//2, 240), text="SAVE", color=game.BRIGHTYELLOW)
+			noteText, noteRect = modules.helper.createText((game.SCREENWIDTH//2, 130), text="", color=game.BRIGHTYELLOW)
+	saveText, saveRect = modules.helper.createText((game.SCREENWIDTH//2, 240), text="SAVE", color=game.BRIGHTYELLOW)
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
-	leftSlotPosText, leftSlotPosRect = game.createText((game.SCREENWIDTH//3, 120), text=str(leftSlotPos), color=game.BRIGHTYELLOW)
-	rightSlotPosText, rightSlotPosRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 120), text=str(rightSlotPos), color=game.BRIGHTYELLOW)
-	leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
-	rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
+	leftSlotPosText, leftSlotPosRect = modules.helper.createText((game.SCREENWIDTH//3, 120), text=str(leftSlotPos), color=game.BRIGHTYELLOW)
+	rightSlotPosText, rightSlotPosRect = modules.helper.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 120), text=str(rightSlotPos), color=game.BRIGHTYELLOW)
+	leftSlotSwitchText, leftSlotSwitchRect = modules.helper.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
+	rightSlotSwitchText, rightSlotSwitchRect = modules.helper.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
 	cachedLocations = {}
 	cachedLocations["leftSlotRoom"] = [copy.copy(fromRoomIndex), copy.copy(leftSlotPos)]
 	cachedLocations["rightSlotRoom"] = [copy.copy(toRoomIndex), copy.copy(rightSlotPos)]
@@ -240,34 +242,34 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
 	posSelect = [2,3]
 	while True:
 		if (currentMode == 0):
-			titleText, titleTextRect = game.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
+			titleText, titleTextRect = modules.helper.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
 		game.screen.fill((0,0,0))
 		if (leftSlotSwitch):
-			leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
+			leftSlotSwitchText, leftSlotSwitchRect = modules.helper.createText((game.SCREENWIDTH//3, 250), text="X", color=game.BRIGHTYELLOW)
 		else:
-			leftSlotSwitchText, leftSlotSwitchRect = game.createText((game.SCREENWIDTH//3, 250), text="[]", color=game.BRIGHTYELLOW)
+			leftSlotSwitchText, leftSlotSwitchRect = modules.helper.createText((game.SCREENWIDTH//3, 250), text="[]", color=game.BRIGHTYELLOW)
 		if (rightSlotSwitch):
-			rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
+			rightSlotSwitchText, rightSlotSwitchRect = modules.helper.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="X", color=game.BRIGHTYELLOW)
 		else:
-			rightSlotSwitchText, rightSlotSwitchRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="[]", color=game.BRIGHTYELLOW)
+			rightSlotSwitchText, rightSlotSwitchRect = modules.helper.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 250), text="[]", color=game.BRIGHTYELLOW)
 		if (leftSlotSwitch and rightSlotSwitch):
-			statusText, statusRect = game.createText((game.SCREENWIDTH//2, 300), text="Two-way exit", color=game.BRIGHTYELLOW)
+			statusText, statusRect = modules.helper.createText((game.SCREENWIDTH//2, 300), text="Two-way exit", color=game.BRIGHTYELLOW)
 		elif (leftSlotSwitch or rightSlotSwitch):
-			statusText, statusRect = game.createText((game.SCREENWIDTH//2, 300), text="One-way exit", color=game.BRIGHTYELLOW)
+			statusText, statusRect = modules.helper.createText((game.SCREENWIDTH//2, 300), text="One-way exit", color=game.BRIGHTYELLOW)
 		else:
-			statusText, statusRect = game.createText((game.SCREENWIDTH//2, 300), text="Disabled exit", color=game.BRIGHTYELLOW)
+			statusText, statusRect = modules.helper.createText((game.SCREENWIDTH//2, 300), text="Disabled exit", color=game.BRIGHTYELLOW)
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
 		roomSlotLeft = allroomData["roomList"][fromRoomIndex]
 		roomSlotRight = allroomData["roomList"][toRoomIndex]
-		leftSlotText, leftSlotRect = game.createText((game.SCREENWIDTH//3, 180), text=roomSlotLeft, color=game.BRIGHTYELLOW)
-		rightSlotText, rightSlotRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 180), text=roomSlotRight, color=game.BRIGHTYELLOW)
+		leftSlotText, leftSlotRect = modules.helper.createText((game.SCREENWIDTH//3, 180), text=roomSlotLeft, color=game.BRIGHTYELLOW)
+		rightSlotText, rightSlotRect = modules.helper.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 180), text=roomSlotRight, color=game.BRIGHTYELLOW)
 		if (selection == 0):
-			leftSlotText, leftSlotRect = game.createText((game.SCREENWIDTH//3, 180), text=roomSlotLeft, color=game.ORANGE)
+			leftSlotText, leftSlotRect = modules.helper.createText((game.SCREENWIDTH//3, 180), text=roomSlotLeft, color=game.ORANGE)
 		elif (selection == 1):
-			rightSlotText, rightSlotRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 180), text=roomSlotRight, color=game.ORANGE)
+			rightSlotText, rightSlotRect = modules.helper.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 180), text=roomSlotRight, color=game.ORANGE)
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
-				game.terminate()
+				modules.helper.terminate()
 			elif (event.type == toggleEvent):
 				allowLoopTerminate = True
 			elif (event.type == pg.MOUSEBUTTONDOWN):
@@ -301,7 +303,7 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
 			currentMode = 0
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			titleText, titleTextRect = game.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
+			titleText, titleTextRect = modules.helper.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
 			cachedLocations["leftSlotRoom"] = [copy.copy(fromRoomIndex), copy.copy(leftSlotPos)]
 			cachedLocations["rightSlotRoom"] = [copy.copy(toRoomIndex), copy.copy(rightSlotPos)]
 		if (clicked):
@@ -366,27 +368,27 @@ def makeExitLoop(toggleEvent, togglekey=pg.K_ESCAPE, fromRoomIndex=0, data={}):
 				if (selection == 2):
 					leftSlotPos = coordinates
 					selection = 0
-					leftSlotPosText, leftSlotPosRect = game.createText((game.SCREENWIDTH//3, 120), text=str(leftSlotPos), color=game.BRIGHTYELLOW)
+					leftSlotPosText, leftSlotPosRect = modules.helper.createText((game.SCREENWIDTH//3, 120), text=str(leftSlotPos), color=game.BRIGHTYELLOW)
 				else:
 					rightSlotPos = coordinates
 					selection = 1
-					rightSlotPosText, rightSlotPosRect = game.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 120), text=str(rightSlotPos), color=game.BRIGHTYELLOW)
+					rightSlotPosText, rightSlotPosRect = modules.helper.createText((game.SCREENWIDTH//2+game.SCREENWIDTH//3-200, 120), text=str(rightSlotPos), color=game.BRIGHTYELLOW)
 				cachedLocations["leftSlotRoom"] = [copy.copy(fromRoomIndex), copy.copy(leftSlotPos)]
 				cachedLocations["rightSlotRoom"] = [copy.copy(toRoomIndex), copy.copy(rightSlotPos)]
 				currentMode = 0
 				game.SFX["equipItem"].play()
 				can_pressbutton = False
 				pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-				titleText, titleTextRect = game.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
+				titleText, titleTextRect = modules.helper.createText((game.SCREENWIDTH//2, 20), text="qkuldo's very high-tech Exit Editor", color=game.BRIGHTYELLOW)
 		roomLayout.fill((0,0,15))
 		if (selection == 0 or selection == 2):
 			customRoomRenderer(roomLayout, list(allroomData["rooms"][allroomData["roomList"][fromRoomIndex]].values())[3:18], 0, 1, allroomData["roomList"][fromRoomIndex])
 			if (selection in posSelect):
-				titleText, titleTextRect = game.createText((game.SCREENWIDTH//2, 20), text="SELECTING IN "+allroomData["roomList"][fromRoomIndex]+" (x to go back)", color=game.BRIGHTYELLOW)
+				titleText, titleTextRect = modules.helper.createText((game.SCREENWIDTH//2, 20), text="SELECTING IN "+allroomData["roomList"][fromRoomIndex]+" (x to go back)", color=game.BRIGHTYELLOW)
 		elif (selection == 1 or selection == 3):
 			customRoomRenderer(roomLayout, list(allroomData["rooms"][allroomData["roomList"][toRoomIndex]].values())[3:18], 0, 1, allroomData["roomList"][toRoomIndex])
 			if (selection in posSelect):
-				titleText, titleTextRect = game.createText((game.SCREENWIDTH//2, 20), text="SELECTING IN "+allroomData["roomList"][toRoomIndex]+" (x to go back)", color=game.BRIGHTYELLOW)
+				titleText, titleTextRect = modules.helper.createText((game.SCREENWIDTH//2, 20), text="SELECTING IN "+allroomData["roomList"][toRoomIndex]+" (x to go back)", color=game.BRIGHTYELLOW)
 		game.screen.blit(roomLayout, (0,0))
 		if (currentMode == 0):
 			pg.draw.rect(game.screen, game.BLUE, blueBoxRect)
@@ -441,8 +443,8 @@ def runEditor():
 	global BUTTONPRESSCOOLDOWN
 	global tileBoxList
 	commandList = ["qkuldo's very futuristic modern ","high-tech room editor","[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[t]: Exit Select","[left shift]: Edit Exits","[h]: Toggle this Help Menu"]
-	ROOMLAYER = game.initDrawLayer()
-	EDITORHUDLAYER = game.initDrawLayer()
+	ROOMLAYER = modules.helper.initDrawLayer()
+	EDITORHUDLAYER = modules.helper.initDrawLayer()
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
 	BUTTONPRESSCOOLDOWN = pg.event.custom_type()
 	SAVECOOLDOWN = pg.event.custom_type()
@@ -459,7 +461,7 @@ def runEditor():
 	findoutY = 0
 	tileBoxList = []
 	roomIndex = 0
-	currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+	currentRoomText, currentRoomText_Rect = modules.helper.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 	for row in roomLayout:
 		findoutX = 0
 		findoutY += 48
@@ -467,10 +469,10 @@ def runEditor():
 			tileBoxList.append(pg.Rect(findoutX, findoutY, 48, 48))
 			findoutX += 48
 	current_tool = "p"
-	currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
-	currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
-	saveText, saveTextRect = game.createText((50, 20), 2, "saved!", game.BRIGHTYELLOW)
-	helpText, helpText_Rect = game.createText((1100, 20), 2, ("[c]:aaaaaaaaa"), game.ORANGE)
+	currentToolText, currentToolText_Rect = modules.helper.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
+	currentModeText, currentModeText_Rect = modules.helper.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
+	saveText, saveTextRect = modules.helper.createText((50, 20), 2, "saved!", game.BRIGHTYELLOW)
+	helpText, helpText_Rect = modules.helper.createText((1100, 20), 2, ("[c]:aaaaaaaaa"), game.ORANGE)
 	currentBrushIndex = 0
 	brush = ACCEPTED_TILES[currentBrushIndex]
 	extras = pg.image.load("assets/extras.png").convert_alpha()
@@ -487,14 +489,14 @@ def runEditor():
 		helpMenu_index = 0
 		helpMenu_drawy = 20
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], 48, 48)
-		game.clearLayer(ROOMLAYER)
-		game.clearLayer(EDITORHUDLAYER)
-		game.clearLayer(game.screen)
+		modules.helper.clearLayer(ROOMLAYER)
+		modules.helper.clearLayer(EDITORHUDLAYER)
+		modules.helper.clearLayer(game.screen)
 		switchFrame = False
 		tileOption = "a"
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
-				game.terminate()
+				modules.helper.terminate()
 			elif (event.type == ANIMATIONSWITCHEVENT):
 				switchFrame = True
 				if (roomFrame == 0):
@@ -523,7 +525,7 @@ def runEditor():
 			roomExits = allroomData["rooms"][currentRoom]["exits"]
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+			currentRoomText, currentRoomText_Rect = modules.helper.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 		elif (keys[pg.K_h] and can_pressbutton and hudView):
 			game.SFX["equipItem"].play()
 			helpMenu = not helpMenu
@@ -549,7 +551,7 @@ def runEditor():
 			allroomData["rooms"][currentRoom]["itemCoordinates"] = roomItemCoordinates
 			allroomData["rooms"][currentRoom]["exits"] = []
 			allroomData["roomList"].append(currentRoom)
-			currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+			currentRoomText, currentRoomText_Rect = modules.helper.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 			roomIndex = allroomData["roomList"].index(currentRoom)
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 		elif (keys[pg.K_d] and can_pressbutton):
@@ -559,7 +561,7 @@ def runEditor():
 				allroomData["roomList"].remove(currentRoom)
 				roomIndex -= 1
 				currentRoom = allroomData["roomList"][roomIndex]
-				currentRoomText, currentRoomText_Rect = game.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
+				currentRoomText, currentRoomText_Rect = modules.helper.createText((game.SCREENWIDTH/2, 20), 2, currentRoom, game.ORANGE)
 				roomLayout = list(allroomData["rooms"][currentRoom].values())[3:18]
 			else:
 				game.SFX["openMenu"].play()
@@ -569,20 +571,20 @@ def runEditor():
 			current_tool = "i"
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using COLORPICKER}"), game.BLUE)
+			currentToolText, currentToolText_Rect = modules.helper.createText((game.SCREENWIDTH/4, 20), 2, ("using COLORPICKER}"), game.BLUE)
 		elif (keys[pg.K_b] and can_pressbutton):
 			current_tool = "p"
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
+			currentToolText, currentToolText_Rect = modules.helper.createText((game.SCREENWIDTH/4, 20), 2, ("using PAINT"), game.BLUE)
 		elif (keys[pg.K_x] and can_pressbutton):
 			game.SFX["equipItem"].play()
 			itemVer = not itemVer
 			if (itemVer):
-				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("ITEM MODE"), game.BRIGHTYELLOW)
+				currentModeText, currentModeText_Rect = modules.helper.createText((100, 20), 2, ("ITEM MODE"), game.BRIGHTYELLOW)
 				commandList = ["[b]: Paint Item", "[q]: Change Item Brush", "[i]: Itempicker",  "[l]: Switch room","[x]: Switch to Tile Mode","[e]: Erase Item","[r]: Change Item with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[t]: Exit Select","[left shift]: Edit Exits","[h]: Toggle this Help Menu"]
 			else:
-				currentModeText, currentModeText_Rect = game.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
+				currentModeText, currentModeText_Rect = modules.helper.createText((100, 20), 2, ("TILE MODE"), game.BRIGHTYELLOW)
 				commandList = ["[b]: Paint Tile", "[q]: Change Tile Brush", "[i]: Tilepicker",  "[l]: Switch room","[x]: Switch to Item Mode","[e]: Erase Tile","[r]: Change Tile with up/down arrow keys","[s]: Save Room","[v]: Change Helper View","[n]: New Room","[d]: Delete Current Room","[t]: Exit Select","[left shift]: Edit Exits","[h]: Toggle this Help Menu"]
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
@@ -596,12 +598,12 @@ def runEditor():
 			current_tool = "r"
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using BRUSHCHANGE"), game.BLUE)
+			currentToolText, currentToolText_Rect = modules.helper.createText((game.SCREENWIDTH/4, 20), 2, ("using BRUSHCHANGE"), game.BLUE)
 		elif (keys[pg.K_e] and can_pressbutton):
 			current_tool = "e"
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using ERASE"), game.BLUE)
+			currentToolText, currentToolText_Rect = modules.helper.createText((game.SCREENWIDTH/4, 20), 2, ("using ERASE"), game.BLUE)
 		elif (keys[pg.K_s] and can_pressbutton):
 			for row in range(15):
 				allroomData["rooms"][currentRoom][str(row)] = roomLayout[row]
@@ -610,7 +612,7 @@ def runEditor():
 			allroomData["rooms"][currentRoom]["itemCoordinates"] = roomItemCoordinates
 			with open('rooms.json', 'w') as roomFile:
 				json.dump(allroomData, roomFile, indent=2)
-			saveText, saveTextRect = game.createText((1000, 20), 2, ("saved as "+currentRoom+"!"), game.BRIGHTYELLOW)
+			saveText, saveTextRect = modules.helper.createText((1000, 20), 2, ("saved as "+currentRoom+"!"), game.BRIGHTYELLOW)
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
 			display_saveText = True
@@ -620,7 +622,7 @@ def runEditor():
 			current_tool = "t"
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, ("using EXIT SELECT"), game.BLUE)
+			currentToolText, currentToolText_Rect = modules.helper.createText((game.SCREENWIDTH/4, 20), 2, ("using EXIT SELECT"), game.BLUE)
 		if (keys[pg.K_UP] and can_pressbutton and current_tool == "r"):
 			if (not itemVer):
 				currentBrushIndex += 1
@@ -633,7 +635,7 @@ def runEditor():
 					itembrush = 0
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
+			currentToolText, currentToolText_Rect = modules.helper.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
 		if (keys[pg.K_DOWN] and can_pressbutton and current_tool == "r"):
 			if (not itemVer):
 				currentBrushIndex -= 1
@@ -646,7 +648,7 @@ def runEditor():
 					itembrush = len(game.ITEMDATA["ITEM TYPES"]) - 1
 			can_pressbutton = False
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
-			currentToolText, currentToolText_Rect = game.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
+			currentToolText, currentToolText_Rect = modules.helper.createText((game.SCREENWIDTH/4, 20), 2, str(brush), game.BLUE)
 		if (keys[pg.K_LSHIFT] and can_pressbutton):
 			ROOMLAYER.fill((0,0,15))
 			pg.time.set_timer(BUTTONPRESSCOOLDOWN, 500, 1)
@@ -668,19 +670,19 @@ def runEditor():
 		if ((current_tool == "r" or current_tool == "p") and not itemVer):
 			if ((not brush == " ")):
 				if (brush.isdigit()):
-					EDITORHUDLAYER.blit(pg.transform.scale(game.proptileSpritesheets[propSet].load_frame(int(brush)), (48,48)), tileshowing_pos)
+					EDITORHUDLAYER.blit(pg.transform.scale(proptileSpritesheets[propSet].load_frame(int(brush)), (48,48)), tileshowing_pos)
 				elif (brush == "#"):
-					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(0), (48,48)), tileshowing_pos)
+					EDITORHUDLAYER.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(0), (48,48)), tileshowing_pos)
 				elif (brush == "_"):
-					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(1), (48,48)), tileshowing_pos)
+					EDITORHUDLAYER.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(1), (48,48)), tileshowing_pos)
 				elif (brush == "-"):
-					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(2), (48,48)), tileshowing_pos)
+					EDITORHUDLAYER.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(2), (48,48)), tileshowing_pos)
 				elif (brush == "+"):
-					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(3), (48,48)), tileshowing_pos)
+					EDITORHUDLAYER.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(3), (48,48)), tileshowing_pos)
 				elif (brush == "="):
-					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(4), (48,48)), tileshowing_pos)
+					EDITORHUDLAYER.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(4), (48,48)), tileshowing_pos)
 				elif (brush == "^"):
-					EDITORHUDLAYER.blit(pg.transform.scale(game.walltileSpritesheets[wallSet].load_frame(5), (48,48)), tileshowing_pos)
+					EDITORHUDLAYER.blit(pg.transform.scale(walltileSpritesheets[wallSet].load_frame(5), (48,48)), tileshowing_pos)
 				elif (brush == "@"):
 					EDITORHUDLAYER.blit(pg.transform.scale(playerAsset.load_frame(0), (48,48)), tileshowing_pos)
 				elif (brush in alphabet):
@@ -696,7 +698,7 @@ def runEditor():
 		if (current_tool == "t"):
 			for exitSelector in exitSelectors:
 				if (exitSelector.colliderect(mouseRect)):
-					tempAlphaChange = game.initDrawLayer()
+					tempAlphaChange = modules.helper.initDrawLayer()
 					exitHover.center = exitSelector.center
 					pg.draw.rect(tempAlphaChange, game.ORANGE, exitHover)
 					tempAlphaChange.set_alpha(150)
@@ -725,14 +727,14 @@ def runEditor():
 			EDITORHUDLAYER.blit(currentRoomText, currentRoomText_Rect)
 		if (helpMenu and hudView != 3):
 			for text in commandList:
-				helpText, helpText_Rect = game.createText((1100, helpMenu_drawy), 2, text, game.ORANGE)
+				helpText, helpText_Rect = modules.helper.createText((1100, helpMenu_drawy), 2, text, game.ORANGE)
 				helpMenu_index += 1
 				helpMenu_drawy += 20
 				helpText_Rect.midright = (game.SCREENWIDTH,helpText_Rect.midright[1])
 				EDITORHUDLAYER.blit(helpText, helpText_Rect)
 		elif (hudView != 3):
 			#helpText text is now equal to the "toggle this help menu" element in commandList
-			helpText, helpText_Rect = game.createText((1100, helpMenu_drawy), 2, commandList[-1], game.ORANGE)
+			helpText, helpText_Rect = modules.helper.createText((1100, helpMenu_drawy), 2, commandList[-1], game.ORANGE)
 			helpText_Rect.midright = (game.SCREENWIDTH,helpText_Rect.midright[1])
 			EDITORHUDLAYER.blit(helpText, helpText_Rect)
 		game.screen.blit(ROOMLAYER, (0, 0))
@@ -749,5 +751,5 @@ if (__name__ == "__main__"):
 	game.setup()
 	playerAsset = pg.image.load("assets/player.png").convert_alpha()
 	playerAsset = modules.sheets.Spritesheet(playerAsset, 16, 16)
-	game.loadTileSpritesheets()
+	modules.helper.loadTileSpritesheets(walltileSpritesheets, proptileSpritesheets)
 	runEditor()

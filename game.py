@@ -1,4 +1,4 @@
-import random, sys, json, os, time, math, copy
+import random, os, time, math, copy
 import pygame as pg
 import modules
 FPS = 30
@@ -14,7 +14,6 @@ PALEBLUE = (24, 23, 87)
 DARKBLUE = (7,5,35)
 DARKESTBLUE = (0,0,15)
 ORANGE = (255,126,71)
-BASEIMGPATH = "assets/"
 TILESIZE = 48
 #from bottom
 HUDMARGIN = 440
@@ -39,72 +38,16 @@ DIRECTION_IDS = {
 "down":3
 }
 DIRECTION_ANGLES = (90,-90,0,180)
-
-def loadImages(path):
-	images = []
-	aseExtension = ".ase"
-	fullpath = BASEIMGPATH + path
-	imageNames = []
-	for img_name in os.listdir(fullpath):
-		#code until continue block is for checking and ignoring .ase files from libresprite
-		root, extension = os.path.splitext(fullpath + img_name)
-		if (extension == aseExtension):
-			continue
-		images.append(pg.image.load(fullpath + img_name).convert_alpha())
-		imageNames.append(img_name)
-		#print(img_name + " loaded in")
-	assert len(images) == len(imageNames), f"there are not enough names for images or there are not enough images for names. why? find out urself. also {len(images)} images {len(imageNames)} names.  </qkuldo>"
-	return images, imageNames
-
-def loadTileSpritesheets():
-	global walltileSpritesheets, proptileSpritesheets
-	tileImages,tileNames = loadImages("tiles/")
-	walltileSpritesheets = []
-	proptileSpritesheets = []
-	wallbunchID, propbunchID = "walltile", "proptile"
-	for tilebunch in tileImages:
-		if (wallbunchID in tileNames[tileImages.index(tilebunch)]):
-			walltileSpritesheets.append(modules.sheets.Spritesheet(tilebunch,16,16))
-		elif (propbunchID in tileNames[tileImages.index(tilebunch)]):
-			proptileSpritesheets.append(modules.sheets.Spritesheet(tilebunch,16,16))
-		else:
-			raise Exception("you BUFFOON!!!!! one of the tile bunches is named IMPROPERLY!!!!!! you have done a SLOPPY JOB!!!!! you *****************!!!!!!!!<qkuldo> sorry for its harsh language, the code's just letting you know that one of the tile sheets is not properly named. pls use walltile prefix for walls and proptile prefix for props. goodbye! </qkuldo>")
-	#print("tile spritesheets successfully loaded")
-
-def readJsonFile(path):
-	#loads path file with json.load
-	with open(path, "r") as file:
-		#more rhyme!
-		data = json.load(file)
-		file.close()
-	return data
+walltileSpritesheets = []
+proptileSpritesheets = []
 
 def readAllJsonData():
 	global DIALOGDATA, ITEMDATA, ROOMTILEDATA, EXITDATA
-	ROOMTILEDATA = readJsonFile("rooms.json")["rooms"]
-	EXITDATA = readJsonFile("rooms.json")["exitData"]
-	DIALOGDATA = readJsonFile("dialog.json")
-	ITEMDATA = readJsonFile("itemData.json")
+	ROOMTILEDATA = modules.helper.readJsonFile("rooms.json")["rooms"]
+	EXITDATA = modules.helper.readJsonFile("rooms.json")["exitData"]
+	DIALOGDATA = modules.helper.readJsonFile("dialog.json")
+	ITEMDATA = modules.helper.readJsonFile("itemData.json")
 	assert len(ITEMDATA["ITEM TYPES"]) == len(ITEMDATA["ITEM ASSETS"]), "<qkuldo>there's an inequality in the itemData.json file between the item types and item assets.</qkuldo>"
-
-def addItem(itemList, itemID, coordinates, assets):
-	"""Appends item sprites to a list
-	itemList - list sprite is appended to
-	itemID - the index in ITEMIDS
-	coordinates - where the coordinate attribute of the sprite will be
-	assets - the list of all item assets
-	"""
-	itemList.append(modules.interactables.Sprite(assets[itemID], coordinates, 0, spriteScale=[TILESIZE,TILESIZE], hitboxScale=[TILESIZE,TILESIZE], customAttributes = {
-					"itemID":itemID,
-					"fromGroundOffset":0,
-					"oscillate":0,
-					"active":True
-				}))
-
-def goto_angle(velocity,angle):
-	# Calculates a directional vector based on velocity and angle.`
-	direction = pg.Vector2(0, velocity).rotate(-angle)
-	return direction
 
 def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems=[]):
 	#loadRoom function needs only to be used when loading a new room
@@ -180,13 +123,13 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 		for item in range(0, len(ROOMTILEDATA[roomToLoad]["items"])):
 			if (not item in inactiveItems):
 				itemID = ROOMTILEDATA[roomToLoad]["items"][item]
-				itemCoordinate = findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
+				itemCoordinate = modules.helper.findTilePixelLocation(ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][0],ROOMTILEDATA[roomToLoad]["itemCoordinates"][item][1])
 				if (len(itemAssets) >= itemID):
-					addItem(items, itemID, itemCoordinate, itemAssets)
+					modules.helper.addItem(items, itemID, itemCoordinate, itemAssets)
 		for exitID in ROOMTILEDATA[roomToLoad]["exits"]:
 			assert exitID <= len(EXITDATA)-1, f"<qkuldo>searching for an exit({exitID}) that doesn't exist</qkuldo>"
 			assert roomToLoad in EXITDATA[exitID].keys(), f"<qkuldo>this exit({exitID}) is not related to this room({roomToLoad})</qkuldo>"
-			exitCoordinate = findTilePixelLocation(EXITDATA[exitID][roomToLoad][0],EXITDATA[exitID][roomToLoad][1])
+			exitCoordinate = modules.helper.findTilePixelLocation(EXITDATA[exitID][roomToLoad][0],EXITDATA[exitID][roomToLoad][1])
 			exitTo = list(EXITDATA[exitID]["involved rooms"]).index(roomToLoad)
 			#below code switches exitTo from the index of the current room to the index of the next room
 			if (exitTo > 0):
@@ -210,7 +153,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 			else:
 				exitTo = 1
 			exitTo = EXITDATA[exitID]["involved rooms"][exitTo]
-			exitCoordinate = findTilePixelLocation(EXITDATA[exitID][exitTo][0],EXITDATA[exitID][exitTo][1])
+			exitCoordinate = modules.helper.findTilePixelLocation(EXITDATA[exitID][exitTo][0],EXITDATA[exitID][exitTo][1])
 			toCoordinates.append(EXITDATA[exitID][roomToLoad])
 			exitReturns.append(exitTo)
 			exitIDs.append(exitID)
@@ -230,25 +173,8 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 		}
 		return currentRoomData
 
-def findTilePixelLocation(tileRow, tileColumn):
-	#converts tile coordinates to pixel coordinates
-	#tile = roomLayout[str(tileRow)][tileColumn]
-	tileX = tileRow*TILESIZE
-	tileY = tileColumn*TILESIZE
-	return (tileX,tileY)
-
-def findPixelTileLocation(x, y):
-	#converts pixel coordinates to tile coordinates
-	pixelX = int(x//TILESIZE)
-	pixelY = int(y//TILESIZE)
-	return (pixelX,pixelY)
-
-def terminate():
-	pg.quit()
-	sys.exit()
-
 def setup():
-	global screen,clock,MISSINGTEXTURE,SFX,BIGDISPLAYFONT_BOLD,CURSOR, CURSORCLICKED, SMALLDISPLAYFONT_BOLD, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, MEDIUMDISPLAYFONT_BOLD, HPBARDESIGN, LOCKEDUNTARGET
+	global screen,clock,MISSINGTEXTURE,SFX,CURSOR, CURSORCLICKED, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, HPBARDESIGN, LOCKEDUNTARGET
 	pg.init()
 	pg.mixer.init()
 	clock = pg.time.Clock()
@@ -260,9 +186,6 @@ def setup():
 	for SFX_name in os.listdir(SFX_PATH):
 		SFX[os.path.splitext(SFX_name)[0]] = pg.mixer.Sound(SFX_PATH + SFX_name)
 		SFX[os.path.splitext(SFX_name)[0]].set_volume(0.3)
-	BIGDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 30)
-	SMALLDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 15)
-	MEDIUMDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 25)
 	CURSOR = pg.image.load("assets/cursor.png").convert_alpha()
 	CURSORCLICKED = pg.image.load("assets/cursorClicked.png").convert_alpha()
 	CURSOR = pg.transform.scale(CURSOR, (TILESIZE,TILESIZE))
@@ -280,20 +203,12 @@ def setup():
 	TARGETRECT = TARGET.get_rect()
 	pg.mouse.set_visible(False)
 
-def initDrawLayer():
-	layer = pg.Surface((SCREENWIDTH,SCREENHEIGHT),pg.SRCALPHA).convert_alpha()
-	return layer
-
-def clearLayer(layer):
-	#use this for tilelayer before loading a new room after exiting a previous room
-	layer.fill((0,0,0,0))
-
 def showInventory(HUDLAYER, Player, itemAssets, loadAll = True, mouse_collide_index = -1):
 	drawx, drawy = 500, 450
 	ITEMTILESIZE = 48
 	ITEMHITBOXES = []
 	INVENTORYITEMIDS = []
-	ITEM_AMOUNT_TEXT, ITEM_AMOUNT_TEXT_RECT = createText((0,0), text = DEBUGTEXT)
+	ITEM_AMOUNT_TEXT, ITEM_AMOUNT_TEXT_RECT = modules.helper.createText((0,0), text = DEBUGTEXT)
 	weaponSlots = Player.customAttributes["stats"]["equipment"]["WEAPONS"]
 	for item in Player.customAttributes["inventory"]:
 		itemAmount = Player.customAttributes["inventory"][item]
@@ -317,10 +232,10 @@ def showInventory(HUDLAYER, Player, itemAssets, loadAll = True, mouse_collide_in
 				HUDLAYER.blit(pg.transform.scale(EQUIPPED_SELECTOR, (ITEMTILESIZE,ITEMTILESIZE)), (drawx,drawy))
 		if (itemAmount > 1):
 			if (mouse_collide_index == itemIndex):
-				ITEM_AMOUNT_TEXT, ITEM_AMOUNT_TEXT_RECT = createText((drawx+ITEMTILESIZE/2+10,drawy+ITEMTILESIZE+10), text = f"{itemAmount}", font=0)
+				ITEM_AMOUNT_TEXT, ITEM_AMOUNT_TEXT_RECT = modules.helper.createText((drawx+ITEMTILESIZE/2+10,drawy+ITEMTILESIZE+10), text = f"{itemAmount}", font=0)
 				HUDLAYER.blit(ITEM_AMOUNT_TEXT, ITEM_AMOUNT_TEXT_RECT)
 			else:
-				ITEM_AMOUNT_TEXT, ITEM_AMOUNT_TEXT_RECT = createText((drawx+ITEMTILESIZE-10,drawy+ITEMTILESIZE-10), text = f"{itemAmount}", font=0)
+				ITEM_AMOUNT_TEXT, ITEM_AMOUNT_TEXT_RECT = modules.helper.createText((drawx+ITEMTILESIZE-10,drawy+ITEMTILESIZE-10), text = f"{itemAmount}", font=0)
 				HUDLAYER.blit(ITEM_AMOUNT_TEXT, ITEM_AMOUNT_TEXT_RECT)
 		if (loadAll):
 			ITEMHITBOXES.append(pg.Rect(drawx,drawy, ITEMTILESIZE, ITEMTILESIZE))
@@ -338,134 +253,6 @@ def loadHudLayer(HUDLAYER,blackHudArea,currentRoomData,playerPortrait):
 	pg.draw.line(HUDLAYER,currentRoomData["hud theme"],(0,HUDMARGIN),(SCREENWIDTH,HUDMARGIN),5)
 	HUDLAYER.blit(playerPortrait, (10,480))
 
-def hitboxInbound(rect):
-	"""checks if given rect is outside of the screen borders
-	returns False if not out of bounds, returns True otherwise
-	"""
-	if (rect.midbottom[1] < SCREENHEIGHT and rect.midtop[1] > 0 and rect.midleft[0] > 0 and rect.midright[0] < SCREENWIDTH):
-		return True
-	else:
-		return False
-
-def complexMove(Sprite, movement_line,operation,currentRoomData, divider=1):
-	collideChecker = Sprite.siMove(movement_line,operation, divider)
-	if (collideChecker.collidelist(currentRoomData["collisionBoxes"]) == -1 and hitboxInbound(collideChecker)):
-		Sprite.move(movement_line,operation,divider)
-
-def animateLoop(Sprite, startFrame, endFrame):
-	#loops animation on certain start and end frames
-	if (Sprite.customAttributes["currentFrame"] > endFrame or Sprite.customAttributes["currentFrame"] < startFrame):
-		Sprite.customAttributes["currentFrame"] = startFrame
-	if (Sprite.customAttributes["currentFrame"] < endFrame):
-		Sprite.customAttributes["currentFrame"] += 1
-	else:
-		Sprite.customAttributes["currentFrame"] = startFrame
-
-def createText(center, font = 0, text = "hello there", color=(255,255,255)):
-	if (font == 0):
-		textSurface = BIGDISPLAYFONT_BOLD.render(text, False, color)
-	elif (font == 1):
-		textSurface = SMALLDISPLAYFONT_BOLD.render(text, False, color)
-	elif (font == 2):
-		textSurface = MEDIUMDISPLAYFONT_BOLD.render(text, False, color)
-	textRect = textSurface.get_rect()
-	textRect.center = center
-	return (textSurface, textRect)
-
-def face_target(person_pos,targetpos,face=True):
-	out_dir = (targetpos[0]-person_pos[0],targetpos[1]-person_pos[1])
-	length = math.hypot(*out_dir)
-	if (length == 0.0):
-		out_dir = (0,1)
-	else:
-		out_dir = (out_dir[0]/length, out_dir[1]/length)
-	if (face):
-		angle = math.degrees(math.atan2(-out_dir[0],-out_dir[1]))
-	else:
-		angle = math.degrees(math.atan2(out_dir[0],out_dir[1]))
-	return angle
-
-def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDTH/2, SCREENHEIGHT/2), checkCollision=False, collisionList=(), setDir = True):
-	#goto_angle that also sets the "facingDirection" custom attribute of sprite if setDir is True
-	#returns the initial goto_angle call if checkCollision is False, else returns (0,0) if collision checks with any rect in collisionList parameter fail
-	directional_vector = -goto_angle(Sprite.speed*speed_multiplier, angle)
-	if (setDir):
-		distance_fromTarget = (Sprite.coordinates[0]-targetPos[0], Sprite.coordinates[1]-targetPos[1])
-		assert "facingDirection" in Sprite.customAttributes.keys(), "<qkuldo>Sprite incompatible with function due to the lack of the facingDirection custom attribute. Use goto_angle instead if this is intended.</qkuldo>"
-		if (abs(distance_fromTarget[0]) > abs(distance_fromTarget[1])):
-			if (abs(distance_fromTarget[0]) == distance_fromTarget[0]):
-				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
-			elif (abs(distance_fromTarget[0]) != distance_fromTarget[0]):
-				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
-		else:
-			if (abs(distance_fromTarget[1]) == distance_fromTarget[1]):
-				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
-			elif (abs(distance_fromTarget[1]) != distance_fromTarget[1]):
-				Sprite.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
-	if (checkCollision):
-		spriteDummy = Sprite.createDummy()
-		spriteDummy.x += directional_vector[0]
-		spriteDummy.y += directional_vector[1]
-		if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
-			return directional_vector
-		else:
-			spriteDummy = Sprite.createDummy()
-			spriteDummy.x += directional_vector[0]
-			if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
-				return (directional_vector[0],0)
-			spriteDummy = Sprite.createDummy()
-			spriteDummy.y += directional_vector[1]
-			if (spriteDummy.collidelist(collisionList) == -1 and hitboxInbound(spriteDummy)):
-				return (0,directional_vector[1])
-			return (0, 0)
-	else:
-		return directional_vector
-
-def unpack_nestedDict(inputArray, key):
-	"""returns a set with all the values with parameter 'key' in a nested array 'inputDict'"""
-	output = set()
-	for nestedDict in inputArray:
-		output.add(nestedDict[key])
-	return output
-
-
-def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGHT//2), mode=0, circleRadius=600, radiusChange=10):
-	"""if mode is 0, this function causes a tunnel transition animation with the circle getting smaller, if mode is 1 the circle gets bigger"""
-	mask = initDrawLayer().convert_alpha()
-	END_TRANSITION = pg.event.custom_type()
-	pg.time.set_timer(END_TRANSITION, duration)
-	break_signal = False
-	if (mode == 1):
-		maxCircleRadius = circleRadius
-		circleRadius = 0
-	else:
-		maxCircleRadius = 0
-	while True:
-		for event in pg.event.get():
-			if (event.type == pg.QUIT):
-				terminate()
-			elif (event.type == END_TRANSITION):
-				break_signal = True
-		screen.fill("black")
-		mask.fill("black")
-		if (mode == 1 and circleRadius < maxCircleRadius):
-			masked = background.copy().convert_alpha()
-			circleRadius += radiusChange
-			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
-			masked.blit(mask)
-		elif (mode == 0):
-			masked = background.copy().convert_alpha()
-			circleRadius -= radiusChange
-			pg.draw.circle(mask, (0,0,0,0), center, circleRadius)
-			masked.blit(mask)
-		screen.blit(masked)
-		pg.draw.circle(screen, (7,5,35), center, circleRadius+5, width=10)
-
-		pg.display.flip()
-		clock.tick(FPS)
-		if (break_signal):
-			break
-
 def game():
 	#find and make assets
 	itemAssets = ITEMDATA["ITEM ASSETS"]
@@ -482,14 +269,14 @@ def game():
 	specialItem = pg.Surface((TILESIZE,TILESIZE)).convert_alpha()
 	specialItemRect = specialItem.get_rect()
 	#define screen layers
-	TILELAYER = initDrawLayer()
-	HUDLAYER = initDrawLayer()
-	SPRITELAYER = initDrawLayer()
-	INFOLAYER = initDrawLayer()
-	BASELAYER = initDrawLayer()
-	CAMERALAYER = initDrawLayer()
-	INVENTORY_DESCLAYER = initDrawLayer()
-	DEBUGLAYER = initDrawLayer()
+	TILELAYER = modules.helper.initDrawLayer()
+	HUDLAYER = modules.helper.initDrawLayer()
+	SPRITELAYER = modules.helper.initDrawLayer()
+	INFOLAYER = modules.helper.initDrawLayer()
+	BASELAYER = modules.helper.initDrawLayer()
+	CAMERALAYER = modules.helper.initDrawLayer()
+	INVENTORY_DESCLAYER = modules.helper.initDrawLayer()
+	DEBUGLAYER = modules.helper.initDrawLayer()
 	blackHudArea = pg.Rect((0,HUDMARGIN),(SCREENWIDTH,HUDMARGIN))
 	#define custom events
 	ANIMATIONSWITCHEVENT = pg.event.custom_type()
@@ -551,7 +338,7 @@ def game():
 		cache["item inactivators"][current_room] = set()
 	if (not current_room in list(temp_cache["item timers"].keys())):
 		temp_cache["item timers"][current_room] = []
-	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
+	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | modules.helper.unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 	#define sprites
 	#directionalFrames custom attribute is written as a list for compatibility with DIRECTION_IDS constant dict
 	Player = modules.interactables.Sprite(playerAsset,currentRoomData["playerSpawn"],5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
@@ -590,11 +377,11 @@ def game():
 	playerMaxHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
 	attackHitbox = pg.Rect(0, 0, TILESIZE//2, TILESIZE//2)
 	#make text
-	#testText, textTestRect = createText((SCREENWIDTH/2,SCREENHEIGHT/2))
-	specialPickupText, specialPickupTextRect = createText((0,0), text = DEBUGTEXT)
-	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((520,500), text = DEBUGTEXT)
-	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "LEFT CLICK TO EQUIP WEAPON", color=BRIGHTYELLOW, font = 1)
-	test_text, test_text_rect = createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
+	#testText, textTestRect = modules.helper.createText((SCREENWIDTH/2,SCREENHEIGHT/2))
+	specialPickupText, specialPickupTextRect = modules.helper.createText((0,0), text = DEBUGTEXT)
+	INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = modules.helper.createText((520,500), text = DEBUGTEXT)
+	WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = modules.helper.createText((300, 650), text = "LEFT CLICK TO EQUIP WEAPON", color=BRIGHTYELLOW, font = 1)
+	test_text, test_text_rect = modules.helper.createText((50, 20), text = str(debugMode), color=BRIGHTYELLOW)
 	PLACEHOLDERTARGETLOCK = [SCREENWIDTH/2, SCREENHEIGHT/2]
 	#set timers
 	pg.time.set_timer(ANIMATIONSWITCHEVENT,180)
@@ -603,12 +390,12 @@ def game():
 		#cleanup
 
 		screen.fill(BGCOLOR)
-		clearLayer(SPRITELAYER)
-		clearLayer(CAMERALAYER)
-		clearLayer(HUDLAYER)
-		clearLayer(INVENTORY_DESCLAYER)
-		clearLayer(INFOLAYER)
-		clearLayer(DEBUGLAYER)
+		modules.helper.clearLayer(SPRITELAYER)
+		modules.helper.clearLayer(CAMERALAYER)
+		modules.helper.clearLayer(HUDLAYER)
+		modules.helper.clearLayer(INVENTORY_DESCLAYER)
+		modules.helper.clearLayer(INFOLAYER)
+		modules.helper.clearLayer(DEBUGLAYER)
 		#set stuff
 		current_time = pg.time.get_ticks()
 		timedRect.bottomleft = Player.hitbox.topright
@@ -618,7 +405,7 @@ def game():
 		playerHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
-		healthText, healthTextRect = createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
+		healthText, healthTextRect = modules.helper.createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
 		player_CenterOffset = (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1])
 
 		playerSword.hitbox.center = Player.hitbox.center
@@ -627,12 +414,12 @@ def game():
 			cameraMove_Percentx = 0.01
 			cameraMove_Percenty = 0.01
 		#below line is pretty trippy ngl
-		#Player.angle = face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
+		#Player.angle = modules.helper.face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
 
 		if (debugMode == 1):
-			test_text, test_text_rect = createText((200, 20), text = current_room + " MODE " + str(debugMode), color=BRIGHTYELLOW)
+			test_text, test_text_rect = modules.helper.createText((200, 20), text = current_room + " MODE " + str(debugMode), color=BRIGHTYELLOW)
 		else:
-			test_text, test_text_rect = createText((100, 20), text = "MODE "+str(debugMode), color=BRIGHTYELLOW)
+			test_text, test_text_rect = modules.helper.createText((100, 20), text = "MODE "+str(debugMode), color=BRIGHTYELLOW)
 
 		switchFrame = False
 		current_time = pg.time.get_ticks()
@@ -641,14 +428,14 @@ def game():
 		#handle events
 		for event in pg.event.get():
 			if (event.type == pg.QUIT):
-				terminate()
+				modules.helper.terminate()
 			elif (event.type == ANIMATIONSWITCHEVENT):
 				switchFrame = True
 			elif (event.type == SPECIALPICKUPSTAY):
 				specialPickupVisible = not specialPickupVisible
 				pg.time.set_timer(SPECIALPICKUPSTAY, 0)
 				specialPickupAlpha = 255
-				specialPickupText, specialPickupTextRect = createText((0,0), text = "<qkuldo>you're not supposed to see this!</qkuldo>")
+				specialPickupText, specialPickupTextRect = modules.helper.createText((0,0), text = "<qkuldo>you're not supposed to see this!</qkuldo>")
 				specialPickupFade = False
 				special_itemGet_addY = 0
 			elif (event.type == START_FADEOUT):
@@ -666,14 +453,14 @@ def game():
 				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 				timedRect_fill = False
 				if (debugMode == 1):
-					test_text, test_text_rect = createText((100, 20), text = "click", color=BRIGHTYELLOW)
+					test_text, test_text_rect = modules.helper.createText((100, 20), text = "click", color=BRIGHTYELLOW)
 				attack_qte_active = True
 				pg.time.set_timer(ATTACK_QTE_END, 1000, 1)
 			elif (event.type == ATTACK_QTE_END):
 				Player.customAttributes["speed divider"] = 1
 				if (attack_qte_success):
 					if (debugMode == 2):
-						test_text, test_text_rect = createText((100, 20), text = "success", color=BRIGHTYELLOW)
+						test_text, test_text_rect = modules.helper.createText((100, 20), text = "success", color=BRIGHTYELLOW)
 					#print("success")
 					SFX["slash"].play()
 					pg.time.set_timer(ENDSWORD_VISIBILITY, 500, 1)
@@ -688,7 +475,7 @@ def game():
 					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 					if (debugMode == 2):
-						test_text, test_text_rect = createText((100, 20), text = "fail", color=BRIGHTYELLOW)
+						test_text, test_text_rect = modules.helper.createText((100, 20), text = "fail", color=BRIGHTYELLOW)
 				attack_qte_success = False
 				attack_qte_ongoing_attack = False
 				attack_qte_active = False
@@ -730,25 +517,25 @@ def game():
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"])):
 			if (keys[pg.K_w] or keys[pg.K_UP]):
-				complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
 				#Player.angle = DIRECTION_ANGLES["up"]
 			elif (keys[pg.K_s] or keys[pg.K_DOWN]):
-				complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
 				#Player.angle = DIRECTION_ANGLES["down"]
 			if (keys[pg.K_a] or keys[pg.K_LEFT]):
-				complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
 				#Player.angle = DIRECTION_ANGLES["left"]
 			elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
-				complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 				#Player.angle = DIRECTION_ANGLES["right"]
 			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 				Player.customAttributes["target pos"] = PLACEHOLDERTARGETLOCK #this is a placeholder
 				Player.customAttributes["targeting"] = True
-				goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
+				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 				TARGETRECT.center = Player.customAttributes["target pos"]
@@ -776,7 +563,7 @@ def game():
 				else:
 					playerSword.customAttributes["negativeSUB"] = False					
 				Player.customAttributes["attempted qte"] = True
-				playerSword.angle = face_target(Player.hitbox.center, Player.customAttributes["target pos"])
+				playerSword.angle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
 				attack_qte_success = False
 				on_attack_button_cooldown = True
@@ -788,7 +575,7 @@ def game():
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 		#update stuff
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
-			goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
+			modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 		if (switchFrame and (not specialPickupVisible)):
 			if (Player.customAttributes["hit animation"]):
 				Player.customAttributes["visible"] = not Player.customAttributes["visible"]
@@ -803,7 +590,7 @@ def game():
 				Player.customAttributes["frameRow"] = 1
 			elif (not Player.customAttributes["apply knockback"]):
 				Player.customAttributes["visible"] = True
-				animateLoop(Player, Player.customAttributes["directionalFrames"][Player.customAttributes["facingDirection"]]["startFrame"], Player.customAttributes["directionalFrames"][Player.customAttributes["facingDirection"]]["endFrame"])
+				modules.helper.animateLoop(Player, Player.customAttributes["directionalFrames"][Player.customAttributes["facingDirection"]]["startFrame"], Player.customAttributes["directionalFrames"][Player.customAttributes["facingDirection"]]["endFrame"])
 				Player.customAttributes["frameRow"] = 0
 			roomAccumulateFrames += 1
 			if (roomAccumulateFrames == 2):
@@ -812,7 +599,7 @@ def game():
 				else:
 					roomFrame = 0
 				roomAccumulateFrames = 0
-			clearLayer(TILELAYER)
+			modules.helper.clearLayer(TILELAYER)
 			TILELAYER.fill(DARKESTBLUE)
 			loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
 		elif (specialPickupVisible):
@@ -840,12 +627,12 @@ def game():
 				else:
 					playerSword.customAttributes["offset"] += 6
 			if (playerSword.customAttributes["moving"]):
-				directional_vector = goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=1.3)
+				directional_vector = modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=1.3)
 				Player.coordinates[0] += directional_vector[0]
 				Player.coordinates[1] += directional_vector[1]
 
 		if (Player.customAttributes["apply knockback"] and not Player.customAttributes["hit animation"]):
-			directional_vector = goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
+			directional_vector = modules.helper.goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
 			if (Player.customAttributes["reverse knockback"]):
 				Player.coordinates[0] -= directional_vector[0]
 				Player.coordinates[1] -= directional_vector[1]
@@ -860,29 +647,29 @@ def game():
 			if (MOUSE_HOVER_INVENTORY_INDEX != -1):
 				#creates item header text
 				if (ITEMTYPEIDS[ITEMDATA["ITEM TYPES"][ITEMIDS[MOUSE_HOVER_ID]]] in ("weapon", "armor")):
-					INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((300,480), text = INVENTORY_ITEMS[MOUSE_HOVER_INVENTORY_INDEX], color=BRIGHTYELLOW)
+					INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = modules.helper.createText((300,480), text = INVENTORY_ITEMS[MOUSE_HOVER_INVENTORY_INDEX], color=BRIGHTYELLOW)
 				else:
-					INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((300,480), text = INVENTORY_ITEMS[MOUSE_HOVER_INVENTORY_INDEX], color=WHITE)
+					INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = modules.helper.createText((300,480), text = INVENTORY_ITEMS[MOUSE_HOVER_INVENTORY_INDEX], color=WHITE)
 				itemType = ITEMTYPEIDS.index(ITEMTYPEIDS[ITEMDATA["ITEM TYPES"][INVENTORY_ITEMS[MOUSE_HOVER_INVENTORY_INDEX]]])
 				#blit type icon and item name
 				HUDLAYER.blit(pg.transform.scale(ICONS.load_frame(itemType), (TILESIZE/2, TILESIZE/2)), (INVENTORY_ITEM_TEXT_RECT.topleft[0]-ITEMTYPE_XMARGIN, INVENTORY_ITEM_TEXT_RECT.midleft[1]-ITEMTYPE_YMARGIN))
 				HUDLAYER.blit(INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT)
 				#display description
 				if (type(DIALOGDATA["ITEM DESCRIPTIONS"][MOUSE_HOVER_ID]) != list):
-					INVENTORY_ITEM_DESCRIPTION, INVENTORY_ITEM_DESC_RECT = createText((300,520), font=1, text = DIALOGDATA["ITEM DESCRIPTIONS"][ITEMIDS.index(INVENTORY_ITEMS[MOUSE_HOVER_INVENTORY_INDEX])])
+					INVENTORY_ITEM_DESCRIPTION, INVENTORY_ITEM_DESC_RECT = modules.helper.createText((300,520), font=1, text = DIALOGDATA["ITEM DESCRIPTIONS"][ITEMIDS.index(INVENTORY_ITEMS[MOUSE_HOVER_INVENTORY_INDEX])])
 					INVENTORY_DESCLAYER.blit(INVENTORY_ITEM_DESCRIPTION, INVENTORY_ITEM_DESC_RECT)
 				else:
 					starty = 520
 					for line in DIALOGDATA["ITEM DESCRIPTIONS"][MOUSE_HOVER_ID]:
-						INVENTORY_ITEM_DESCRIPTION, INVENTORY_ITEM_DESC_RECT = createText((300,starty), font=1, text = line)
+						INVENTORY_ITEM_DESCRIPTION, INVENTORY_ITEM_DESC_RECT = modules.helper.createText((300,starty), font=1, text = line)
 						INVENTORY_DESCLAYER.blit(INVENTORY_ITEM_DESCRIPTION, INVENTORY_ITEM_DESC_RECT)
 						starty += 15
 				isWeapon = ITEMTYPEIDS[itemType] == "weapon"
 				isEquipped = MOUSE_HOVER_ID in Player.customAttributes["stats"]["equipment"]["WEAPONS"].values()
 				if (isWeapon and not isEquipped):
-					WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "LEFT CLICK TO EQUIP WEAPON", color=BRIGHTYELLOW, font = 1)
+					WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = modules.helper.createText((300, 650), text = "LEFT CLICK TO EQUIP WEAPON", color=BRIGHTYELLOW, font = 1)
 				elif (isWeapon and isEquipped):
-					WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
+					WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT = modules.helper.createText((300, 650), text = "EQUIPPED IN WEAPON SLOT", color=BRIGHTYELLOW, font = 1)
 				if (ITEMTYPEIDS[itemType] == "weapon"):
 					HUDLAYER.blit(WEAPON_EQUIPPED_TEXT, WEAPON_EQUIPPED_TEXT_RECT)
 				#equip weapon
@@ -912,7 +699,7 @@ def game():
 						playerSword.asset = pg.transform.scale(weaponAssets[0], (TILESIZE,TILESIZE))
 			HUDLAYER.blit(INVENTORY_DESCLAYER, (0, 0))
 		else:
-			INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = createText((500,520), text = DEBUGTEXT)
+			INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = modules.helper.createText((500,520), text = DEBUGTEXT)
 
 
 		if (debugMode > 0):
@@ -962,7 +749,7 @@ def game():
 					if (ITEMTYPEIDS[item.customAttributes["itemID"]] in ("weapon", "armor")):
 						SFX["special_ItemCollect"].play()
 						itemText = ITEMIDS[item.customAttributes["itemID"]]
-						specialPickupText, specialPickupTextRect = createText((0,0), text = f"You got a {itemText}!", color=BRIGHTYELLOW)
+						specialPickupText, specialPickupTextRect = modules.helper.createText((0,0), text = f"You got a {itemText}!", color=BRIGHTYELLOW)
 						specialPickupVisible = True
 						zoom_level = 1
 						pg.time.set_timer(SPECIALPICKUPSTAY, 2700)
@@ -975,7 +762,7 @@ def game():
 		if (Player.customAttributes["visible"]):
 			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 			#if (playerSword.customAttributes["visible"]):
-			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-goto_angle(50, playerSword.angle)[0],-goto_angle(50, playerSword.angle)[1]))
+			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-modules.helper.goto_angle(50, playerSword.angle)[0],-modules.helper.goto_angle(50, playerSword.angle)[1]))
 			#else:
 			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
 		if (not specialPickupVisible):
@@ -990,21 +777,21 @@ def game():
 						cache["item inactivators"][current_room] = set()
 					if (not current_room in list(temp_cache["item timers"].keys())):
 						temp_cache["item timers"][current_room] = []
-					roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2500, circleRadius=600, radiusChange=15)
-					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
+					modules.helper.roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2500, circleRadius=600, radiusChange=15)
+					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | modules.helper.unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][0],currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][1]))
 					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 					for exitIndex in range(0, len(currentRoomData["exits"])):
 						if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
 							currentRoomData["contained exits"][exitIndex] = True
-					CURRENTCOMBINELAYER = initDrawLayer().convert_alpha()
+					CURRENTCOMBINELAYER = modules.helper.initDrawLayer().convert_alpha()
 					CURRENTCOMBINELAYER.fill((0,0,15))
 					loadRoom(current_room,CURRENTCOMBINELAYER,itemAssets,False,roomFrame)
 					Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 					CURRENTCOMBINELAYER.blit(SPRITELAYER, (0,0))
-					roomTransition(CURRENTCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15, mode=1)
-					clearLayer(TILELAYER)
-					clearLayer(SPRITELAYER)
+					modules.helper.roomTransition(CURRENTCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15, mode=1)
+					modules.helper.clearLayer(TILELAYER)
+					modules.helper.clearLayer(SPRITELAYER)
 					playerSword.customAttributes["moving"] = False
 					playerSword.customAttributes["visible"] = False
 					Player.customAttributes["speed divider"] = 1
@@ -1033,9 +820,10 @@ def game():
 			TARGETRECT.center = Player.customAttributes["target pos"]
 			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
 		elif (attack_qte_ongoing_attack and not playerSword.customAttributes["visible"]):
-			UNTARGETRECT = pg.transform.rotate(LOCKEDUNTARGET, face_target(Player.hitbox.center, Player.customAttributes["target pos"])).get_rect()
-			UNTARGETRECT.center = (Player.hitbox.center[0]-goto_angle(30,face_target(Player.hitbox.center, Player.customAttributes["target pos"]))[0],Player.hitbox.center[1]-goto_angle(30,face_target(Player.hitbox.center, Player.customAttributes["target pos"]))[1])
-			INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, face_target(Player.hitbox.center, Player.customAttributes["target pos"])), UNTARGETRECT)
+			faceAngle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
+			UNTARGETRECT = pg.transform.rotate(LOCKEDUNTARGET, faceAngle).get_rect()
+			UNTARGETRECT.center = (Player.hitbox.center[0]-faceAngle[0],Player.hitbox.center[1]-modules.helper.goto_angle(30,faceAngle)[1])
+			INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, modules.helper.faceAngle), UNTARGETRECT)
 		if (timedRect_fill):
 			timedRect.width += timedRect_fillRate
 			pg.draw.rect(INFOLAYER, DARKBLUE, timedRectBG)
@@ -1044,10 +832,10 @@ def game():
 		pg.draw.rect(INFOLAYER, BRIGHTYELLOW, timedRect)
 
 		if (playerSword.customAttributes["visible"]):
-			playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
+			playerSword.coordinates = (playerSword.hitbox.x-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], playerSword.hitbox.y-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"])
-			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[1]))
-			attackHitbox.center = (Player.hitbox.center[0]-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
+			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-modules.helper.goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-modules.helper.goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[1]))
+			attackHitbox.center = (Player.hitbox.center[0]-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
 
 
 		if (specialPickupVisible):
@@ -1099,7 +887,7 @@ def game():
 			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
 
 		if (keys[pg.K_o] and debugMode == 3):
-			roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusChange=15)
+			modules.helper.roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusChange=15)
 		if ((not specialPickupVisible) and (not clicked)):
 			screen.blit(CURSOR, pg.mouse.get_pos())
 		elif ((not specialPickupVisible) and clicked):
@@ -1114,5 +902,5 @@ def game():
 if (__name__ == "__main__"):
 	readAllJsonData()
 	setup()
-	loadTileSpritesheets()
+	modules.helper.loadTileSpritesheets(walltileSpritesheets, proptileSpritesheets)
 	game()
