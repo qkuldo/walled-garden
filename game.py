@@ -1047,7 +1047,7 @@ def game():
 			playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"])
 			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[1]))
-			attackHitbox.center = (Player.hitbox.center[0]-goto_angle(50,playerSword.angle)[0], Player.hitbox.center[1]-goto_angle(50,playerSword.angle)[1])
+			attackHitbox.center = (Player.hitbox.center[0]-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
 
 
 		if (specialPickupVisible):
