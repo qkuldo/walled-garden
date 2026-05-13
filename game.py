@@ -588,6 +588,7 @@ def game():
 	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
 	playerHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
 	playerMaxHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
+	attackHitbox = pg.Rect(0, 0, TILESIZE//2, TILESIZE//2)
 	#make text
 	#testText, textTestRect = createText((SCREENWIDTH/2,SCREENHEIGHT/2))
 	specialPickupText, specialPickupTextRect = createText((0,0), text = DEBUGTEXT)
@@ -919,6 +920,7 @@ def game():
 			if (debugMode == 2):
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
 				pg.draw.rect(DEBUGLAYER,WHITE,Player.hitbox)
+				pg.draw.rect(DEBUGLAYER,BRIGHTYELLOW,attackHitbox)
 			elif (debugMode == 3):
 				if (keys[pg.K_f]):
 					Player.customAttributes["stats"]["health"] -= 1
@@ -1045,6 +1047,7 @@ def game():
 			playerSword.coordinates = (playerSword.hitbox.x-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], playerSword.hitbox.y-goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"])
 			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[1]))
+			attackHitbox.center = (Player.hitbox.center[0]-goto_angle(35,playerSword.angle)[0], Player.hitbox.center[1]-goto_angle(35,playerSword.angle)[1])
 
 
 		if (specialPickupVisible):
