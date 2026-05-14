@@ -202,6 +202,7 @@ def setup():
 	HPBARDESIGN = pg.transform.scale(HPBARDESIGN, (TILESIZE*2, TILESIZE*2))
 	TARGETRECT = TARGET.get_rect()
 	pg.mouse.set_visible(False)
+	modules.helper.setVeryImportants(screen, clock)
 
 def showInventory(HUDLAYER, Player, itemAssets, loadAll = True, mouse_collide_index = -1):
 	drawx, drawy = 500, 450
@@ -779,7 +780,7 @@ def game():
 						temp_cache["item timers"][current_room] = []
 					modules.helper.roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2500, circleRadius=600, radiusChange=15)
 					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | modules.helper.unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
-					Player.coordinates = list(findTilePixelLocation(currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][0],currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][1]))
+					Player.coordinates = list(modules.helper.findTilePixelLocation(currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][0],currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][1]))
 					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 					for exitIndex in range(0, len(currentRoomData["exits"])):
 						if (currentRoomData["exits"][exitIndex].colliderect(Player.hitbox)):
@@ -822,8 +823,8 @@ def game():
 		elif (attack_qte_ongoing_attack and not playerSword.customAttributes["visible"]):
 			faceAngle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			UNTARGETRECT = pg.transform.rotate(LOCKEDUNTARGET, faceAngle).get_rect()
-			UNTARGETRECT.center = (Player.hitbox.center[0]-faceAngle[0],Player.hitbox.center[1]-modules.helper.goto_angle(30,faceAngle)[1])
-			INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, modules.helper.faceAngle), UNTARGETRECT)
+			UNTARGETRECT.center = (Player.hitbox.center[0]-modules.helper.goto_angle(30,faceAngle)[0],Player.hitbox.center[1]-modules.helper.goto_angle(30,faceAngle)[1])
+			INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, faceAngle), UNTARGETRECT)
 		if (timedRect_fill):
 			timedRect.width += timedRect_fillRate
 			pg.draw.rect(INFOLAYER, DARKBLUE, timedRectBG)

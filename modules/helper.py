@@ -1,5 +1,5 @@
 import pygame as pg
-import json, sys, os
+import json, sys, os, math
 import modules.sprite as sprite
 import modules.spritesheet as sheets
 SCREENWIDTH = 1280
@@ -10,6 +10,20 @@ pg.font.init()
 BIGDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 30)
 SMALLDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 15)
 MEDIUMDISPLAYFONT_BOLD = pg.font.Font("font/PixelifySans-Bold.ttf", 25)
+DIRECTION_IDS = {
+"left":0,
+"right":1,
+"up":2,
+"down":3
+}
+screen = pg.Surface((1,1))
+clock = pg.time.Clock()
+FPS = 30
+def setVeryImportants(surface, clockObject):
+	"""sets the main blitting surface"""
+	global screen, clock
+	screen = surface
+	clock = clockObject
 def loadImages(path):
 	"""returns a list of pygame surfaces of .png images within the folder corresponding to the path parameter and a list of all .png filenames without the file extension"""
 	images = []
