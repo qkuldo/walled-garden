@@ -20,7 +20,7 @@ screen = pg.Surface((1,1))
 clock = pg.time.Clock()
 FPS = 30
 def setVeryImportants(surface, clockObject):
-	"""sets the main blitting surface"""
+	"""sets the main blitting surface and the clock"""
 	global screen, clock
 	screen = surface
 	clock = clockObject
