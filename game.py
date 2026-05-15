@@ -388,6 +388,7 @@ def game():
 			},
 			"visible":True,
 			"rectOperation":(12,12),
+			"hit angle":0,
 			"name":modules.helper.generateName(random.randint(5, 10))
 		})
 	enemyList = [test_enemy]
@@ -794,8 +795,14 @@ def game():
 					"start time":pg.time.get_ticks(),
 					"duration":500
 				}
+				enemy.customAttributes["hit angle"] = copy.copy(playerSword.angle)
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
+				directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=(50/FPS), angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
+				enemy.coordinates[0] += directional_vector[0]
+				enemy.coordinates[1] += directional_vector[1]
+			else:
+				enemy.customAttributes["visible"] = True
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
