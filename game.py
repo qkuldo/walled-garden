@@ -40,7 +40,8 @@ DIRECTION_IDS = {
 DIRECTION_ANGLES = (90,-90,0,180)
 walltileSpritesheets = []
 proptileSpritesheets = []
-MIN_KNOCKBACK = 2
+#like minecraft
+MIN_KNOCKBACK = 1.552
 
 def readAllJsonData():
 	global DIALOGDATA, ITEMDATA, ROOMTILEDATA, EXITDATA
@@ -357,7 +358,7 @@ def game():
 				"health":20,
 				"max health":20,
 				"defense":3,
-				"weight":3,
+				"weight":1.03,
 				"equipment":{
 					"WEAPONS":{
 						"sword":None,
@@ -383,7 +384,7 @@ def game():
 				"health":5,
 				"max health":5,
 				"defense":0,
-				"weight":3,
+				"weight":1,
 				"equipment":{
 					"SLOT 1":None,
 					"SLOT 2":None
@@ -392,8 +393,6 @@ def game():
 			"visible":True,
 			"rectOperation":(12,0),
 			"hit angle":0,
-			"hit damage":0,
-			"knockback momentum":0,
 			"name":modules.helper.generateName(random.randint(5, 10))
 		})
 	enemyList = [test_enemy]
@@ -797,7 +796,6 @@ def game():
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
 				enemy.customAttributes["stats"]["health"] -= damage
-				enemy.customAttributes["hit damage"] = copy.copy(damage)
 				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
 					"start time":pg.time.get_ticks(),
 					"duration":500
@@ -805,8 +803,9 @@ def game():
 				enemy.customAttributes["hit angle"] = copy.copy(playerSword.angle)
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
-				speedOverrideCalculation = MIN_KNOCKBACK + enemy.customAttributes["hit damage"]*0.75
-				directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=1, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedOverride = speedOverrideCalculation)
+				#will add more later
+				speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
+				directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=MIN_KNOCKBACK, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation)
 				enemy.coordinates[0] += directional_vector[0]
 				enemy.coordinates[1] += directional_vector[1]
 			else:

@@ -142,13 +142,10 @@ def face_target(person_pos,targetpos,face=True):
 	else:
 		angle = math.degrees(math.atan2(out_dir[0],out_dir[1]))
 	return angle
-def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDTH/2, SCREENHEIGHT/2), checkCollision=False, collisionList=(), setDir = True, speedOverride=None):
+def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDTH/2, SCREENHEIGHT/2), checkCollision=False, collisionList=(), setDir = True, speedDivider=1):
 	#goto_angle that also sets the "facingDirection" custom attribute of sprite if setDir is True
 	#returns the initial goto_angle call if checkCollision is False, else returns (0,0) if collision checks with any rect in collisionList parameter fail
-	if (speedOverride == None):
-		directional_vector = -goto_angle(Sprite.speed*speed_multiplier, angle)
-	else:
-		directional_vector = -goto_angle(speedOverride*speed_multiplier, angle)
+	directional_vector = -goto_angle(Sprite.speed*speed_multiplier/speedDivider, angle)
 	if (setDir):
 		distance_fromTarget = (Sprite.coordinates[0]-targetPos[0], Sprite.coordinates[1]-targetPos[1])
 		assert "facingDirection" in Sprite.customAttributes.keys(), "<qkuldo>Sprite incompatible with function due to the lack of the facingDirection custom attribute. Use goto_angle instead if this is intended.</qkuldo>"
