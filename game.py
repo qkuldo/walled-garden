@@ -370,7 +370,8 @@ def game():
 			"apply knockback":False,
 			"reverse knockback":False,
 			"attempted qte":False,
-			"speed divider":1
+			"speed divider":1,
+			"hit angle":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	#name is for identification in case of index change
@@ -491,7 +492,6 @@ def game():
 					#print("fail")
 					SFX["failedSlash"].play()
 					Player.customAttributes["apply knockback"] = True
-					Player.customAttributes["reverse knockback"] = True
 					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 					if (debugMode == 2):
@@ -535,7 +535,7 @@ def game():
 			if (debugMode > 3):
 				debugMode = 0
 			menuPressCooldown = MENUPRESSTIME
-		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"])):
+		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"]) and (not Player.customAttributes["hit animation"])):
 			if (keys[pg.K_w] or keys[pg.K_UP]):
 				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
@@ -563,7 +563,7 @@ def game():
 			elif (not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
-			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None):
+			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["hit animation"])):
 				attack_qte_ongoing_attack = True
 				attack_qte_success = False
 				timedRect_fill = True
@@ -586,6 +586,7 @@ def game():
 				playerSword.angle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
 				attack_qte_success = False
+				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 				on_attack_button_cooldown = True
 				timedRect_fill = False
 				Player.customAttributes["attempted qte"] = True
@@ -652,13 +653,15 @@ def game():
 				Player.coordinates[1] += directional_vector[1]
 
 		if (Player.customAttributes["apply knockback"] and not Player.customAttributes["hit animation"]):
-			directional_vector = modules.helper.goto_angleComplex(Player, speed_multiplier=-(50/FPS), angle=DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
+			directional_vector = modules.helper.goto_angleComplex(Player, speed_multiplier=(50/FPS), angle=Player.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
 			if (Player.customAttributes["reverse knockback"]):
 				Player.coordinates[0] -= directional_vector[0]
 				Player.coordinates[1] -= directional_vector[1]
 			else:
 				Player.coordinates[0] += directional_vector[0]
 				Player.coordinates[1] += directional_vector[1]
+			if (not modules.helper.hitboxInbound(Player.hitbox)):
+				raise Exception("<qkuldo>u were right, there was an exception</qkuldo>")
 
 		#SPRITELAYER.blit(testText, textTestRect)
 		if ((not specialPickupVisible) and drawHud and len(Player.customAttributes["inventory"]) > 0):
@@ -738,6 +741,7 @@ def game():
 				if (keys[pg.K_h] and menuPressCooldown <= 0):
 					menuPressCooldown = MENUPRESSTIME
 					Player.customAttributes["apply knockback"] = True
+					Player.customAttributes["hit angle"] = DIRECTION_ANGLES[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])]
 					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 
