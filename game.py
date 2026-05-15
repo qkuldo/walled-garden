@@ -375,7 +375,7 @@ def game():
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	#name is for identification in case of index change
-	test_enemy = modules.interactables.Sprite(MISSINGTEXTURE,copy.copy(currentRoomData["playerSpawn"]),5,spriteScale = (TILESIZE,TILESIZE), hitboxScale=(TILESIZE-24, TILESIZE-24), customAttributes = {
+	test_enemy = modules.interactables.Sprite(MISSINGTEXTURE,copy.copy(currentRoomData["playerSpawn"]),5,spriteScale = (TILESIZE,TILESIZE), hitboxScale=(TILESIZE-24, TILESIZE), customAttributes = {
 			"facingDirection":DIRECTION_IDS["left"],
 			"stats":{
 				"health":5,
@@ -387,7 +387,7 @@ def game():
 				}
 			},
 			"visible":True,
-			"rectOperation":(12,12),
+			"rectOperation":(12,0),
 			"hit angle":0,
 			"name":modules.helper.generateName(random.randint(5, 10))
 		})
