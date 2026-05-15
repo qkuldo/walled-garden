@@ -1,5 +1,5 @@
 import pygame as pg
-import json, sys, os, math
+import json, sys, os, math, random
 import modules.sprite as sprite
 import modules.spritesheet as sheets
 SCREENWIDTH = 1280
@@ -19,6 +19,11 @@ DIRECTION_IDS = {
 screen = pg.Surface((1,1))
 clock = pg.time.Clock()
 FPS = 30
+namecharacters = "abcdefghijklmnopqrstuvwxyz"
+
+def generateName(length=1):
+	return "".join(random.choices(namecharacters, k=length))
+
 def setVeryImportants(surface, clockObject):
 	"""sets the main blitting surface and the clock"""
 	global screen, clock

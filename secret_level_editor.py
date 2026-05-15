@@ -540,7 +540,7 @@ def runEditor():
 			roomItems = []
 			roomExits = []
 			roomItemCoordinates = []
-			currentRoom = "".join(random.choices(alphabet, k=10))
+			currentRoom = modules.helper.generateName(10)
 			allroomData["rooms"][currentRoom] = {}
 			allroomData["rooms"][currentRoom]["wall set"] = 0
 			allroomData["rooms"][currentRoom]["prop set"] = 0

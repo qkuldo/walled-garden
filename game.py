@@ -287,6 +287,7 @@ def game():
 	ENDSWORD_PLAYERMOVEMENT = pg.event.custom_type()
 	PLAYER_HITSTART = pg.event.custom_type()
 	PLAYER_HITSTOP = pg.event.custom_type()
+
 	#player attack variables
 	ATTACK_QTE_END = pg.event.custom_type()
 	ATTACK_QTE_START = pg.event.custom_type()
@@ -333,7 +334,8 @@ def game():
 	}
 	#temp cache stores data only needed for the current session
 	temp_cache = {
-		"item timers":{}
+		"item timers":{},
+		"hit cooldowns":{}
 	}
 	if (not current_room in list(cache["item inactivators"].keys())):
 		cache["item inactivators"][current_room] = set()
@@ -370,7 +372,24 @@ def game():
 			"attempted qte":False,
 			"speed divider":1
 		})
-	playerSword = modules.interactables.Sprite(pg.transform.scale(weaponAssets[1], (TILESIZE,TILESIZE)), Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
+	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
+	#name is for identification in case of index change
+	test_enemy = modules.interactables.Sprite(MISSINGTEXTURE,copy.copy(currentRoomData["playerSpawn"]),5,spriteScale = (TILESIZE,TILESIZE), hitboxScale=(TILESIZE-24, TILESIZE-24), customAttributes = {
+			"facingDirection":DIRECTION_IDS["left"],
+			"stats":{
+				"health":5,
+				"max health":5,
+				"defense":0,
+				"equipment":{
+					"SLOT 1":None,
+					"SLOT 2":None
+				}
+			},
+			"visible":True,
+			"rectOperation":(12,12),
+			"name":modules.helper.generateName(random.randint(5, 10))
+		})
+	enemyList = [test_enemy]
 	#rect creation
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
@@ -707,6 +726,8 @@ def game():
 			DEBUGLAYER.blit(test_text, test_text_rect)
 			if (debugMode == 2):
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
+				for enemy in enemyList:
+					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)	
 				pg.draw.rect(DEBUGLAYER,WHITE,Player.hitbox)
 				pg.draw.rect(DEBUGLAYER,BRIGHTYELLOW,attackHitbox)
 			elif (debugMode == 3):
@@ -759,7 +780,27 @@ def game():
 						specialItem = pg.transform.scale(item.asset, (TILESIZE, TILESIZE))
 					else:
 						SFX["itemCollect"].play()
-
+		for enemyIndex in range(0, len(enemyList)):
+			enemy = enemyList[enemyIndex]
+			if (enemy.customAttributes["stats"]["health"] <= 0):
+				enemyList.remove(enemy)
+			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
+				enemy.customAttributes["stats"]["health"] -= ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
+				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
+					"start time":pg.time.get_ticks(),
+					"duration":500
+				}
+			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
+				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
+			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
+			if (enemy.customAttributes["visible"]):
+				enemy.draw(0, SPRITELAYER)
+		for timerKeyIndex in range(0, len(temp_cache["hit cooldowns"].keys())):
+			timerKey = list(temp_cache["hit cooldowns"].keys())[timerKeyIndex]
+			timer = temp_cache["hit cooldowns"][timerKey]
+			current_time = pg.time.get_ticks()
+			if (current_time - timer["start time"] >= timer["duration"]):
+				del temp_cache["hit cooldowns"][timerKey]
 		if (Player.customAttributes["visible"]):
 			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 			#if (playerSword.customAttributes["visible"]):

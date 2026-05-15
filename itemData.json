@@ -18,5 +18,10 @@
 		"assets/missing.png",
 		"assets/items/weapon use/ceremonial-sword.png",
 		"assets/missing.png"
+	],
+	"WEAPON STATS":[
+		0,
+		2,
+		0
 	]
 }
