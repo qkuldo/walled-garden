@@ -801,6 +801,8 @@ def game():
 					"duration":500
 				}
 				enemy.customAttributes["hit angle"] = copy.copy(playerSword.angle)
+				SFX["damage"].set_volume(random.uniform(0.2,0.5))
+				SFX["damage"].play()
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
 				#will add more later
