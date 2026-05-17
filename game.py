@@ -358,7 +358,7 @@ def game():
 				"health":20,
 				"max health":20,
 				"defense":3,
-				"weight":1.03,
+				"weight":1,
 				"equipment":{
 					"WEAPONS":{
 						"sword":None,
@@ -384,7 +384,7 @@ def game():
 				"health":5,
 				"max health":5,
 				"defense":0,
-				"weight":1,
+				"weight":1.5,
 				"equipment":{
 					"SLOT 1":None,
 					"SLOT 2":None
