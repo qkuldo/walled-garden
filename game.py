@@ -360,6 +360,7 @@ def game():
 			"inventory":{},
 			"target pos":None,
 			"targeting":False,
+			"target name":"",
 			"stats":{
 				"health":20,
 				"max health":20,
@@ -584,7 +585,7 @@ def game():
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-			distanceList.append({"distance":modules.helper.measureDistance(enemy.hitbox.center,Player.hitbox.center),"position":enemy.hitbox.center})
+			distanceList.append({"distance":modules.helper.measureDistance(enemy.hitbox.center,Player.hitbox.center),"position":enemy.hitbox.center,"name":enemy.customAttributes["name"]})
 		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
 			#debug controller
 			debugSecMode += 1
@@ -614,6 +615,7 @@ def game():
 				distances = modules.helper.unpack_nestedDict(distanceList, "distance", returnSet = False)
 				Player.customAttributes["target pos"] = distanceList[distances.index(min(distances))]["position"]
 				Player.customAttributes["targeting"] = True
+				Player.customAttributes["target name"] = copy.copy(distanceList[distances.index(min(distances))]["name"])
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
@@ -940,6 +942,9 @@ def game():
 			continue
 
 		if ((attack_qte_ongoing_attack or playerSword.customAttributes["visible"]) and Player.customAttributes["targeting"]):
+			posMatch = next((enemy for enemy in enemyList if (enemy.customAttributes["name"] == Player.customAttributes["target name"])), None)
+			if (posMatch != None):
+				Player.customAttributes["target pos"] = posMatch.hitbox.center
 			target_angle += 2
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 			TARGETRECT.center = Player.customAttributes["target pos"]
