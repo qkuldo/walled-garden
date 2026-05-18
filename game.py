@@ -476,7 +476,7 @@ def game():
 					if (debugMode == 2):
 						test_text, test_text_rect = modules.helper.createText((100, 20), text = "success", color=BRIGHTYELLOW)
 					#print("success")
-					SFX["slash"].set_volume(0.3)
+					SFX["slash"].set_volume(0.4)
 					SFX["slash"].play()
 					pg.time.set_timer(ENDSWORD_VISIBILITY, 500, 1)
 					pg.time.set_timer(ENDSWORD_PLAYERMOVEMENT, 100, 1)
