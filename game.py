@@ -476,6 +476,7 @@ def game():
 					if (debugMode == 2):
 						test_text, test_text_rect = modules.helper.createText((100, 20), text = "success", color=BRIGHTYELLOW)
 					#print("success")
+					SFX["slash"].set_volume(0.3)
 					SFX["slash"].play()
 					pg.time.set_timer(ENDSWORD_VISIBILITY, 500, 1)
 					pg.time.set_timer(ENDSWORD_PLAYERMOVEMENT, 100, 1)
@@ -798,6 +799,7 @@ def game():
 				}
 				enemy.customAttributes["hit angle"] = copy.copy(playerSword.angle)
 				SFX["damage"].set_volume(random.uniform(0.2,0.5))
+				SFX["slash"].set_volume(0.2)
 				SFX["damage"].play()
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
