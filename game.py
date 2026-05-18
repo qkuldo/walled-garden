@@ -334,6 +334,7 @@ def game():
 	roomAccumulateFrames = 0
 	current_room = "spawnSpot"
 	clickInCooldown = False
+	debugSecMode = 0
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -381,7 +382,7 @@ def game():
 			"hit angle":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
-	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, copy.copy(currentRoomData["playerSpawn"]), enemyAssets)
+	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, copy.copy(currentRoomData["playerSpawn"]), enemyAssets, DIRECTION_IDS["left"])
 	enemyList = [test_enemy]
 	#rect creation
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
@@ -526,6 +527,12 @@ def game():
 			debugMode += 1
 			if (debugMode > 3):
 				debugMode = 0
+			menuPressCooldown = MENUPRESSTIME
+		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
+			#debug controller
+			debugSecMode += 1
+			if (debugSecMode > 2):
+				debugSecMode = 0
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"]) and (not Player.customAttributes["hit animation"])):
 			if (keys[pg.K_w] or keys[pg.K_UP]):
@@ -803,6 +810,34 @@ def game():
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
+			if (debugMode == 2):
+				#debug shenanigans
+				if (debugSecMode == 0):
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,str(enemy.customAttributes["type"]),ORANGE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,enemy.customAttributes["name"],ORANGE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.coordinates[0]:.2f},{enemy.coordinates[1]:.2f}",ORANGE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				elif (debugSecMode == 1):
+					healthFormatting = str(enemy.customAttributes["stats"]["health"]) + "/" + str(enemy.customAttributes["stats"]["max health"])
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,healthFormatting,BRIGHTYELLOW)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,str(enemy.customAttributes["stats"]["defense"]),BRIGHTYELLOW)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,str(enemy.customAttributes["stats"]["weight"]),BRIGHTYELLOW)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					weaponFormatting = str(enemy.customAttributes["stats"]["equipment"]["SLOT 1"]) + "," + str(enemy.customAttributes["stats"]["equipment"]["SLOT 2"])
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,weaponFormatting,BRIGHTYELLOW)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				else:
+					directionFormatting = list(DIRECTION_IDS.keys())[list(DIRECTION_IDS.values()).index(enemy.customAttributes["facingDirection"])]
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,directionFormatting,BLUE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,str(enemy.customAttributes["visible"]),BLUE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 		for timerKeyIndex in range(0, len(temp_cache["hit cooldowns"].keys())):
 			timerKey = list(temp_cache["hit cooldowns"].keys())[timerKeyIndex]
 			timer = temp_cache["hit cooldowns"][timerKey]
@@ -815,6 +850,35 @@ def game():
 			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-modules.helper.goto_angle(50, playerSword.angle)[0],-modules.helper.goto_angle(50, playerSword.angle)[1]))
 			#else:
 			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
+		if (debugMode == 2):
+			#debug shenanigans part 2: electric boogaloo
+			if (debugSecMode == 0):
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-10),2,f"{Player.coordinates[0]:.2f},{Player.coordinates[1]:.2f}",ORANGE)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				if (Player.customAttributes["target pos"] != None):
+					dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-30),2,f"{Player.customAttributes["target pos"][0]:.2f},{Player.customAttributes["target pos"][1]:.2f}",ORANGE)
+				else:
+					dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-30),2,"what target?",ORANGE)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+			elif (debugSecMode == 1):
+				healthFormatting = str(Player.customAttributes["stats"]["health"]) + "/" + str(Player.customAttributes["stats"]["max health"])
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-10),2,healthFormatting,BRIGHTYELLOW)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-30),2,str(Player.customAttributes["stats"]["defense"]),BRIGHTYELLOW)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-50),2,str(Player.customAttributes["stats"]["weight"]),BRIGHTYELLOW)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				weaponFormatting = str(Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]) + "," + str(Player.customAttributes["stats"]["equipment"]["WEAPONS"]["shield"]) + "," + str(Player.customAttributes["stats"]["equipment"]["WEAPONS"]["bow"])
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-70),2,weaponFormatting,BRIGHTYELLOW)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+			else:
+				directionFormatting = list(DIRECTION_IDS.keys())[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])]
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-10),2,directionFormatting,BLUE)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-30),2,str(enemy.customAttributes["visible"]),BLUE)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-50),2,str(Player.customAttributes["currentFrame"]) + "," + str(Player.customAttributes["frameRow"]),BLUE)
+				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 		if (not specialPickupVisible):
 			for exit in currentRoomData["exits"]:
 				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
