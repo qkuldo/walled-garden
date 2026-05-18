@@ -76,6 +76,14 @@ def addItem(itemList, itemID, coordinates, assets):
 					"oscillate":0,
 					"active":True
 				}))
+def makeEnemy(data, type, coordinates, assetData):
+	BASE_ATTRIBUTES = data["BASE ATTRIBUTES"][type]
+	CUSTOM_ATTRIBUTES = data["CUSTOM ATTRIBUTES"][type]
+	CUSTOM_ATTRIBUTES["name"] = CUSTOM_ATTRIBUTES["nameAdder"] + generateName(random.randint(5,10))
+	del CUSTOM_ATTRIBUTES["nameAdder"]
+	enemy = sprite.Sprite(assetData[type], coordinates, BASE_ATTRIBUTES["speed"], BASE_ATTRIBUTES["scale"], BASE_ATTRIBUTES["hitboxScale"], customAttributes=CUSTOM_ATTRIBUTES)
+	enemy.update(CUSTOM_ATTRIBUTES["rectOperation"])
+	return enemy
 def goto_angle(velocity,angle):
 	# Calculates a directional vector based on velocity and angle.`
 	direction = pg.Vector2(0, velocity).rotate(-angle)

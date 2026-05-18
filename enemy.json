@@ -1,0 +1,27 @@
+{
+	"ASSETS":[
+		"assets/missing.png"
+	],
+	"BASE ATTRIBUTES":[
+		{"speed":5, "scale":[48,48], "hitboxScale":[24,48]}
+	],
+	"CUSTOM ATTRIBUTES":[
+		{
+			"facingDirection":null,
+			"stats":{
+				"health":5,
+				"max health":5,
+				"defense":0,
+				"weight":1.5,
+				"equipment":{
+					"SLOT 1":null,
+					"SLOT 2":null
+				}
+			},
+			"visible":true,
+			"rectOperation":[12,0],
+			"hit angle":0,
+			"nameAdder":"_TEST"
+		}
+	]
+}

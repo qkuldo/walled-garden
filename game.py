@@ -44,11 +44,12 @@ proptileSpritesheets = []
 MIN_KNOCKBACK = 1.552
 
 def readAllJsonData():
-	global DIALOGDATA, ITEMDATA, ROOMTILEDATA, EXITDATA
+	global DIALOGDATA, ITEMDATA, ROOMTILEDATA, EXITDATA, ENEMYDATA
 	ROOMTILEDATA = modules.helper.readJsonFile("rooms.json")["rooms"]
 	EXITDATA = modules.helper.readJsonFile("rooms.json")["exitData"]
 	DIALOGDATA = modules.helper.readJsonFile("dialog.json")
 	ITEMDATA = modules.helper.readJsonFile("itemData.json")
+	ENEMYDATA = modules.helper.readJsonFile("enemy.json")
 	assert len(ITEMDATA["ITEM TYPES"]) == len(ITEMDATA["ITEM ASSETS"]), "<qkuldo>there's an inequality in the itemData.json file between the item types and item assets.</qkuldo>"
 
 def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems=[]):
@@ -260,10 +261,13 @@ def game():
 	#find and make assets
 	itemAssets = ITEMDATA["ITEM ASSETS"]
 	weaponAssets = ITEMDATA["WEAPON USE"]
+	enemyAssets = ENEMYDATA["ASSETS"]
 	for assetPath in itemAssets:
 		itemAssets[itemAssets.index(assetPath)] = pg.image.load(assetPath).convert_alpha()
 	for assetPath in weaponAssets:
 		weaponAssets[weaponAssets.index(assetPath)] = pg.image.load(assetPath).convert_alpha()
+	for assetPath in enemyAssets:
+		enemyAssets[enemyAssets.index(assetPath)] = pg.image.load(assetPath).convert_alpha()
 	playerAsset = pg.image.load("assets/player.png").convert_alpha()
 	playerAsset = modules.sheets.Spritesheet(playerAsset, 16, 16)
 	playerPortrait = pg.image.load("assets/playerPortrait.png").convert()
@@ -377,24 +381,7 @@ def game():
 			"hit angle":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
-	#name is for identification in case of index change
-	test_enemy = modules.interactables.Sprite(MISSINGTEXTURE,copy.copy(currentRoomData["playerSpawn"]),5,spriteScale = (TILESIZE,TILESIZE), hitboxScale=(TILESIZE-24, TILESIZE), customAttributes = {
-			"facingDirection":DIRECTION_IDS["left"],
-			"stats":{
-				"health":5,
-				"max health":5,
-				"defense":0,
-				"weight":1.5,
-				"equipment":{
-					"SLOT 1":None,
-					"SLOT 2":None
-				}
-			},
-			"visible":True,
-			"rectOperation":(12,0),
-			"hit angle":0,
-			"name":modules.helper.generateName(random.randint(5, 10))
-		})
+	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, copy.copy(currentRoomData["playerSpawn"]), enemyAssets)
 	enemyList = [test_enemy]
 	#rect creation
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
@@ -796,6 +783,7 @@ def game():
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
 				enemy.customAttributes["stats"]["health"] -= damage
+				#name is for identification in case of index change
 				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
 					"start time":pg.time.get_ticks(),
 					"duration":500
