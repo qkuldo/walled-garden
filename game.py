@@ -787,8 +787,6 @@ def game():
 					else:
 						SFX["itemCollect"].play()
 		for enemy in enemyList:
-			if (enemy.customAttributes["stats"]["health"] <= 0):
-				enemyList.remove(enemy)
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
 				enemy.customAttributes["stats"]["health"] -= damage
@@ -809,6 +807,8 @@ def game():
 				enemy.coordinates[0] += directional_vector[0]
 				enemy.coordinates[1] += directional_vector[1]
 			else:
+				if (enemy.customAttributes["stats"]["health"] <= 0):
+					enemyList.remove(enemy)
 				enemy.customAttributes["visible"] = True
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["visible"]):
