@@ -29,6 +29,13 @@ def setVeryImportants(surface, clockObject):
 	global screen, clock
 	screen = surface
 	clock = clockObject
+def measureDistance(pos1,pos2):
+	"""measures euclidian distance between 2 points"""
+	output = [(pos1[0]-pos2[0]) ** 2,(pos1[1]-pos2[1]) ** 2]
+	#square roots values
+	output[0] = output[0] ** 0.5
+	output[1] = output[1] ** 0.5
+	return tuple(output)
 def loadImages(path):
 	"""returns a list of pygame surfaces of .png images within the folder corresponding to the path parameter and a list of all .png filenames without the file extension"""
 	images = []
@@ -185,11 +192,17 @@ def goto_angleComplex(Sprite, speed_multiplier=3, angle=0, targetPos=(SCREENWIDT
 			return (0, 0)
 	else:
 		return directional_vector
-def unpack_nestedDict(inputArray, key):
-	"""returns a set with all the values with parameter 'key' in a nested array 'inputDict'"""
-	output = set()
+def unpack_nestedDict(inputArray, key, returnSet = True):
+	"""returns a set(if returnSet is true, otherwise it returns a list) with all the values with parameter 'key' in a nested array 'inputDict'"""
+	if (returnSet):
+		output = set()
+	else:
+		output = []
 	for nestedDict in inputArray:
-		output.add(nestedDict[key])
+		if (returnSet):
+			output.add(nestedDict[key])
+		else:
+			output.append(nestedDict[key])
 	return output
 def roomTransition(background, duration=1000, center=(SCREENWIDTH//2,SCREENHEIGHT//2), mode=0, circleRadius=600, radiusChange=10):
 	"""if mode is 0, this function causes a tunnel transition animation with the circle getting smaller, if mode is 1 the circle gets bigger"""

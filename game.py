@@ -335,6 +335,7 @@ def game():
 	current_room = "spawnSpot"
 	clickInCooldown = False
 	debugSecMode = 0
+	distanceList = []
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -434,9 +435,8 @@ def game():
 			test_text, test_text_rect = modules.helper.createText((200, 20), text = current_room + " MODE " + str(debugMode), color=BRIGHTYELLOW)
 		else:
 			test_text, test_text_rect = modules.helper.createText((100, 20), text = "MODE "+str(debugMode), color=BRIGHTYELLOW)
-
+		distanceList = []
 		switchFrame = False
-		current_time = pg.time.get_ticks()
 		#cache important data
 		cache["player"] = Player.customAttributes
 		#handle events
@@ -529,6 +529,62 @@ def game():
 			if (debugMode > 3):
 				debugMode = 0
 			menuPressCooldown = MENUPRESSTIME
+		for enemy in enemyList:
+			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
+				damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
+				enemy.customAttributes["stats"]["health"] -= damage
+				#name is for identification in case of index change
+				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
+					"start time":pg.time.get_ticks(),
+					"duration":500
+				}
+				enemy.customAttributes["hit angle"] = copy.copy(playerSword.angle)
+				SFX["damage"].set_volume(random.uniform(0.2,0.5))
+				SFX["slash"].set_volume(0.2)
+				SFX["damage"].play()
+			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
+				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
+				#will add more later
+				speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
+				directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=MIN_KNOCKBACK, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation)
+				enemy.coordinates[0] += directional_vector[0]
+				enemy.coordinates[1] += directional_vector[1]
+			else:
+				if (enemy.customAttributes["stats"]["health"] <= 0):
+					enemyList.remove(enemy)
+				enemy.customAttributes["visible"] = True
+			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
+			if (enemy.customAttributes["visible"]):
+				enemy.draw(0, SPRITELAYER)
+			if (debugMode == 2):
+				#debug shenanigans
+				if (debugSecMode == 0):
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,str(enemy.customAttributes["type"]),ORANGE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,enemy.customAttributes["name"],ORANGE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.coordinates[0]:.2f},{enemy.coordinates[1]:.2f}",ORANGE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				elif (debugSecMode == 1):
+					healthFormatting = str(enemy.customAttributes["stats"]["health"]) + "/" + str(enemy.customAttributes["stats"]["max health"])
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,healthFormatting,BRIGHTYELLOW)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,str(enemy.customAttributes["stats"]["defense"]),BRIGHTYELLOW)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,str(enemy.customAttributes["stats"]["weight"]),BRIGHTYELLOW)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					weaponFormatting = str(enemy.customAttributes["stats"]["equipment"]["SLOT 1"]) + "," + str(enemy.customAttributes["stats"]["equipment"]["SLOT 2"])
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,weaponFormatting,BRIGHTYELLOW)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+				else:
+					directionFormatting = list(DIRECTION_IDS.keys())[list(DIRECTION_IDS.values()).index(enemy.customAttributes["facingDirection"])]
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,directionFormatting,BLUE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,str(enemy.customAttributes["visible"]),BLUE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+			distanceList.append({"distance":modules.helper.measureDistance(enemy.hitbox.center,Player.hitbox.center),"position":enemy.hitbox.center})
 		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
 			#debug controller
 			debugSecMode += 1
@@ -555,7 +611,8 @@ def game():
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 				#Player.angle = DIRECTION_ANGLES["right"]
 			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
-				Player.customAttributes["target pos"] = PLACEHOLDERTARGETLOCK #this is a placeholder
+				distances = modules.helper.unpack_nestedDict(distanceList, "distance", returnSet = False)
+				Player.customAttributes["target pos"] = distanceList[distances.index(min(distances))]["position"]
 				Player.customAttributes["targeting"] = True
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				target_angle += 4
@@ -732,7 +789,14 @@ def game():
 			if (debugMode == 2):
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
 				for enemy in enemyList:
-					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)	
+					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)
+				for data in distanceList:
+					if (data["distance"] == min(modules.helper.unpack_nestedDict(distanceList, "distance"))):
+						pg.draw.line(DEBUGLAYER, WHITE, data["position"], Player.hitbox.center, 2)
+					elif (data["distance"] == max(modules.helper.unpack_nestedDict(distanceList, "distance"))):
+						pg.draw.line(DEBUGLAYER, ORANGE, data["position"], Player.hitbox.center, 2)
+					else:
+						pg.draw.line(DEBUGLAYER, PALEBLUE, data["position"], Player.hitbox.center, 2)
 				pg.draw.rect(DEBUGLAYER,WHITE,Player.hitbox)
 				pg.draw.rect(DEBUGLAYER,BRIGHTYELLOW,attackHitbox)
 			elif (debugMode == 3):
@@ -786,61 +850,6 @@ def game():
 						specialItem = pg.transform.scale(item.asset, (TILESIZE, TILESIZE))
 					else:
 						SFX["itemCollect"].play()
-		for enemy in enemyList:
-			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
-				damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
-				enemy.customAttributes["stats"]["health"] -= damage
-				#name is for identification in case of index change
-				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
-					"start time":pg.time.get_ticks(),
-					"duration":500
-				}
-				enemy.customAttributes["hit angle"] = copy.copy(playerSword.angle)
-				SFX["damage"].set_volume(random.uniform(0.2,0.5))
-				SFX["slash"].set_volume(0.2)
-				SFX["damage"].play()
-			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
-				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
-				#will add more later
-				speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
-				directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=MIN_KNOCKBACK, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation)
-				enemy.coordinates[0] += directional_vector[0]
-				enemy.coordinates[1] += directional_vector[1]
-			else:
-				if (enemy.customAttributes["stats"]["health"] <= 0):
-					enemyList.remove(enemy)
-				enemy.customAttributes["visible"] = True
-			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
-			if (enemy.customAttributes["visible"]):
-				enemy.draw(0, SPRITELAYER)
-			if (debugMode == 2):
-				#debug shenanigans
-				if (debugSecMode == 0):
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,str(enemy.customAttributes["type"]),ORANGE)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,enemy.customAttributes["name"],ORANGE)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.coordinates[0]:.2f},{enemy.coordinates[1]:.2f}",ORANGE)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-				elif (debugSecMode == 1):
-					healthFormatting = str(enemy.customAttributes["stats"]["health"]) + "/" + str(enemy.customAttributes["stats"]["max health"])
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,healthFormatting,BRIGHTYELLOW)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,str(enemy.customAttributes["stats"]["defense"]),BRIGHTYELLOW)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,str(enemy.customAttributes["stats"]["weight"]),BRIGHTYELLOW)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					weaponFormatting = str(enemy.customAttributes["stats"]["equipment"]["SLOT 1"]) + "," + str(enemy.customAttributes["stats"]["equipment"]["SLOT 2"])
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,weaponFormatting,BRIGHTYELLOW)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-				else:
-					directionFormatting = list(DIRECTION_IDS.keys())[list(DIRECTION_IDS.values()).index(enemy.customAttributes["facingDirection"])]
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-10),2,directionFormatting,BLUE)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,str(enemy.customAttributes["visible"]),BLUE)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
-					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 		for timerKey in list(temp_cache["hit cooldowns"]):
 			timer = temp_cache["hit cooldowns"][timerKey]
 			current_time = pg.time.get_ticks()
