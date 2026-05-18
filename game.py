@@ -839,8 +839,7 @@ def game():
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-		for timerKeyIndex in range(0, len(temp_cache["hit cooldowns"].keys())):
-			timerKey = list(temp_cache["hit cooldowns"].keys())[timerKeyIndex]
+		for timerKey in list(temp_cache["hit cooldowns"]):
 			timer = temp_cache["hit cooldowns"][timerKey]
 			current_time = pg.time.get_ticks()
 			if (current_time - timer["start time"] >= timer["duration"]):
