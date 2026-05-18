@@ -351,7 +351,7 @@ def game():
 	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | modules.helper.unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 	#define sprites
 	#directionalFrames custom attribute is written as a list for compatibility with DIRECTION_IDS constant dict
-	Player = modules.interactables.Sprite(playerAsset,currentRoomData["playerSpawn"],5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
+	Player = modules.interactables.Sprite(playerAsset,copy.copy(currentRoomData["playerSpawn"]),5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
 			"currentFrame":0,
 			"frameRow":0,
 			"facingDirection":DIRECTION_IDS["left"],
@@ -533,6 +533,8 @@ def game():
 			debugSecMode += 1
 			if (debugSecMode > 2):
 				debugSecMode = 0
+			if (debugMode == 3):
+				enemyList.append(modules.helper.makeEnemy(ENEMYDATA, 0, copy.copy(Player.coordinates), enemyAssets, DIRECTION_IDS["left"]))
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"]) and (not Player.customAttributes["hit animation"])):
 			if (keys[pg.K_w] or keys[pg.K_UP]):
@@ -783,8 +785,7 @@ def game():
 						specialItem = pg.transform.scale(item.asset, (TILESIZE, TILESIZE))
 					else:
 						SFX["itemCollect"].play()
-		for enemyIndex in range(0, len(enemyList)):
-			enemy = enemyList[enemyIndex]
+		for enemy in enemyList:
 			if (enemy.customAttributes["stats"]["health"] <= 0):
 				enemyList.remove(enemy)
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
@@ -875,7 +876,7 @@ def game():
 				directionFormatting = list(DIRECTION_IDS.keys())[list(DIRECTION_IDS.values()).index(Player.customAttributes["facingDirection"])]
 				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-10),2,directionFormatting,BLUE)
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-30),2,str(enemy.customAttributes["visible"]),BLUE)
+				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-30),2,str(Player.customAttributes["visible"]),BLUE)
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-50),2,str(Player.customAttributes["currentFrame"]) + "," + str(Player.customAttributes["frameRow"]),BLUE)
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)

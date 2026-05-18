@@ -1,5 +1,5 @@
 import pygame as pg
-import json, sys, os, math, random
+import json, sys, os, math, random, copy
 import modules.sprite as sprite
 import modules.spritesheet as sheets
 SCREENWIDTH = 1280
@@ -77,10 +77,9 @@ def addItem(itemList, itemID, coordinates, assets):
 					"active":True
 				}))
 def makeEnemy(data, type, coordinates, assetData, facingDirection):
-	BASE_ATTRIBUTES = data["BASE ATTRIBUTES"][type]
-	CUSTOM_ATTRIBUTES = data["CUSTOM ATTRIBUTES"][type]
+	BASE_ATTRIBUTES = copy.deepcopy(data["BASE ATTRIBUTES"][type])
+	CUSTOM_ATTRIBUTES = copy.deepcopy(data["CUSTOM ATTRIBUTES"][type])
 	CUSTOM_ATTRIBUTES["name"] = CUSTOM_ATTRIBUTES["nameAdder"] + generateName(random.randint(5,10))
-	del CUSTOM_ATTRIBUTES["nameAdder"]
 	CUSTOM_ATTRIBUTES["facingDirection"] = facingDirection
 	enemy = sprite.Sprite(assetData[type], coordinates, BASE_ATTRIBUTES["speed"], BASE_ATTRIBUTES["scale"], BASE_ATTRIBUTES["hitboxScale"], customAttributes=CUSTOM_ATTRIBUTES)
 	enemy.update(CUSTOM_ATTRIBUTES["rectOperation"])
