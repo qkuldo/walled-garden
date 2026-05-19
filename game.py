@@ -571,6 +571,8 @@ def game():
 					enemyList.remove(enemy)
 				enemy.customAttributes["visible"] = True
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
+			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
+				Player.customAttributes["target pos"] = enemy.hitbox.center
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
 			if (debugMode == 2):
