@@ -83,10 +83,16 @@ def addItem(itemList, itemID, coordinates, assets):
 					"active":True
 				}))
 def makeEnemy(data, type, coordinates, assetData, facingDirection):
+	enemyFlags = data["FLAGS"]
 	BASE_ATTRIBUTES = copy.deepcopy(data["BASE ATTRIBUTES"][type])
 	CUSTOM_ATTRIBUTES = copy.deepcopy(data["CUSTOM ATTRIBUTES"][type])
 	CUSTOM_ATTRIBUTES["name"] = CUSTOM_ATTRIBUTES["nameAdder"] + generateName(random.randint(5,10))
 	CUSTOM_ATTRIBUTES["facingDirection"] = facingDirection
+	for flag in CUSTOM_ATTRIBUTES["flags"]:
+		if (not flag in enemyFlags):
+			raise Exception("<qkuldo> flag " + flag + " does not exist. </qkuldo>")
+		CUSTOM_ATTRIBUTES["flags"][CUSTOM_ATTRIBUTES["flags"].index(flag)] = enemyFlags[enemyFlags.index(flag)]
+	CUSTOM_ATTRIBUTES["flags"] = set(CUSTOM_ATTRIBUTES["flags"])
 	enemy = sprite.Sprite(assetData[type], coordinates, BASE_ATTRIBUTES["speed"], BASE_ATTRIBUTES["scale"], BASE_ATTRIBUTES["hitboxScale"], customAttributes=CUSTOM_ATTRIBUTES)
 	enemy.update(CUSTOM_ATTRIBUTES["rectOperation"])
 	return enemy

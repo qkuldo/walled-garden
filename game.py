@@ -546,7 +546,9 @@ def game():
 		for enemy in enemyList:
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
-				enemy.customAttributes["stats"]["health"] -= damage
+				#deals damage if enemy has no "invincible" flag
+				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
+					enemy.customAttributes["stats"]["health"] -= damage
 				#name is for identification in case of index change
 				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
 					"start time":pg.time.get_ticks(),
@@ -558,11 +560,12 @@ def game():
 				SFX["damage"].play()
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
-				#will add more later
-				speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
-				directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=MIN_KNOCKBACK, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation)
-				enemy.coordinates[0] += directional_vector[0]
-				enemy.coordinates[1] += directional_vector[1]
+				if (not ENEMYDATA["FLAGS"][0] in enemy.customAttributes["flags"]):
+					#will add more later
+					speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
+					directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=MIN_KNOCKBACK, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation)
+					enemy.coordinates[0] += directional_vector[0]
+					enemy.coordinates[1] += directional_vector[1]
 			else:
 				if (enemy.customAttributes["stats"]["health"] <= 0):
 					enemyList.remove(enemy)
