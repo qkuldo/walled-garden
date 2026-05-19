@@ -599,11 +599,12 @@ def game():
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 			distanceList.append({"distance":modules.helper.measureDistance(enemy.hitbox.center,Player.hitbox.center),"position":enemy.hitbox.center,"name":enemy.customAttributes["name"]})
-		distances = modules.helper.unpack_nestedDict(distanceList, "distance", returnSet = False)
-		zipped_distData = zip(distances, distanceList)
-		zipped_distData_sorted = sorted(zipped_distData, key = lambda x:x[0])
-		distances_sorted, distanceList_sorted = zip(*zipped_distData_sorted)
-		distances, distanceList = list(distances_sorted), list(distanceList_sorted)
+		if (len(enemyList) > 0):
+			distances = modules.helper.unpack_nestedDict(distanceList, "distance", returnSet = False)
+			zipped_distData = zip(distances, distanceList)
+			zipped_distData_sorted = sorted(zipped_distData, key = lambda x:x[0])
+			distances_sorted, distanceList_sorted = zip(*zipped_distData_sorted)
+			distances, distanceList = list(distances_sorted), list(distanceList_sorted)
 		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
 			#debug controller
 			debugSecMode += 1
@@ -629,7 +630,7 @@ def game():
 				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 				#Player.angle = DIRECTION_ANGLES["right"]
-			if (scrollWheel_direction == SCROLLWHEEL_UP and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+			if (scrollWheel_direction == SCROLLWHEEL_UP and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
 				targetNames = modules.helper.unpack_nestedDict(distanceList, "name", False)
 				targetIndex = targetNames.index(Player.customAttributes["target name"])
 				if (targetIndex+1 < len(distanceList)):
@@ -641,7 +642,7 @@ def game():
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				canScroll = False
 				pg.time.set_timer(SCROLLWHEEL_COOLDOWN, 300, 1)
-			if (scrollWheel_direction == SCROLLWHEEL_DOWN and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+			if (scrollWheel_direction == SCROLLWHEEL_DOWN and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
 				targetNames = modules.helper.unpack_nestedDict(distanceList, "name", False)
 				targetIndex = targetNames.index(Player.customAttributes["target name"])
 				if (targetIndex-1 >= 0):
@@ -653,7 +654,7 @@ def game():
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				canScroll = False
 				pg.time.set_timer(SCROLLWHEEL_COOLDOWN, 300, 1)
-			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
 				if (not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = distanceList[0]["position"]
 					Player.customAttributes["targeting"] = True
