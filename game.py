@@ -40,6 +40,8 @@ DIRECTION_IDS = {
 DIRECTION_ANGLES = (90,-90,0,180)
 walltileSpritesheets = []
 proptileSpritesheets = []
+SCROLLWHEEL_UP = 1
+SCROLLWHEEL_DOWN = -1
 #like minecraft
 MIN_KNOCKBACK = 1.552
 
@@ -293,6 +295,7 @@ def game():
 	ENDSWORD_PLAYERMOVEMENT = pg.event.custom_type()
 	PLAYER_HITSTART = pg.event.custom_type()
 	PLAYER_HITSTOP = pg.event.custom_type()
+	SCROLLWHEEL_COOLDOWN = pg.event.custom_type()
 
 	#player attack variables
 	ATTACK_QTE_END = pg.event.custom_type()
@@ -336,6 +339,7 @@ def game():
 	clickInCooldown = False
 	debugSecMode = 0
 	distanceList = []
+	canScroll = True
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -413,6 +417,7 @@ def game():
 		modules.helper.clearLayer(INFOLAYER)
 		modules.helper.clearLayer(DEBUGLAYER)
 		#set stuff
+		scrollWheel_direction = 0
 		current_time = pg.time.get_ticks()
 		timedRect.bottomleft = Player.hitbox.topright
 		timedRectBG.bottomleft = Player.hitbox.topright
@@ -507,6 +512,14 @@ def game():
 				Player.customAttributes["hit animation"] = True
 			if (event.type == CLICKCOOLDOWNFINISH):
 				clickInCooldown = False
+			if (event.type == pg.MOUSEWHEEL):
+				#if (event.y == SCROLLWHEEL_UP):
+				#	print("up")
+				#elif (event.y == SCROLLWHEEL_DOWN):
+				#	print("down")
+				scrollWheel_direction = copy.copy(event.y)
+			if (event.type == SCROLLWHEEL_COOLDOWN):
+				canScroll = True
 		#detect key presses
 		keys = pg.key.get_pressed()
 		if (drawHud):
@@ -616,10 +629,35 @@ def game():
 				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 				#Player.angle = DIRECTION_ANGLES["right"]
+			if (scrollWheel_direction == SCROLLWHEEL_UP and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+				targetNames = modules.helper.unpack_nestedDict(distanceList, "name", False)
+				targetIndex = targetNames.index(Player.customAttributes["target name"])
+				if (targetIndex+1 < len(distanceList)):
+					targetIndex += 1
+				else:
+					targetIndex = 0
+				Player.customAttributes["target pos"] = distanceList[targetIndex]["position"]
+				Player.customAttributes["target name"] = copy.copy(distanceList[targetIndex]["name"])
+				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
+				canScroll = False
+				pg.time.set_timer(SCROLLWHEEL_COOLDOWN, 300, 1)
+			if (scrollWheel_direction == SCROLLWHEEL_DOWN and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+				targetNames = modules.helper.unpack_nestedDict(distanceList, "name", False)
+				targetIndex = targetNames.index(Player.customAttributes["target name"])
+				if (targetIndex-1 >= 0):
+					targetIndex -= 1
+				else:
+					targetIndex = len(distanceList)-1
+				Player.customAttributes["target pos"] = distanceList[targetIndex]["position"]
+				Player.customAttributes["target name"] = copy.copy(distanceList[targetIndex]["name"])
+				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
+				canScroll = False
+				pg.time.set_timer(SCROLLWHEEL_COOLDOWN, 300, 1)
 			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
-				Player.customAttributes["target pos"] = distanceList[0]["position"]
-				Player.customAttributes["targeting"] = True
-				Player.customAttributes["target name"] = copy.copy(distanceList[0]["name"])
+				if (not Player.customAttributes["targeting"]):
+					Player.customAttributes["target pos"] = distanceList[0]["position"]
+					Player.customAttributes["targeting"] = True
+					Player.customAttributes["target name"] = copy.copy(distanceList[0]["name"])
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
