@@ -588,7 +588,7 @@ def game():
 			distanceList.append({"distance":modules.helper.measureDistance(enemy.hitbox.center,Player.hitbox.center),"position":enemy.hitbox.center,"name":enemy.customAttributes["name"]})
 		distances = modules.helper.unpack_nestedDict(distanceList, "distance", returnSet = False)
 		zipped_distData = zip(distances, distanceList)
-		zipped_distData_sorted = sorted(zipped_distData, key = lambda x:(x[0],x[0]-1))
+		zipped_distData_sorted = sorted(zipped_distData, key = lambda x:x[0])
 		distances_sorted, distanceList_sorted = zip(*zipped_distData_sorted)
 		distances, distanceList = list(distances_sorted), list(distanceList_sorted)
 		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
@@ -796,6 +796,8 @@ def game():
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
 				for enemy in enemyList:
 					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)
+				if (len(distanceList) > 0):
+					pg.draw.line(DEBUGLAYER, WHITE, distanceList[0]["position"], Player.hitbox.center, 2)
 				for dataIndex in range(0, len(distanceList)):
 					data = distanceList[dataIndex]
 					if (dataIndex == 0):
