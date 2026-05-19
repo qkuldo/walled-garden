@@ -796,13 +796,12 @@ def game():
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
 				for enemy in enemyList:
 					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)
-				if (len(distanceList) > 0):
-					pg.draw.line(DEBUGLAYER, WHITE, distanceList[0]["position"], Player.hitbox.center, 2)
 				for dataIndex in range(0, len(distanceList)):
 					data = distanceList[dataIndex]
-					if (dataIndex == 0):
+					distance = distances[dataIndex]
+					if (distance == distances[0]):
 						pg.draw.line(DEBUGLAYER, WHITE, data["position"], Player.hitbox.center, 2)
-					elif (dataIndex == len(distanceList)-1):
+					elif (distance == distances[-1]):
 						pg.draw.line(DEBUGLAYER, ORANGE, data["position"], Player.hitbox.center, 2)
 					else:
 						pg.draw.line(DEBUGLAYER, PALEBLUE, data["position"], Player.hitbox.center, 2)
