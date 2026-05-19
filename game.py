@@ -587,8 +587,7 @@ def game():
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,str(enemy.customAttributes["stats"]["weight"]),BRIGHTYELLOW)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					weaponFormatting = str(enemy.customAttributes["stats"]["equipment"]["SLOT 1"]) + "," + str(enemy.customAttributes["stats"]["equipment"]["SLOT 2"])
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,weaponFormatting,BRIGHTYELLOW)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,str(enemy.customAttributes["stats"]["attack"]),BRIGHTYELLOW)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 				else:
 					directionFormatting = list(DIRECTION_IDS.keys())[list(DIRECTION_IDS.values()).index(enemy.customAttributes["facingDirection"])]

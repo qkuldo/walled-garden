@@ -14,10 +14,7 @@
 				"max health":5,
 				"defense":0,
 				"weight":1.5,
-				"equipment":{
-					"SLOT 1":null,
-					"SLOT 2":null
-				}
+				"attack":1
 			},
 			"visible":true,
 			"rectOperation":[12,0],
