@@ -33,9 +33,8 @@ def measureDistance(pos1,pos2):
 	"""measures euclidian distance between 2 points"""
 	output = [(pos1[0]-pos2[0]) ** 2,(pos1[1]-pos2[1]) ** 2]
 	#square roots values
-	output[0] = output[0] ** 0.5
-	output[1] = output[1] ** 0.5
-	return tuple(output)
+	output = (output[0]+output[1])**0.5
+	return output
 def loadImages(path):
 	"""returns a list of pygame surfaces of .png images within the folder corresponding to the path parameter and a list of all .png filenames without the file extension"""
 	images = []

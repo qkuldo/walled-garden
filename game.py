@@ -586,6 +586,11 @@ def game():
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 			distanceList.append({"distance":modules.helper.measureDistance(enemy.hitbox.center,Player.hitbox.center),"position":enemy.hitbox.center,"name":enemy.customAttributes["name"]})
+		distances = modules.helper.unpack_nestedDict(distanceList, "distance", returnSet = False)
+		zipped_distData = zip(distances, distanceList)
+		zipped_distData_sorted = sorted(zipped_distData, key = lambda x:(x[0],x[0]-1))
+		distances_sorted, distanceList_sorted = zip(*zipped_distData_sorted)
+		distances, distanceList = list(distances_sorted), list(distanceList_sorted)
 		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
 			#debug controller
 			debugSecMode += 1
@@ -612,10 +617,9 @@ def game():
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 				#Player.angle = DIRECTION_ANGLES["right"]
 			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
-				distances = modules.helper.unpack_nestedDict(distanceList, "distance", returnSet = False)
-				Player.customAttributes["target pos"] = distanceList[distances.index(min(distances))]["position"]
+				Player.customAttributes["target pos"] = distanceList[0]["position"]
 				Player.customAttributes["targeting"] = True
-				Player.customAttributes["target name"] = copy.copy(distanceList[distances.index(min(distances))]["name"])
+				Player.customAttributes["target name"] = copy.copy(distanceList[0]["name"])
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
@@ -792,10 +796,11 @@ def game():
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
 				for enemy in enemyList:
 					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)
-				for data in distanceList:
-					if (data["distance"] == min(modules.helper.unpack_nestedDict(distanceList, "distance"))):
+				for dataIndex in range(0, len(distanceList)):
+					data = distanceList[dataIndex]
+					if (dataIndex == 0):
 						pg.draw.line(DEBUGLAYER, WHITE, data["position"], Player.hitbox.center, 2)
-					elif (data["distance"] == max(modules.helper.unpack_nestedDict(distanceList, "distance"))):
+					elif (dataIndex == len(distanceList)-1):
 						pg.draw.line(DEBUGLAYER, ORANGE, data["position"], Player.hitbox.center, 2)
 					else:
 						pg.draw.line(DEBUGLAYER, PALEBLUE, data["position"], Player.hitbox.center, 2)
