@@ -179,7 +179,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 		return currentRoomData
 
 def setup():
-	global screen,clock,MISSINGTEXTURE,SFX,CURSOR, CURSORCLICKED, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, HPBARDESIGN, LOCKEDUNTARGET
+	global screen,clock,MISSINGTEXTURE,SFX,CURSOR, CURSORCLICKED, ICONS, EQUIPPED_SELECTOR, TARGET, TARGETRECT, LOCKEDTARGET, HPBARDESIGN, LOCKEDUNTARGET, AVAILABLETARGET
 	pg.init()
 	pg.mixer.init()
 	clock = pg.time.Clock()
@@ -201,6 +201,8 @@ def setup():
 	TARGET = pg.transform.scale(TARGET, (TILESIZE,TILESIZE))
 	LOCKEDTARGET = pg.image.load("assets/locked_target.png").convert_alpha()
 	LOCKEDTARGET = pg.transform.scale(LOCKEDTARGET, (TILESIZE,TILESIZE))
+	AVAILABLETARGET = pg.image.load("assets/available_target.png").convert_alpha()
+	AVAILABLETARGET = pg.transform.scale(AVAILABLETARGET, (TILESIZE,TILESIZE))
 	LOCKEDUNTARGET = pg.image.load("assets/locked_untarget.png").convert_alpha()
 	LOCKEDUNTARGET = pg.transform.scale(LOCKEDUNTARGET, (TILESIZE//1.5,TILESIZE//1.5))
 	HPBARDESIGN = pg.image.load("assets/healthbarDesign.png")
@@ -676,12 +678,15 @@ def game():
 				target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 				TARGETRECT.center = Player.customAttributes["target pos"]
-				INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
+				if (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) > 90):
+					INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
+				else:
+					INFOLAYER.blit(pg.transform.rotate(AVAILABLETARGET, target_angle), TARGETRECT)
 			elif (not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
 				Player.customAttributes["target name"] = ""
-			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
+			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"]) and (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 90)):
 				attack_qte_ongoing_attack = True
 				attack_qte_success = False
 				timedRect_fill = True
