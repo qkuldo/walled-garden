@@ -340,6 +340,7 @@ def game():
 	debugSecMode = 0
 	distanceList = []
 	canScroll = True
+	attack_qte_power = 0
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -385,7 +386,8 @@ def game():
 			"reverse knockback":False,
 			"attempted qte":False,
 			"speed divider":1,
-			"hit angle":0
+			"hit angle":0,
+			"attack power":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, copy.copy(currentRoomData["playerSpawn"]), enemyAssets, DIRECTION_IDS["left"])
@@ -468,14 +470,6 @@ def game():
 				clicked = False
 			elif (event.type == ATTACK_BUTTON_COOLDOWN):
 				on_attack_button_cooldown = False
-			elif (event.type == ATTACK_QTE_START):
-				#print(timedRect.width)
-				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
-				timedRect_fill = False
-				if (debugMode == 1):
-					test_text, test_text_rect = modules.helper.createText((100, 20), text = "click", color=BRIGHTYELLOW)
-				attack_qte_active = True
-				pg.time.set_timer(ATTACK_QTE_END, 1000, 1)
 			elif (event.type == ATTACK_QTE_END):
 				Player.customAttributes["speed divider"] = 1
 				if (attack_qte_success):
@@ -545,7 +539,12 @@ def game():
 			menuPressCooldown = MENUPRESSTIME
 		for enemy in enemyList:
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
-				damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
+				if (Player.customAttributes["attack power"] == 1):
+					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
+					enemy.customAttributes["hit power"] = 1
+				else:
+					enemy.customAttributes["hit power"] = 0
+					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]*0.75
 				#deals damage if enemy has no "invincible" flag
 				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
 					enemy.customAttributes["stats"]["health"] -= damage
@@ -561,8 +560,9 @@ def game():
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
 				if (not ENEMYDATA["FLAGS"][0] in enemy.customAttributes["flags"]):
-					#will add more later
 					speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
+					if (enemy.customAttributes["hit power"] == 0):
+						speedResistanceCalculation = speedResistanceCalculation*1.5
 					directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=MIN_KNOCKBACK, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation)
 					enemy.coordinates[0] += directional_vector[0]
 					enemy.coordinates[1] += directional_vector[1]
@@ -609,6 +609,15 @@ def game():
 			zipped_distData_sorted = sorted(zipped_distData, key = lambda x:x[0])
 			distances_sorted, distanceList_sorted = zip(*zipped_distData_sorted)
 			distances, distanceList = list(distances_sorted), list(distanceList_sorted)
+		if (attack_qte_power >= 15 and attack_qte_power < 30):
+			#print(timedRect.width)
+			if (debugMode == 1):
+				test_text, test_text_rect = modules.helper.createText((100, 20), text = "click", color=BRIGHTYELLOW)
+			attack_qte_active = True
+		if (attack_qte_power == 30 or playerSword.customAttributes["visible"]):
+			timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
+			timedRect_fill = False
+			pg.time.set_timer(ATTACK_QTE_END, 200, 1)
 		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
 			#debug controller
 			debugSecMode += 1
@@ -671,35 +680,40 @@ def game():
 			elif (not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
+				Player.customAttributes["target name"] = ""
 			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
 				attack_qte_ongoing_attack = True
 				attack_qte_success = False
 				timedRect_fill = True
+				Player.customAttributes["attack power"] = 0
 				Player.customAttributes["speed divider"] = 3
 				if (not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = copy.copy(mouseRect.center)
-				pg.time.set_timer(ATTACK_QTE_START, 1000, 1)
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active):
 				attack_qte_success = True
 				on_attack_button_cooldown = True
-				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
-				playerSword.customAttributes["offset"] = random.choice((-60,60))
-				if (playerSword.customAttributes["offset"] == 60):
+				Player.customAttributes["attempted qte"] = True
+				if (attack_qte_power > 27):
+					Player.customAttributes["attack power"] = 1
+					playerSword.customAttributes["offset"] = random.choice((-100,100))
+				else:
+					playerSword.customAttributes["offset"] = random.choice((-40,40))
+				if (playerSword.customAttributes["offset"] > 0):
 					playerSword.customAttributes["negativeSUB"] = True
 				else:
-					playerSword.customAttributes["negativeSUB"] = False					
-				Player.customAttributes["attempted qte"] = True
+					playerSword.customAttributes["negativeSUB"] = False
+				attack_qte_power = 0			
 				playerSword.angle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
 				attack_qte_success = False
 				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 				on_attack_button_cooldown = True
 				timedRect_fill = False
+				attack_qte_power = 0
 				Player.customAttributes["attempted qte"] = True
 				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
-				pg.time.set_timer(ATTACK_QTE_START, 0)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 		#update stuff
@@ -750,13 +764,23 @@ def game():
 
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 		if (playerSword.customAttributes["visible"]):
-			if (playerSword.customAttributes["offset"] != 0):
-				if (playerSword.customAttributes["negativeSUB"] == True):
-					playerSword.customAttributes["offset"] -= 6
-				else:
-					playerSword.customAttributes["offset"] += 6
+			if (playerSword.customAttributes["negativeSUB"] == True):
+				if (playerSword.customAttributes["offset"] > 0):
+					if (Player.customAttributes["attack power"] == 0):
+						playerSword.customAttributes["offset"] -= 6
+					else:
+						playerSword.customAttributes["offset"] -= 10
+			else:
+				if (playerSword.customAttributes["offset"] < 0):
+					if (Player.customAttributes["attack power"] == 0):
+						playerSword.customAttributes["offset"] += 6
+					else:
+						playerSword.customAttributes["offset"] += 8
 			if (playerSword.customAttributes["moving"]):
-				directional_vector = modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=0.6)
+				if (Player.customAttributes["attack power"] == 0):
+					directional_vector = modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=2)
+				else:
+					directional_vector = modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=0.6)
 				Player.coordinates[0] += directional_vector[0]
 				Player.coordinates[1] += directional_vector[1]
 
@@ -978,7 +1002,6 @@ def game():
 					attack_qte_ongoing_attack = False
 					Player.customAttributes["attempted qte"] = True
 					timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
-					pg.time.set_timer(ATTACK_QTE_START, 0)
 					pg.time.set_timer(ATTACK_QTE_END, 0)
 					pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 0)
 					break
@@ -1004,7 +1027,8 @@ def game():
 			UNTARGETRECT.center = (Player.hitbox.center[0]-modules.helper.goto_angle(30,faceAngle)[0],Player.hitbox.center[1]-modules.helper.goto_angle(30,faceAngle)[1])
 			INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, faceAngle), UNTARGETRECT)
 		if (timedRect_fill):
-			timedRect.width += timedRect_fillRate
+			attack_qte_power += timedRect_fillRate
+			timedRect.width = attack_qte_power
 			pg.draw.rect(INFOLAYER, DARKBLUE, timedRectBG)
 			pg.draw.rect(INFOLAYER, BLUE, timedRectBG,3)
 		#draw circle function below is for testing purposes
