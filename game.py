@@ -686,14 +686,20 @@ def game():
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
 				Player.customAttributes["target name"] = ""
-			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"]) and (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 90)):
-				attack_qte_ongoing_attack = True
-				attack_qte_success = False
-				timedRect_fill = True
-				Player.customAttributes["attack power"] = 0
-				Player.customAttributes["speed divider"] = 3
+			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
 				if (not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = copy.copy(mouseRect.center)
+					attack_qte_ongoing_attack = True
+					attack_qte_success = False
+					timedRect_fill = True
+					Player.customAttributes["attack power"] = 0
+					Player.customAttributes["speed divider"] = 3
+				elif (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 90):
+					attack_qte_ongoing_attack = True
+					attack_qte_success = False
+					timedRect_fill = True
+					Player.customAttributes["attack power"] = 0
+					Player.customAttributes["speed divider"] = 3
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active):
 				attack_qte_success = True
 				on_attack_button_cooldown = True
