@@ -696,7 +696,7 @@ def game():
 					timedRect_fill = True
 					Player.customAttributes["attack power"] = 0
 					Player.customAttributes["speed divider"] = 3
-				elif (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 90):
+				elif (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 150):
 					attack_qte_ongoing_attack = True
 					attack_qte_success = False
 					timedRect_fill = True
