@@ -473,6 +473,7 @@ def game():
 			elif (event.type == ATTACK_BUTTON_COOLDOWN):
 				on_attack_button_cooldown = False
 			elif (event.type == ATTACK_QTE_END):
+				attack_qte_power = 0
 				Player.customAttributes["speed divider"] = 1
 				if (attack_qte_success):
 					if (debugMode == 2):
@@ -611,15 +612,16 @@ def game():
 			zipped_distData_sorted = sorted(zipped_distData, key = lambda x:x[0])
 			distances_sorted, distanceList_sorted = zip(*zipped_distData_sorted)
 			distances, distanceList = list(distances_sorted), list(distanceList_sorted)
-		if (attack_qte_power >= 15 and attack_qte_power < 30):
-			#print(timedRect.width)
-			if (debugMode == 1):
-				test_text, test_text_rect = modules.helper.createText((100, 20), text = "click", color=BRIGHTYELLOW)
-			attack_qte_active = True
-		if (attack_qte_power == 30 or playerSword.customAttributes["visible"]):
-			timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
-			timedRect_fill = False
-			pg.time.set_timer(ATTACK_QTE_END, 200, 1)
+		if (timedRect_fill):
+			if (15 <= attack_qte_power < 30):
+				#print(timedRect.width)
+				if (debugMode == 1):
+					test_text, test_text_rect = modules.helper.createText((100, 20), text = "click", color=BRIGHTYELLOW)
+				attack_qte_active = True
+			if (attack_qte_power >= 30 or playerSword.customAttributes["visible"]):
+				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
+				timedRect_fill = False
+				pg.time.set_timer(ATTACK_QTE_END, 500, 1)
 		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
 			#debug controller
 			debugSecMode += 1
@@ -715,14 +717,12 @@ def game():
 					playerSword.customAttributes["negativeSUB"] = True
 				else:
 					playerSword.customAttributes["negativeSUB"] = False
-				attack_qte_power = 0			
 				playerSword.angle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
 				attack_qte_success = False
 				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 				on_attack_button_cooldown = True
 				timedRect_fill = False
-				attack_qte_power = 0
 				Player.customAttributes["attempted qte"] = True
 				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
