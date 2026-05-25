@@ -576,7 +576,7 @@ def game():
 					enemyList.remove(enemy)
 				enemy.customAttributes["visible"] = True
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
-			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
+			if (enemy.customAttributes["name"] == Player.customAttributes["target name"] and not attack_qte_ongoing_attack):
 				Player.customAttributes["target pos"] = enemy.hitbox.center
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
@@ -682,7 +682,7 @@ def game():
 				target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 				TARGETRECT.center = Player.customAttributes["target pos"]
-				if (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) > 90):
+				if (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) > 120):
 					INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
 				else:
 					INFOLAYER.blit(pg.transform.rotate(AVAILABLETARGET, target_angle), TARGETRECT)
@@ -698,7 +698,7 @@ def game():
 					timedRect_fill = True
 					Player.customAttributes["attack power"] = 0
 					Player.customAttributes["speed divider"] = 3
-				elif (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 150):
+				elif (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) <120):
 					attack_qte_ongoing_attack = True
 					attack_qte_success = False
 					timedRect_fill = True
