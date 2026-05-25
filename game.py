@@ -540,6 +540,8 @@ def game():
 			if (debugMode > 3):
 				debugMode = 0
 			menuPressCooldown = MENUPRESSTIME
+		if (playerSword.customAttributes["visible"]):
+			attackHitbox.center = (Player.hitbox.center[0]-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
 		for enemy in enemyList:
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				if (Player.customAttributes["attack power"] == 1):
@@ -1049,7 +1051,6 @@ def game():
 			playerSword.coordinates = (playerSword.hitbox.x-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], playerSword.hitbox.y-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"])
 			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-modules.helper.goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-modules.helper.goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[1]))
-			attackHitbox.center = (Player.hitbox.center[0]-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
 
 
 		if (specialPickupVisible):
