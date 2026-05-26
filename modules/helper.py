@@ -82,6 +82,17 @@ def addItem(itemList, itemID, coordinates, assets):
 					"oscillate":0,
 					"active":True
 				}))
+def moveEnemy(enemy, data, currentRoomData):
+	if (data["FLAGS"][2] in enemy.customAttributes["flags"]):
+		if (enemy.customAttributes["goomba fancy value"] == 0):
+			movement = complexMove(enemy,0,-1,currentRoomData)
+		else:
+			movement = complexMove(enemy,0,1,currentRoomData)
+		if (not movement):
+			if (enemy.customAttributes["goomba fancy value"] == 0):
+				enemy.customAttributes["goomba fancy value"] = 1
+			else:
+				enemy.customAttributes["goomba fancy value"] = 0
 def makeEnemy(data, type, coordinates, assetData, facingDirection):
 	enemyFlags = data["FLAGS"]
 	BASE_ATTRIBUTES = copy.deepcopy(data["BASE ATTRIBUTES"][type])
@@ -132,6 +143,8 @@ def complexMove(Sprite, movement_line,operation,currentRoomData, divider=1):
 	collideChecker = Sprite.siMove(movement_line,operation, divider)
 	if (collideChecker.collidelist(currentRoomData["collisionBoxes"]) == -1 and hitboxInbound(collideChecker)):
 		Sprite.move(movement_line,operation,divider)
+		return True
+	return False
 def animateLoop(Sprite, startFrame, endFrame):
 	#loops animation on certain start and end frames
 	if (Sprite.customAttributes["currentFrame"] > endFrame or Sprite.customAttributes["currentFrame"] < startFrame):

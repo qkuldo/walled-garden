@@ -20,11 +20,13 @@
 			"rectOperation":[12,0],
 			"hit angle":0,
 			"nameAdder":"_TEST",
-			"flags":[]
+			"flags":["_TEST MOVEMENT"],
+			"goomba fancy value":0
 		}
 	],
 	"FLAGS":[
 		"NO KNOCKBACK",
-		"INVINCIBLE"
+		"INVINCIBLE",
+		"_TEST MOVEMENT"
 	]
 }
