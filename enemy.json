@@ -20,7 +20,7 @@
 			"rectOperation":[12,0],
 			"hit angle":0,
 			"nameAdder":"_TEST",
-			"flags":["_TEST MOVEMENT"],
+			"flags":[],
 			"goomba fancy value":0
 		}
 	],
