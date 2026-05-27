@@ -577,7 +577,7 @@ def game():
 				enemy.customAttributes["visible"] = True
 				modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData)
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
-			if (enemy.customAttributes["name"] == Player.customAttributes["target name"] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
@@ -657,8 +657,7 @@ def game():
 					targetIndex += 1
 				else:
 					targetIndex = 0
-				if (not (playerSword.customAttributes["visible"] or attack_qte_ongoing_attack)):
-					Player.customAttributes["target pos"] = copy.deepcopy(distanceList[targetIndex]["position"])
+				Player.customAttributes["target pos"] = copy.deepcopy(distanceList[targetIndex]["position"])
 				Player.customAttributes["target name"] = copy.copy(distanceList[targetIndex]["name"])
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				canScroll = False
@@ -670,16 +669,14 @@ def game():
 					targetIndex -= 1
 				else:
 					targetIndex = len(distanceList)-1
-				if (not (playerSword.customAttributes["visible"] or attack_qte_ongoing_attack)):
-					Player.customAttributes["target pos"] = copy.deepcopy(distanceList[targetIndex]["position"])
+				Player.customAttributes["target pos"] = copy.deepcopy(distanceList[targetIndex]["position"])
 				Player.customAttributes["target name"] = copy.copy(distanceList[targetIndex]["name"])
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				canScroll = False
 				pg.time.set_timer(SCROLLWHEEL_COOLDOWN, 300, 1)
 			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
 				if (not Player.customAttributes["targeting"]):
-					if (not (playerSword.customAttributes["visible"] or attack_qte_ongoing_attack)):
-						Player.customAttributes["target pos"] = copy.deepcopy(distanceList[0]["position"])
+					Player.customAttributes["target pos"] = copy.deepcopy(distanceList[0]["position"])
 					Player.customAttributes["targeting"] = True
 					Player.customAttributes["target name"] = copy.copy(distanceList[0]["name"])
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
@@ -1034,7 +1031,7 @@ def game():
 
 		if ((attack_qte_ongoing_attack or playerSword.customAttributes["visible"]) and Player.customAttributes["targeting"]):
 			posMatch = next((enemy for enemy in enemyList if (enemy.customAttributes["name"] == Player.customAttributes["target name"])), None)
-			if (posMatch != None and not (playerSword.customAttributes["visible"] or attack_qte_ongoing_attack)):
+			if (posMatch != None):
 				Player.customAttributes["target pos"] = posMatch.hitbox.center
 			target_angle += 2
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
