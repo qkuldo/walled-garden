@@ -82,17 +82,19 @@ def addItem(itemList, itemID, coordinates, assets):
 					"oscillate":0,
 					"active":True
 				}))
-def moveEnemy(enemy, data, currentRoomData):
+def moveEnemy(enemy, data, currentRoomData, Player):
+	movement_vector = (0, 0)
+	checkCollisionList = copy.deepcopy(currentRoomData["collisionBoxes"])
+	checkCollisionList.append(Player.hitbox)
 	if (data["FLAGS"][2] in enemy.customAttributes["flags"]):
-		if (enemy.customAttributes["goomba fancy value"] == 0):
-			movement = complexMove(enemy,0,-1,currentRoomData)
-		else:
-			movement = complexMove(enemy,0,1,currentRoomData)
-		if (not movement):
-			if (enemy.customAttributes["goomba fancy value"] == 0):
-				enemy.customAttributes["goomba fancy value"] = 1
-			else:
-				enemy.customAttributes["goomba fancy value"] = 0
+		if (measureDistance(Player.hitbox.center, enemy.hitbox.center) < 500 and measureDistance(Player.hitbox.center, enemy.hitbox.center) > enemy.customAttributes["pursue distance"]):
+			enemy.customAttributes["state"] = 1
+		elif (measureDistance(Player.hitbox.center, enemy.hitbox.center) < enemy.customAttributes["pursue distance"]):
+			enemy.customAttributes["state"] = 2
+		if (enemy.customAttributes["state"] == 1):
+			movement_vector = goto_angleComplex(enemy, speed_multiplier=1, angle=face_target(enemy.hitbox.center, Player.hitbox.center), targetPos=Player.hitbox.center, checkCollision=True, collisionList=checkCollisionList, setDir = True) 
+		enemy.coordinates[0] += movement_vector[0]
+		enemy.coordinates[1] += movement_vector[1]
 def makeEnemy(data, type, coordinates, assetData, facingDirection):
 	enemyFlags = data["FLAGS"]
 	BASE_ATTRIBUTES = copy.deepcopy(data["BASE ATTRIBUTES"][type])

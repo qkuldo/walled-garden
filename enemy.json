@@ -3,7 +3,7 @@
 		"assets/missing.png"
 	],
 	"BASE ATTRIBUTES":[
-		{"speed":5, "scale":[48,48], "hitboxScale":[24,48]}
+		{"speed":3, "scale":[48,48], "hitboxScale":[24,48]}
 	],
 	"CUSTOM ATTRIBUTES":[
 		{
@@ -20,8 +20,9 @@
 			"rectOperation":[12,0],
 			"hit angle":0,
 			"nameAdder":"_TEST",
-			"flags":[],
-			"goomba fancy value":0
+			"flags":["_TEST MOVEMENT"],
+			"state":0,
+			"pursue distance":60
 		}
 	],
 	"FLAGS":[

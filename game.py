@@ -575,7 +575,7 @@ def game():
 				if (enemy.customAttributes["stats"]["health"] <= 0):
 					enemyList.remove(enemy)
 				enemy.customAttributes["visible"] = True
-				modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData)
+				modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player)
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
