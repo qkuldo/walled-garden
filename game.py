@@ -391,7 +391,7 @@ def game():
 			"attack power":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
-	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, copy.copy(currentRoomData["playerSpawn"]), enemyAssets, DIRECTION_IDS["left"])
+	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, [currentRoomData["playerSpawn"][0] + 48, currentRoomData["playerSpawn"][1] + 48], enemyAssets, DIRECTION_IDS["left"])
 	enemyList = [test_enemy]
 	#rect creation
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
@@ -419,7 +419,12 @@ def game():
 		modules.helper.clearLayer(INVENTORY_DESCLAYER)
 		modules.helper.clearLayer(INFOLAYER)
 		modules.helper.clearLayer(DEBUGLAYER)
+		enemy_hitboxList = []
 		#set stuff
+		for enemy in enemyList:
+			enemy_hitboxList.append(enemy.hitbox)
+		enemyHitboxRoomData = copy.deepcopy(currentRoomData)
+		enemyHitboxRoomData["collisionBoxes"] = enemyHitboxRoomData["collisionBoxes"] + enemy_hitboxList
 		scrollWheel_direction = 0
 		current_time = pg.time.get_ticks()
 		timedRect.bottomleft = Player.hitbox.topright
@@ -630,23 +635,23 @@ def game():
 			if (debugSecMode > 2):
 				debugSecMode = 0
 			if (debugMode == 3):
-				enemyList.append(modules.helper.makeEnemy(ENEMYDATA, 0, copy.copy(Player.coordinates), enemyAssets, DIRECTION_IDS["left"]))
+				enemyList.append(modules.helper.makeEnemy(ENEMYDATA, 0, [Player.coordinates[0] + 48, Player.coordinates[1] + 48], enemyAssets, DIRECTION_IDS["left"]))
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"]) and (not Player.customAttributes["hit animation"])):
 			if (keys[pg.K_w] or keys[pg.K_UP]):
-				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_SUB,enemyHitboxRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
 				#Player.angle = DIRECTION_ANGLES["up"]
 			elif (keys[pg.K_s] or keys[pg.K_DOWN]):
-				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_ADD,enemyHitboxRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
 				#Player.angle = DIRECTION_ANGLES["down"]
 			if (keys[pg.K_a] or keys[pg.K_LEFT]):
-				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_SUB,enemyHitboxRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
 				#Player.angle = DIRECTION_ANGLES["left"]
 			elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
-				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,enemyHitboxRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 				#Player.angle = DIRECTION_ANGLES["right"]
 			if (scrollWheel_direction == SCROLLWHEEL_UP and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
