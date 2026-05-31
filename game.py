@@ -42,8 +42,7 @@ walltileSpritesheets = []
 proptileSpritesheets = []
 SCROLLWHEEL_UP = 1
 SCROLLWHEEL_DOWN = -1
-#like minecraft
-MIN_KNOCKBACK = 1.552
+MIN_KNOCKBACK = 3.52
 
 def readAllJsonData():
 	global DIALOGDATA, ITEMDATA, ROOMTILEDATA, EXITDATA, ENEMYDATA
@@ -568,7 +567,7 @@ def game():
 					speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
 					if (enemy.customAttributes["hit power"] == 0):
 						speedResistanceCalculation = speedResistanceCalculation*1.5
-					directional_vector = modules.helper.goto_angleComplex(enemy, speed_multiplier=MIN_KNOCKBACK, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation)
+					directional_vector = modules.helper.goto_angleComplex(enemy, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation, speedOverride=MIN_KNOCKBACK)
 					enemy.coordinates[0] += directional_vector[0]
 					enemy.coordinates[1] += directional_vector[1]
 			else:
