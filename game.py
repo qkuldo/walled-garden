@@ -14,6 +14,7 @@ PALEBLUE = (24, 23, 87)
 DARKBLUE = (7,5,35)
 DARKESTBLUE = (0,0,15)
 ORANGE = (255,126,71)
+GREEN = (88, 130, 112)
 TILESIZE = 48
 #from bottom
 HUDMARGIN = 440
@@ -1087,7 +1088,7 @@ def game():
 			if (Player.customAttributes["action state"] == 0):
 				pg.draw.rect(INFOLAYER, BLUE, playerActionRect)
 			else:
-				pg.draw.rect(INFOLAYER, ORANGE, playerActionRect)
+				pg.draw.rect(INFOLAYER, GREEN, playerActionRect)
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
 
