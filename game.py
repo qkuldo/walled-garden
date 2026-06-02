@@ -720,11 +720,13 @@ def game():
 				else:
 					Player.customAttributes["action timer"] -= 25
 					playerSword.customAttributes["offset"] = random.choice((-40,40))
-				if ((Player.customAttributes["attack power"] == 1 and Player.customAttributes["action timer"] >= 50) or (Player.customAttributes["attack power"] == 0 and Player.customAttributes["action timer"] >= 25)):
+				if (Player.customAttributes["action timer"] >= 0):
 					attack_qte_success = True
 				else:
 					attack_qte_success = False
 				on_attack_button_cooldown = True
+				timedRect_fill = False
+				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 				Player.customAttributes["attempted qte"] = True
