@@ -332,6 +332,7 @@ def game():
 	ITEMTYPE_XMARGIN = 25
 	ITEMTYPE_YMARGIN = 10
 	HEALTHBAR_COORDINATES = (85,55)
+	ACTIONBAR_COORDINATES = (45,130)
 	target_angle = 0
 	screenCoordinates = (0, 0)
 	roomFrame = 0
@@ -342,6 +343,8 @@ def game():
 	distanceList = []
 	canScroll = True
 	attack_qte_power = 0
+	actionTimer_baseChange = 1
+	actionTimer_max = 100
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -388,7 +391,9 @@ def game():
 			"attempted qte":False,
 			"speed divider":1,
 			"hit angle":0,
-			"attack power":0
+			"attack power":0,
+			"action timer":100,
+			"action state":1
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, [currentRoomData["playerSpawn"][0] + 48, currentRoomData["playerSpawn"][1] + 48], enemyAssets, DIRECTION_IDS["left"])
@@ -419,18 +424,14 @@ def game():
 		modules.helper.clearLayer(INVENTORY_DESCLAYER)
 		modules.helper.clearLayer(INFOLAYER)
 		modules.helper.clearLayer(DEBUGLAYER)
-		enemy_hitboxList = []
 		#set stuff
-		for enemy in enemyList:
-			enemy_hitboxList.append(enemy.hitbox)
-		enemyHitboxRoomData = copy.deepcopy(currentRoomData)
-		enemyHitboxRoomData["collisionBoxes"] = enemyHitboxRoomData["collisionBoxes"] + enemy_hitboxList
 		scrollWheel_direction = 0
 		current_time = pg.time.get_ticks()
 		timedRect.bottomleft = Player.hitbox.topright
 		timedRectBG.bottomleft = Player.hitbox.topright
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
-
+		playerActionRect = pg.Rect(ACTIONBAR_COORDINATES, (Player.customAttributes["action timer"]*2, TILESIZE//2))
+		playerMaxActionRect = pg.Rect(ACTIONBAR_COORDINATES, (actionTimer_max*2, TILESIZE//2))
 		playerHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
@@ -447,6 +448,8 @@ def game():
 
 		if (debugMode == 1):
 			test_text, test_text_rect = modules.helper.createText((200, 20), text = current_room + " MODE " + str(debugMode), color=BRIGHTYELLOW)
+		elif (debugMode == 3):
+			test_text, test_text_rect = modules.helper.createText((200, 20), text = str(Player.customAttributes["action timer"]) + " , " + str(Player.customAttributes["action state"]) + " MODE 3", color=BRIGHTYELLOW)
 		else:
 			test_text, test_text_rect = modules.helper.createText((100, 20), text = "MODE "+str(debugMode), color=BRIGHTYELLOW)
 		distanceList = []
@@ -639,19 +642,19 @@ def game():
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"]) and (not Player.customAttributes["hit animation"])):
 			if (keys[pg.K_w] or keys[pg.K_UP]):
-				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_SUB,enemyHitboxRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
 				#Player.angle = DIRECTION_ANGLES["up"]
 			elif (keys[pg.K_s] or keys[pg.K_DOWN]):
-				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_ADD,enemyHitboxRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
 				#Player.angle = DIRECTION_ANGLES["down"]
 			if (keys[pg.K_a] or keys[pg.K_LEFT]):
-				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_SUB,enemyHitboxRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
 				#Player.angle = DIRECTION_ANGLES["left"]
 			elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
-				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,enemyHitboxRoomData,Player.customAttributes["speed divider"])
+				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
 				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
 				#Player.angle = DIRECTION_ANGLES["right"]
 			if (scrollWheel_direction == SCROLLWHEEL_UP and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
@@ -695,7 +698,7 @@ def game():
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
 				Player.customAttributes["target name"] = ""
-			if (keys[pg.K_z] and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
+			if (keys[pg.K_z] and Player.customAttributes["action state"] == 1 and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
 				if (not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = copy.copy(mouseRect.center)
 					attack_qte_ongoing_attack = True
@@ -710,16 +713,21 @@ def game():
 					Player.customAttributes["attack power"] = 0
 					Player.customAttributes["speed divider"] = 3
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active):
-				attack_qte_success = True
+				if (attack_qte_power > 27):
+					Player.customAttributes["attack power"] = 1
+					Player.customAttributes["action timer"] -= 50
+					playerSword.customAttributes["offset"] = random.choice((-100,100))
+				else:
+					Player.customAttributes["action timer"] -= 25
+					playerSword.customAttributes["offset"] = random.choice((-40,40))
+				if ((Player.customAttributes["attack power"] == 1 and Player.customAttributes["action timer"] >= 50) or (Player.customAttributes["attack power"] == 0 and Player.customAttributes["action timer"] >= 25)):
+					attack_qte_success = True
+				else:
+					attack_qte_success = False
 				on_attack_button_cooldown = True
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 				Player.customAttributes["attempted qte"] = True
-				if (attack_qte_power > 27):
-					Player.customAttributes["attack power"] = 1
-					playerSword.customAttributes["offset"] = random.choice((-100,100))
-				else:
-					playerSword.customAttributes["offset"] = random.choice((-40,40))
 				if (playerSword.customAttributes["offset"] > 0):
 					playerSword.customAttributes["negativeSUB"] = True
 				else:
@@ -874,7 +882,12 @@ def game():
 		else:
 			INVENTORY_ITEM_TEXT, INVENTORY_ITEM_TEXT_RECT = modules.helper.createText((500,520), text = DEBUGTEXT)
 
-
+		if (Player.customAttributes["action state"] == 0):
+			Player.customAttributes["action timer"] += actionTimer_baseChange
+		if (Player.customAttributes["action timer"] >= actionTimer_max):
+			Player.customAttributes["action state"] = 1
+		if (Player.customAttributes["action timer"] <= 0 and Player.customAttributes["action state"] == 1):
+			Player.customAttributes["action state"] = 0
 		if (debugMode > 0):
 			DEBUGLAYER.blit(test_text, test_text_rect)
 			if (debugMode == 2):
@@ -1068,6 +1081,11 @@ def game():
 			pg.draw.rect(INFOLAYER, PALEBLUE, playerMaxHealthRect)
 			pg.draw.rect(INFOLAYER, BLUE, playerHealthRect)
 			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxHealthRect.inflate(5,5),5)
+			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxActionRect)
+			if (Player.customAttributes["action state"] == 0):
+				pg.draw.rect(INFOLAYER, BLUE, playerActionRect)
+			else:
+				pg.draw.rect(INFOLAYER, ORANGE, playerActionRect)
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
 
