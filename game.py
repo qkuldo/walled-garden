@@ -15,6 +15,7 @@ DARKBLUE = (7,5,35)
 DARKESTBLUE = (0,0,15)
 ORANGE = (255,126,71)
 GREEN = (88, 130, 112)
+PALEGREEN = (138, 158, 149)
 TILESIZE = 48
 #from bottom
 HUDMARGIN = 440
@@ -346,6 +347,7 @@ def game():
 	attack_qte_power = 0
 	actionTimer_baseChange = 1
 	actionTimer_max = 100
+	actionTimerFailingMark = False
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -401,6 +403,7 @@ def game():
 	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, [currentRoomData["playerSpawn"][0] + 48, currentRoomData["playerSpawn"][1] + 48], enemyAssets, DIRECTION_IDS["left"])
 	enemyList = [test_enemy]
 	#rect creation
+	playerActionCostRect = pg.Rect((0, 0), (0, TILESIZE//2))
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
 	playerHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
@@ -710,7 +713,7 @@ def game():
 					timedRect_fill = True
 					Player.customAttributes["attack power"] = 0
 					Player.customAttributes["speed divider"] = 3
-				elif (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) <120):
+				elif (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 120):
 					attack_qte_ongoing_attack = True
 					attack_qte_success = False
 					timedRect_fill = True
@@ -740,6 +743,7 @@ def game():
 					playerSword.customAttributes["negativeSUB"] = False
 				playerSword.angle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
+				Player.customAttributes["action timer"] -= 25
 				attack_qte_success = False
 				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 				on_attack_button_cooldown = True
@@ -749,6 +753,23 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 		#update stuff
+		if (attack_qte_ongoing_attack):
+			actionTimerFailingMark = False
+			if (attack_qte_power > 27):
+				if (Player.customAttributes["action timer"] >= 50):
+					playerActionCostRect.width = 100
+				else:
+					playerActionCostRect.width = playerActionRect.width
+					actionTimerFailingMark = True
+			else:
+				if (Player.customAttributes["action timer"] >= 25):
+					playerActionCostRect.width = 50
+				else:
+					actionTimerFailingMark = True
+					playerActionCostRect.width = playerActionRect.width
+			playerActionCostRect.topright = playerActionRect.topright
+		else:
+			playerActionCostRect.width = 0
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
 			modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 		if (switchFrame and (not specialPickupVisible)):
@@ -1087,7 +1108,6 @@ def game():
 			playerSword.draw(0, SPRITELAYER, angleOffset=playerSword.customAttributes["offset"])
 			SPRITELAYER.blit(pg.transform.rotate(hand, playerSword.angle+playerSword.customAttributes["offset"]), (Player.hitbox.center[0]-modules.helper.goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[0], Player.hitbox.center[1]-modules.helper.goto_angle(35,playerSword.angle+playerSword.customAttributes["offset"])[1]))
 
-
 		if (specialPickupVisible):
 			SPRITELAYER.blit(specialPickupText, specialPickupTextRect)
 			SPRITELAYER.blit(specialItem, specialItemRect)
@@ -1101,10 +1121,13 @@ def game():
 				pg.draw.rect(INFOLAYER, BLUE, playerActionRect)
 			else:
 				pg.draw.rect(INFOLAYER, GREEN, playerActionRect)
+			if (actionTimerFailingMark):
+				pg.draw.rect(INFOLAYER, ORANGE, playerActionCostRect)
+			else:
+				pg.draw.rect(INFOLAYER, PALEGREEN, playerActionCostRect)
 			pg.draw.rect(INFOLAYER, BRIGHTYELLOW, playerRecoveryRect)
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
-
 		BASELAYER.fill(BGCOLOR)
 
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
