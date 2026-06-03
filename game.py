@@ -394,7 +394,8 @@ def game():
 			"hit angle":0,
 			"attack power":0,
 			"action timer":100,
-			"action state":1
+			"action state":1,
+			"recovery timer":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, [currentRoomData["playerSpawn"][0] + 48, currentRoomData["playerSpawn"][1] + 48], enemyAssets, DIRECTION_IDS["left"])
@@ -432,6 +433,7 @@ def game():
 		timedRectBG.bottomleft = Player.hitbox.topright
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
 		playerActionRect = pg.Rect(ACTIONBAR_COORDINATES, (Player.customAttributes["action timer"]*2, TILESIZE//2))
+		playerRecoveryRect = pg.Rect((ACTIONBAR_COORDINATES[0],ACTIONBAR_COORDINATES[1]+30), (Player.customAttributes["recovery timer"], TILESIZE//5))
 		playerMaxActionRect = pg.Rect(ACTIONBAR_COORDINATES, (actionTimer_max*2, TILESIZE//2))
 		playerHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["health"], TILESIZE//2))
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
@@ -700,6 +702,7 @@ def game():
 				Player.customAttributes["target pos"] = None
 				Player.customAttributes["target name"] = ""
 			if (keys[pg.K_z] and Player.customAttributes["action state"] == 1 and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
+				Player.customAttributes["recovery timer"] = 0
 				if (not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = copy.copy(mouseRect.center)
 					attack_qte_ongoing_attack = True
@@ -891,6 +894,15 @@ def game():
 			Player.customAttributes["action state"] = 1
 		if (Player.customAttributes["action timer"] <= 0 and Player.customAttributes["action state"] == 1):
 			Player.customAttributes["action state"] = 0
+		if (Player.customAttributes["action state"] == 1 and Player.customAttributes["action timer"] < actionTimer_max and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+			Player.customAttributes["recovery timer"] += 1
+			if (Player.customAttributes["recovery timer"] >= 50):
+				Player.customAttributes["action timer"] += 16
+				Player.customAttributes["recovery timer"] = 0
+				if (Player.customAttributes["action timer"] > 100):
+					Player.customAttributes["action timer"] = 100
+		elif (Player.customAttributes["action state"] == 0):
+			Player.customAttributes["recovery timer"] = 0
 		if (debugMode > 0):
 			DEBUGLAYER.blit(test_text, test_text_rect)
 			if (debugMode == 2):
@@ -1089,6 +1101,7 @@ def game():
 				pg.draw.rect(INFOLAYER, BLUE, playerActionRect)
 			else:
 				pg.draw.rect(INFOLAYER, GREEN, playerActionRect)
+			pg.draw.rect(INFOLAYER, BRIGHTYELLOW, playerRecoveryRect)
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
 
