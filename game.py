@@ -1129,6 +1129,7 @@ def game():
 			pg.draw.rect(INFOLAYER, BRIGHTYELLOW, playerRecoveryRect)
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
+			INFOLAYER.blit(pg.transform.scale(ICONS.load_frame(4), (32,32)), (ACTIONBAR_COORDINATES[0]-32, ACTIONBAR_COORDINATES[1]-3))
 		BASELAYER.fill(BGCOLOR)
 
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
