@@ -1121,10 +1121,11 @@ def game():
 				pg.draw.rect(INFOLAYER, BLUE, playerActionRect)
 			else:
 				pg.draw.rect(INFOLAYER, GREEN, playerActionRect)
-			if (actionTimerFailingMark):
-				pg.draw.rect(INFOLAYER, ORANGE, playerActionCostRect)
-			else:
-				pg.draw.rect(INFOLAYER, PALEGREEN, playerActionCostRect)
+			if (Player.customAttributes["action state"] == 1):
+				if (actionTimerFailingMark):
+					pg.draw.rect(INFOLAYER, ORANGE, playerActionCostRect)
+				else:
+					pg.draw.rect(INFOLAYER, PALEGREEN, playerActionCostRect)
 			pg.draw.rect(INFOLAYER, BRIGHTYELLOW, playerRecoveryRect)
 			INFOLAYER.blit(healthText, healthTextRect)
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
