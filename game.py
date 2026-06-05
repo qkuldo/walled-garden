@@ -458,6 +458,7 @@ def game():
 			test_text, test_text_rect = modules.helper.createText((200, 20), text = str(Player.customAttributes["action timer"]) + " , " + str(Player.customAttributes["action state"]) + " MODE 3", color=BRIGHTYELLOW)
 		else:
 			test_text, test_text_rect = modules.helper.createText((100, 20), text = "MODE "+str(debugMode), color=BRIGHTYELLOW)
+		clock_text, clock_text_rect = modules.helper.createText((100, 50), text = str(current_time), color=BRIGHTYELLOW)
 		distanceList = []
 		switchFrame = False
 		#cache important data
@@ -588,7 +589,7 @@ def game():
 				if (enemy.customAttributes["stats"]["health"] <= 0):
 					enemyList.remove(enemy)
 				enemy.customAttributes["visible"] = True
-				modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player)
+				modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time)
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
@@ -620,6 +621,10 @@ def game():
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-30),2,str(enemy.customAttributes["visible"]),BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,str(enemy.customAttributes["state"]),BLUE)
+					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-90),2,str(enemy.customAttributes["state timer start"]),BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 			distanceList.append({"distance":modules.helper.measureDistance(enemy.hitbox.center,Player.hitbox.center),"position":enemy.hitbox.center,"name":enemy.customAttributes["name"]})
 		if (len(enemyList) > 0):
@@ -926,10 +931,13 @@ def game():
 			Player.customAttributes["recovery timer"] = 0
 		if (debugMode > 0):
 			DEBUGLAYER.blit(test_text, test_text_rect)
+			DEBUGLAYER.blit(clock_text, clock_text_rect)
 			if (debugMode == 2):
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
 				for enemy in enemyList:
 					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)
+					extended_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"])
+					pg.draw.line(DEBUGLAYER,GREEN,enemy.hitbox.center,(enemy.hitbox.center[0]-extended_endpoint[0], enemy.hitbox.center[1]-extended_endpoint[1]), 2)
 				for dataIndex in range(0, len(distanceList)):
 					data = distanceList[dataIndex]
 					distance = distances[dataIndex]

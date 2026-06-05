@@ -22,7 +22,12 @@
 			"nameAdder":"_TEST",
 			"flags":["_TEST MOVEMENT"],
 			"state":0,
-			"pursue distance":60
+			"pursue distance":100,
+			"target angle":0,
+			"attack duration":800,
+			"windup duration":1000,
+			"recovery duration":1000,
+			"state timer start":0
 		}
 	],
 	"FLAGS":[
