@@ -622,7 +622,16 @@ def game():
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-50),2,f"{enemy.customAttributes["hit angle"]:.2f}",BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,str(enemy.customAttributes["state"]),BLUE)
+					if (enemy.customAttributes["state"] == modules.helper.IDLE):
+						dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,"IDLE",BLUE)
+					if (enemy.customAttributes["state"] == modules.helper.PURSUING):
+						dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,"PURSING",BLUE)
+					if (enemy.customAttributes["state"] == modules.helper.WINDUP):
+						dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,"WINDUP",BLUE)
+					if (enemy.customAttributes["state"] == modules.helper.ATTACK):
+						dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,"ATTACK",BLUE)
+					if (enemy.customAttributes["state"] == modules.helper.RECOVERY):
+						dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,"RECOVERY",BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-90),2,str(enemy.customAttributes["state timer start"]),BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
@@ -1005,7 +1014,7 @@ def game():
 		for timerKey in list(temp_cache["hit cooldowns"]):
 			timer = temp_cache["hit cooldowns"][timerKey]
 			current_time = pg.time.get_ticks()
-			if (current_time - timer["start time"] >= timer["duration"]):
+			if (modules.helper.timerFinishCheck(current_time, timer["start time"], timer["duration"])):
 				del temp_cache["hit cooldowns"][timerKey]
 		if (Player.customAttributes["visible"]):
 			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
