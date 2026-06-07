@@ -90,11 +90,15 @@ def addItem(itemList, itemID, coordinates, assets):
 				}))
 def timerFinishCheck(currentTime, startTime, duration):
 	return currentTime - startTime >= duration
-def moveEnemy(enemy, data, currentRoomData, Player, currentTime):
+def moveEnemy(enemy, data, currentRoomData, Player, currentTime, slowdown=False):
 	movement_vector = (0, 0)
 	checkCollisionList = copy.deepcopy(currentRoomData["collisionBoxes"])
 	checkCollisionList.append(Player.hitbox)
 	distance_fromPlayer = measureDistance(Player.hitbox.center, enemy.hitbox.center)
+	if (not slowdown):
+		durationMultiplier = 1
+	else:
+		durationMultiplier = 2
 	if (data["FLAGS"][2] in enemy.customAttributes["flags"]):
 		if (enemy.customAttributes["state"] < 2):
 			if (distance_fromPlayer < 500 and distance_fromPlayer > enemy.customAttributes["pursue distance"]):
@@ -105,23 +109,27 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime):
 				enemy.customAttributes["target angle"] = face_target(enemy.hitbox.center, Player.hitbox.center)
 		else:
 			if (enemy.customAttributes["state"] == 2):
-				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["windup duration"])):
+				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["windup duration"]*durationMultiplier)):
 					enemy.customAttributes["state timer start"] = currentTime
 					enemy.customAttributes["state"] = ATTACK
 			if (enemy.customAttributes["state"] == 3):
-				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["attack duration"])):
+				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["attack duration"]*durationMultiplier)):
 					enemy.customAttributes["state timer start"] = currentTime
 					enemy.customAttributes["state"] = RECOVERY
 			if (enemy.customAttributes["state"] == 4):
-				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["recovery duration"])):
+				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["recovery duration"]*durationMultiplier)):
 					enemy.customAttributes["state timer start"] = currentTime
 					enemy.customAttributes["state"] = PURSUING
 		if (enemy.customAttributes["state"] == PURSUING):
 			movement_vector = goto_angleComplex(enemy, speed_multiplier=1, angle=face_target(enemy.hitbox.center, Player.hitbox.center), targetPos=Player.hitbox.center, checkCollision=True, collisionList=checkCollisionList, setDir = True) 
 		elif (enemy.customAttributes["state"] == ATTACK):
 			movement_vector = goto_angleComplex(enemy, speed_multiplier=3, angle=enemy.customAttributes["target angle"], targetPos=Player.hitbox.center, checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = True)
-		enemy.coordinates[0] += movement_vector[0]
-		enemy.coordinates[1] += movement_vector[1]
+		if (not slowdown):
+			enemy.coordinates[0] += movement_vector[0]
+			enemy.coordinates[1] += movement_vector[1]
+		else:
+			enemy.coordinates[0] += movement_vector[0]/2
+			enemy.coordinates[1] += movement_vector[1]/2
 def makeEnemy(data, type, coordinates, assetData, facingDirection):
 	enemyFlags = data["FLAGS"]
 	BASE_ATTRIBUTES = copy.deepcopy(data["BASE ATTRIBUTES"][type])

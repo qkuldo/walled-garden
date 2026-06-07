@@ -348,6 +348,7 @@ def game():
 	actionTimer_baseChange = 1
 	actionTimer_max = 100
 	actionTimerFailingMark = False
+	comboSlowdown = False
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -589,7 +590,7 @@ def game():
 				if (enemy.customAttributes["stats"]["health"] <= 0):
 					enemyList.remove(enemy)
 				enemy.customAttributes["visible"] = True
-				modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time)
+				modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, comboSlowdown)
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
@@ -939,7 +940,10 @@ def game():
 		if (Player.customAttributes["action timer"] <= 0 and Player.customAttributes["action state"] == 1):
 			Player.customAttributes["action state"] = 0
 		if (Player.customAttributes["action state"] == 1 and Player.customAttributes["action timer"] < actionTimer_max and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
-			Player.customAttributes["recovery timer"] += 1
+			if (not comboSlowdown):
+				Player.customAttributes["recovery timer"] += 1
+			else:
+				Player.customAttributes["recovery timer"] += 0.5
 			if (Player.customAttributes["recovery timer"] >= 50):
 				Player.customAttributes["action timer"] += 16
 				Player.customAttributes["recovery timer"] = 0
@@ -969,6 +973,9 @@ def game():
 				pg.draw.rect(DEBUGLAYER,BRIGHTYELLOW,attackHitbox)
 				if (Player.customAttributes["target pos"] != None):
 					pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, Player.customAttributes["target pos"], 5)
+				if (keys[pg.K_n] and menuPressCooldown <= 0):
+					comboSlowdown = not comboSlowdown
+					menuPressCooldown = MENUPRESSTIME
 			elif (debugMode == 3):
 				if (keys[pg.K_f]):
 					Player.customAttributes["stats"]["health"] -= 1
