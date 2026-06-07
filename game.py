@@ -443,7 +443,7 @@ def game():
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
 		healthText, healthTextRect = modules.helper.createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
-		player_CenterOffset = (SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1])
+		player_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
 
 		playerSword.hitbox.center = Player.hitbox.center
 		if (not specialPickupVisible):
@@ -1172,7 +1172,7 @@ def game():
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
 			BASELAYER.blit(TILELAYER,(0,0))
 			BASELAYER.blit(SPRITELAYER, (0,0))
-			BASELAYER.blit(INFOLAYER, (0,0))
+			screen.blit(INFOLAYER, (0,0))
 		elif (drawHud and Player.hitbox.center[1] > 420):
 			BASELAYER.blit(TILELAYER,(0,(420-Player.coordinates[1])-30))
 			BASELAYER.blit(SPRITELAYER, (0,(420-Player.coordinates[1])-30))
@@ -1208,8 +1208,9 @@ def game():
 			#CAMERALAYER.blit(BASELAYER)
 			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
 			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
-			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
-
+			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_levewl, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
+		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420)) and (not specialPickupVisible)):
+			screen.blit(INFOLAYER, (0,0))
 		if (keys[pg.K_o] and debugMode == 3):
 			modules.helper.roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusChange=15)
 		if ((not specialPickupVisible) and (not clicked)):
