@@ -595,6 +595,15 @@ def game():
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
+			if (enemy.hitbox.colliderect(Player.hitbox) and enemy.customAttributes["state"] == modules.helper.ATTACK and not Player.customAttributes["apply knockback"]):
+				Player.customAttributes["apply knockback"] = True
+				Player.customAttributes["stats"]["health"] -= enemy.customAttributes["stats"]["attack"]
+				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, enemy.hitbox.center, False)
+				pg.time.set_timer(PLAYER_HITSTART, 200, 1)
+				pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
+				SFX["damage"].set_volume(random.uniform(0.2,0.5))
+				SFX["slash"].set_volume(0.2)
+				SFX["damage"].play()
 			if (debugMode == 2):
 				#debug shenanigans
 				if (debugSecMode == 0):
@@ -852,7 +861,7 @@ def game():
 				Player.coordinates[1] += directional_vector[1]
 
 		if (Player.customAttributes["apply knockback"] and not Player.customAttributes["hit animation"]):
-			directional_vector = modules.helper.goto_angleComplex(Player, speed_multiplier=(50/FPS), angle=Player.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False)
+			directional_vector = modules.helper.goto_angleComplex(Player, speed_multiplier=1, angle=Player.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=Player.customAttributes["stats"]["weight"], speedOverride=MIN_KNOCKBACK)
 			if (Player.customAttributes["reverse knockback"]):
 				Player.coordinates[0] -= directional_vector[0]
 				Player.coordinates[1] -= directional_vector[1]
