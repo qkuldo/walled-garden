@@ -1068,6 +1068,10 @@ def game():
 				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-50),2,str(Player.customAttributes["currentFrame"]) + "," + str(Player.customAttributes["frameRow"]),BLUE)
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 		if (not specialPickupVisible):
+			if (comboSlowdown):
+				zoom_level = 1.5
+			else:
+				zoom_level = 1
 			for exit in currentRoomData["exits"]:
 				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
 					exitID = currentRoomData["exit IDs"][currentRoomData["exits"].index(exit)]
@@ -1177,7 +1181,13 @@ def game():
 			BASELAYER.blit(HUDLAYER,(0,0))
 		BASELAYER.blit(DEBUGLAYER, (0,0))
 		if ((not specialPickupVisible)):
-			screen.blit(BASELAYER, (0,0))
+			if (zoom_level > 1):
+				CAMERALAYER.blit(BASELAYER, player_CenterOffset)
+			else:
+				CAMERALAYER.blit(BASELAYER)
+			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
+			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
+			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
 		elif (specialPickupVisible):
 			if (not specialPickupFade):
 				if (zoom_level < 2):
