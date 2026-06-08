@@ -572,7 +572,7 @@ def game():
 					enemy.customAttributes["hit power"] = 1
 				else:
 					enemy.customAttributes["hit power"] = 0
-					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]*0.75
+					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]*0.5
 				#deals damage if enemy has no "invincible" flag
 				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
 					enemy.customAttributes["stats"]["health"] -= damage
@@ -754,10 +754,10 @@ def game():
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active):
 				if (attack_qte_power > 27):
 					Player.customAttributes["attack power"] = 1
-					Player.customAttributes["action timer"] -= 50
+					Player.customAttributes["action timer"] -= 40
 					playerSword.customAttributes["offset"] = random.choice((-100,100))
 				else:
-					Player.customAttributes["action timer"] -= 25
+					Player.customAttributes["action timer"] -= 20
 					playerSword.customAttributes["offset"] = random.choice((-40,40))
 				if (Player.customAttributes["action timer"] >= 0):
 					attack_qte_success = True
@@ -788,14 +788,14 @@ def game():
 		if (attack_qte_ongoing_attack):
 			actionTimerFailingMark = False
 			if (attack_qte_power > 27):
-				if (Player.customAttributes["action timer"] >= 50):
-					playerActionCostRect.width = 100
+				if (Player.customAttributes["action timer"] >= 40):
+					playerActionCostRect.width = 80
 				else:
 					playerActionCostRect.width = playerActionRect.width
 					actionTimerFailingMark = True
 			else:
-				if (Player.customAttributes["action timer"] >= 25):
-					playerActionCostRect.width = 50
+				if (Player.customAttributes["action timer"] >= 20):
+					playerActionCostRect.width = 40
 				else:
 					actionTimerFailingMark = True
 					playerActionCostRect.width = playerActionRect.width
