@@ -444,6 +444,14 @@ def game():
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
 		healthText, healthTextRect = modules.helper.createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
 		player_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
+		if (player_CenterOffset[1] < -120):
+			player_CenterOffset[1] = -120
+		if (player_CenterOffset[0] < -214):
+			player_CenterOffset[0] = -214
+		if (player_CenterOffset[0] > 214):
+			player_CenterOffset[0] = 214
+		if (player_CenterOffset[1] > 120):
+			player_CenterOffset[1] = 120
 
 		playerSword.hitbox.center = Player.hitbox.center
 		if (not specialPickupVisible):
@@ -1208,7 +1216,7 @@ def game():
 			#CAMERALAYER.blit(BASELAYER)
 			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
 			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
-			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_levewl, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
+			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420)) and (not specialPickupVisible)):
 			screen.blit(INFOLAYER, (0,0))
 		if (keys[pg.K_o] and debugMode == 3):

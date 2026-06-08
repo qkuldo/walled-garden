@@ -54,9 +54,7 @@
           11
         ]
       ],
-      "exits": [
-        0
-      ]
+      "exits": []
     },
     "spawnSpot": {
       "wall set": 0,
@@ -75,9 +73,9 @@
       "6": "a2aadaabaaeeeeeeeaabaadaa0a",
       "7": "adaabaa2aaeeeeeeeaa2aabaada",
       "8": "abaa1aadacfffffffcadaa0aaba",
-      "9": "a0aadaccc         cccadaa2a",
+      "9": "a0aadaccc    @    cccadaa2a",
       "10": "adaccc               cccada",
-      "11": "ccc          @     1    ccc",
+      "11": "ccc                1    ccc",
       "12": "                           ",
       "13": "   0         2         1   ",
       "14": "       1                   ",
@@ -87,7 +85,7 @@
       "itemCoordinates": [
         [
           13,
-          13
+          11
         ]
       ],
       "exits": [
