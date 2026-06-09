@@ -346,6 +346,7 @@ def game():
 	canScroll = True
 	attack_qte_power = 0
 	actionTimer_baseChange = 1
+	actionTimer_recoveryChange = 0.5
 	actionTimer_max = 100
 	actionTimerFailingMark = False
 	comboSlowdown = False
@@ -949,9 +950,9 @@ def game():
 			Player.customAttributes["action state"] = 0
 		if (Player.customAttributes["action state"] == 1 and Player.customAttributes["action timer"] < actionTimer_max and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 			if (not comboSlowdown):
-				Player.customAttributes["recovery timer"] += 1
+				Player.customAttributes["recovery timer"] += actionTimer_recoveryChange
 			else:
-				Player.customAttributes["recovery timer"] += 0.5
+				Player.customAttributes["recovery timer"] += actionTimer_recoveryChange/2
 			if (Player.customAttributes["recovery timer"] >= 50):
 				Player.customAttributes["action timer"] += 16
 				Player.customAttributes["recovery timer"] = 0
