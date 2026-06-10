@@ -26,6 +26,7 @@ PURSUING = 1
 WINDUP = 2
 ATTACK = 3
 RECOVERY = 4
+HITSTUN = 5
 
 def generateName(length=1):
 	return "".join(random.choices(namecharacters, k=length))
@@ -90,7 +91,7 @@ def addItem(itemList, itemID, coordinates, assets):
 				}))
 def timerFinishCheck(currentTime, startTime, duration):
 	return currentTime - startTime >= duration
-def moveEnemy(enemy, data, currentRoomData, Player, currentTime, slowdown=False):
+def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, slowdown=False):
 	movement_vector = (0, 0)
 	checkCollisionList = copy.deepcopy(currentRoomData["collisionBoxes"])
 	checkCollisionList.append(Player.hitbox)
@@ -107,19 +108,28 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, slowdown=False)
 				enemy.customAttributes["state"] = WINDUP
 				enemy.customAttributes["state timer start"] = currentTime
 				enemy.customAttributes["target angle"] = face_target(enemy.hitbox.center, Player.hitbox.center)
-		else:
-			if (enemy.customAttributes["state"] == 2):
-				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["windup duration"]*durationMultiplier)):
-					enemy.customAttributes["state timer start"] = currentTime
-					enemy.customAttributes["state"] = ATTACK
-			if (enemy.customAttributes["state"] == 3):
-				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["attack duration"]*durationMultiplier)):
-					enemy.customAttributes["state timer start"] = currentTime
-					enemy.customAttributes["state"] = RECOVERY
-			if (enemy.customAttributes["state"] == 4):
-				if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["recovery duration"]*durationMultiplier)):
-					enemy.customAttributes["state timer start"] = currentTime
+		if (enemy.customAttributes["state"] == WINDUP):
+			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["windup duration"]*durationMultiplier)):
+				enemy.customAttributes["state timer start"] = currentTime
+				enemy.customAttributes["state"] = ATTACK
+		if (enemy.customAttributes["state"] == ATTACK):
+			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["attack duration"]*durationMultiplier)):
+				enemy.customAttributes["state timer start"] = currentTime
+				enemy.customAttributes["state"] = RECOVERY
+		if (enemy.customAttributes["state"] == RECOVERY):
+			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["recovery duration"]*durationMultiplier)):
+				enemy.customAttributes["state timer start"] = currentTime
+				enemy.customAttributes["state"] = PURSUING
+		if (enemy.customAttributes["state"] == HITSTUN):
+			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["hitstun duration"]*durationMultiplier)):
+				enemy.customAttributes["state timer start"] = currentTime
+				if (distance_fromPlayer <= enemy.customAttributes["pursue distance"]):
+					enemy.customAttributes["state"] = WINDUP
+				else:
 					enemy.customAttributes["state"] = PURSUING
+		if (isHit):
+			enemy.customAttributes["state timer start"] = currentTime
+			enemy.customAttributes["state"] = HITSTUN
 		if (enemy.customAttributes["state"] == PURSUING):
 			movement_vector = goto_angleComplex(enemy, speed_multiplier=1, angle=face_target(enemy.hitbox.center, Player.hitbox.center), targetPos=Player.hitbox.center, checkCollision=True, collisionList=checkCollisionList, setDir = True) 
 		elif (enemy.customAttributes["state"] == ATTACK):

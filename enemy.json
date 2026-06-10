@@ -27,7 +27,9 @@
 			"attack duration":800,
 			"windup duration":1000,
 			"recovery duration":1000,
-			"state timer start":0
+			"hitstun duration":100,
+			"state timer start":0,
+			"got hit":false
 		}
 	],
 	"FLAGS":[

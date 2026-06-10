@@ -597,12 +597,14 @@ def game():
 					directional_vector = modules.helper.goto_angleComplex(enemy, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation, speedOverride=MIN_KNOCKBACK)
 					enemy.coordinates[0] += directional_vector[0]
 					enemy.coordinates[1] += directional_vector[1]
+				enemy.customAttributes["got hit"] = True
 			else:
 				if (enemy.customAttributes["stats"]["health"] <= 0):
 					enemyList.remove(enemy)
 				enemy.customAttributes["visible"] = True
 				if (not (specialPickupVisible or drawHud)):
-					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, comboSlowdown)
+					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, enemy.customAttributes["got hit"], comboSlowdown)
+					enemy.customAttributes["got hit"] = False
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
@@ -654,6 +656,8 @@ def game():
 						dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,"ATTACK",BLUE)
 					if (enemy.customAttributes["state"] == modules.helper.RECOVERY):
 						dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,"RECOVERY",BLUE)
+					if (enemy.customAttributes["state"] == modules.helper.HITSTUN):
+						dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-70),2,"HITSTUN",BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-90),2,str(enemy.customAttributes["state timer start"]),BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
