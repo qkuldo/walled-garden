@@ -486,6 +486,7 @@ def game():
 				specialPickupText, specialPickupTextRect = modules.helper.createText((0,0), text = "<qkuldo>you're not supposed to see this!</qkuldo>")
 				specialPickupFade = False
 				special_itemGet_addY = 0
+				comboSlowdown = False
 			elif (event.type == START_FADEOUT):
 				pg.time.set_timer(START_FADEOUT, 0)
 				specialPickupFade = True
@@ -605,7 +606,7 @@ def game():
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
-			if (enemy.hitbox.colliderect(Player.hitbox) and enemy.customAttributes["state"] == modules.helper.ATTACK and not Player.customAttributes["apply knockback"]):
+			if (enemy.hitbox.colliderect(Player.hitbox) and enemy.customAttributes["state"] == modules.helper.ATTACK and not (Player.customAttributes["apply knockback"] or specialPickupVisible)):
 				Player.customAttributes["apply knockback"] = True
 				Player.customAttributes["stats"]["health"] -= enemy.customAttributes["stats"]["attack"]
 				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, enemy.hitbox.center, False)
@@ -1029,6 +1030,7 @@ def game():
 						itemText = ITEMIDS[item.customAttributes["itemID"]]
 						specialPickupText, specialPickupTextRect = modules.helper.createText((0,0), text = f"You got a {itemText}!", color=BRIGHTYELLOW)
 						specialPickupVisible = True
+						comboSlowdown = True
 						zoom_level = 1
 						pg.time.set_timer(SPECIALPICKUPSTAY, 2700)
 						pg.time.set_timer(START_FADEOUT,1890)
