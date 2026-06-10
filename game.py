@@ -433,7 +433,8 @@ def game():
 		modules.helper.clearLayer(DEBUGLAYER)
 		#set stuff
 		scrollWheel_direction = 0
-		current_time = pg.time.get_ticks()
+		if (not (specialPickupVisible or drawHud)):
+			current_time = pg.time.get_ticks()
 		timedRect.bottomleft = Player.hitbox.topright
 		timedRectBG.bottomleft = Player.hitbox.topright
 		mouseRect = pg.Rect(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1], TILESIZE, TILESIZE)
@@ -587,7 +588,7 @@ def game():
 				SFX["damage"].set_volume(random.uniform(0.2,0.5))
 				SFX["slash"].set_volume(0.2)
 				SFX["damage"].play()
-			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
+			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys() and not (specialPickupVisible or drawHud)):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
 				if (not ENEMYDATA["FLAGS"][0] in enemy.customAttributes["flags"]):
 					speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
@@ -600,7 +601,8 @@ def game():
 				if (enemy.customAttributes["stats"]["health"] <= 0):
 					enemyList.remove(enemy)
 				enemy.customAttributes["visible"] = True
-				modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, comboSlowdown)
+				if (not (specialPickupVisible or drawHud)):
+					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, comboSlowdown)
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
@@ -1038,11 +1040,11 @@ def game():
 						specialItem = pg.transform.scale(item.asset, (TILESIZE, TILESIZE))
 					else:
 						SFX["itemCollect"].play()
-		for timerKey in list(temp_cache["hit cooldowns"]):
-			timer = temp_cache["hit cooldowns"][timerKey]
-			current_time = pg.time.get_ticks()
-			if (modules.helper.timerFinishCheck(current_time, timer["start time"], timer["duration"])):
-				del temp_cache["hit cooldowns"][timerKey]
+		if (not (specialPickupVisible or drawHud)):
+			for timerKey in list(temp_cache["hit cooldowns"]):
+				timer = temp_cache["hit cooldowns"][timerKey]
+				if (modules.helper.timerFinishCheck(current_time, timer["start time"], timer["duration"])):
+					del temp_cache["hit cooldowns"][timerKey]
 		if (Player.customAttributes["visible"]):
 			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 			#if (playerSword.customAttributes["visible"]):
