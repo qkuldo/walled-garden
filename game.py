@@ -285,6 +285,7 @@ def game():
 	HUDLAYER = modules.helper.initDrawLayer()
 	SPRITELAYER = modules.helper.initDrawLayer()
 	INFOLAYER = modules.helper.initDrawLayer()
+	AFFECTED_INFOLAYER = modules.helper.initDrawLayer()
 	BASELAYER = modules.helper.initDrawLayer()
 	CAMERALAYER = modules.helper.initDrawLayer()
 	INVENTORY_DESCLAYER = modules.helper.initDrawLayer()
@@ -350,6 +351,8 @@ def game():
 	actionTimer_max = 100
 	actionTimerFailingMark = False
 	comboSlowdown = False
+	#minimum topleft position of camera to reveal out of bounds
+	outOfBoundsRevealBaseline = (4.3, 2.42)
 	#cache stores data that should be saved
 	cache = {
 		"item inactivators":{}
@@ -430,6 +433,7 @@ def game():
 		modules.helper.clearLayer(HUDLAYER)
 		modules.helper.clearLayer(INVENTORY_DESCLAYER)
 		modules.helper.clearLayer(INFOLAYER)
+		modules.helper.clearLayer(AFFECTED_INFOLAYER)
 		modules.helper.clearLayer(DEBUGLAYER)
 		#set stuff
 		scrollWheel_direction = 0
@@ -446,15 +450,7 @@ def game():
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
 		healthText, healthTextRect = modules.helper.createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
 		player_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
-		if (player_CenterOffset[1] < -120):
-			player_CenterOffset[1] = -120
-		if (player_CenterOffset[0] < -214):
-			player_CenterOffset[0] = -214
-		if (player_CenterOffset[0] > 214):
-			player_CenterOffset[0] = 214
-		if (player_CenterOffset[1] > 120):
-			player_CenterOffset[1] = 120
-
+		zoom_reveal_outOfBounds = [outOfBoundsRevealBaseline[0]*((zoom_level-1)*100),outOfBoundsRevealBaseline[1]*((zoom_level-1)*100)]
 		playerSword.hitbox.center = Player.hitbox.center
 		if (not specialPickupVisible):
 			screenCoordinates = (0, 0)
@@ -737,9 +733,9 @@ def game():
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 				TARGETRECT.center = Player.customAttributes["target pos"]
 				if (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) > 120):
-					INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
+					AFFECTED_INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
 				else:
-					INFOLAYER.blit(pg.transform.rotate(AVAILABLETARGET, target_angle), TARGETRECT)
+					AFFECTED_INFOLAYER.blit(pg.transform.rotate(AVAILABLETARGET, target_angle), TARGETRECT)
 			elif (not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
@@ -1085,10 +1081,12 @@ def game():
 				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-50),2,str(Player.customAttributes["currentFrame"]) + "," + str(Player.customAttributes["frameRow"]),BLUE)
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 		if (not specialPickupVisible):
-			if (comboSlowdown):
-				zoom_level = 1.5
-			else:
-				zoom_level = 1
+			if ((comboSlowdown and zoom_level < 1.5) or (Player.customAttributes["targeting"] and 1.5 > zoom_level < 1.25)):
+				zoom_level += 0.1
+			elif (Player.customAttributes["targeting"] and 1.5 > zoom_level < 1.25):
+				zoom_level += 0.1
+			elif (zoom_level > 1 and not (Player.customAttributes["targeting"] or comboSlowdown)):
+				zoom_level -= 0.05
 			for exit in currentRoomData["exits"]:
 				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
 					exitID = currentRoomData["exit IDs"][currentRoomData["exits"].index(exit)]
@@ -1143,19 +1141,19 @@ def game():
 			target_angle += 2
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 			TARGETRECT.center = Player.customAttributes["target pos"]
-			INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
+			AFFECTED_INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
 		elif (attack_qte_ongoing_attack and not playerSword.customAttributes["visible"]):
 			faceAngle = modules.helper.face_target(Player.hitbox.center, copy.copy(Player.customAttributes["target pos"]))
 			UNTARGETRECT = pg.transform.rotate(LOCKEDUNTARGET, faceAngle).get_rect()
 			UNTARGETRECT.center = (Player.hitbox.center[0]-modules.helper.goto_angle(30,faceAngle)[0],Player.hitbox.center[1]-modules.helper.goto_angle(30,faceAngle)[1])
-			INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, faceAngle), UNTARGETRECT)
+			AFFECTED_INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, faceAngle), UNTARGETRECT)
 		if (timedRect_fill):
 			attack_qte_power += timedRect_fillRate
 			timedRect.width = attack_qte_power
-			pg.draw.rect(INFOLAYER, DARKBLUE, timedRectBG)
-			pg.draw.rect(INFOLAYER, BLUE, timedRectBG,3)
+			pg.draw.rect(AFFECTED_INFOLAYER, DARKBLUE, timedRectBG)
+			pg.draw.rect(AFFECTED_INFOLAYER, BLUE, timedRectBG,3)
 		#draw circle function below is for testing purposes
-		pg.draw.rect(INFOLAYER, BRIGHTYELLOW, timedRect)
+		pg.draw.rect(AFFECTED_INFOLAYER, BRIGHTYELLOW, timedRect)
 
 		if (playerSword.customAttributes["visible"]):
 			playerSword.coordinates = (playerSword.hitbox.x-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[0], playerSword.hitbox.y-modules.helper.goto_angle(50,playerSword.angle+playerSword.customAttributes["offset"])[1])
@@ -1185,18 +1183,23 @@ def game():
 			INFOLAYER.blit(HPBARDESIGN, (0,20))
 			INFOLAYER.blit(pg.transform.scale(ICONS.load_frame(4), (32,32)), (ACTIONBAR_COORDINATES[0]-32, ACTIONBAR_COORDINATES[1]-3))
 		BASELAYER.fill(BGCOLOR)
-
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420))):
 			BASELAYER.blit(TILELAYER,(0,0))
 			BASELAYER.blit(SPRITELAYER, (0,0))
+			BASELAYER.blit(AFFECTED_INFOLAYER, (0,0))
 			screen.blit(INFOLAYER, (0,0))
 		elif (drawHud and Player.hitbox.center[1] > 420):
 			BASELAYER.blit(TILELAYER,(0,(420-Player.coordinates[1])-30))
 			BASELAYER.blit(SPRITELAYER, (0,(420-Player.coordinates[1])-30))
-
-		if (drawHud):
-			BASELAYER.blit(HUDLAYER,(0,0))
 		BASELAYER.blit(DEBUGLAYER, (0,0))
+		if (player_CenterOffset[0] > zoom_reveal_outOfBounds[0]):
+			player_CenterOffset[0] = zoom_reveal_outOfBounds[0]
+		elif (player_CenterOffset[0] < -zoom_reveal_outOfBounds[0]):
+			player_CenterOffset[0] = -zoom_reveal_outOfBounds[0]
+		if (player_CenterOffset[1] > zoom_reveal_outOfBounds[1]):
+			player_CenterOffset[1] = zoom_reveal_outOfBounds[1]
+		elif (player_CenterOffset[1] < -zoom_reveal_outOfBounds[1]):
+			player_CenterOffset[1] = -zoom_reveal_outOfBounds[1]
 		if ((not specialPickupVisible)):
 			if (zoom_level > 1):
 				CAMERALAYER.blit(BASELAYER, player_CenterOffset)
@@ -1228,6 +1231,8 @@ def game():
 			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420)) and (not specialPickupVisible)):
 			screen.blit(INFOLAYER, (0,0))
+		if (drawHud):
+			screen.blit(HUDLAYER,(0,0))
 		if (keys[pg.K_o] and debugMode == 3):
 			modules.helper.roomTransition(BASELAYER, center=Player.hitbox.center, duration=1500, circleRadius=600, radiusChange=15)
 		if ((not specialPickupVisible) and (not clicked)):
