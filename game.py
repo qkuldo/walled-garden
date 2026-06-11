@@ -827,7 +827,7 @@ def game():
 			playerActionCostRect.topright = playerActionRect.topright
 		else:
 			playerActionCostRect.width = 0
-		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
+		if ((attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 			modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 		if (switchFrame and (not specialPickupVisible)):
 			if (comboSlowdown and not slowedDownAnimations):
@@ -892,7 +892,7 @@ def game():
 						playerSword.customAttributes["offset"] += 6
 					else:
 						playerSword.customAttributes["offset"] += 8
-			if (playerSword.customAttributes["moving"]):
+			if (playerSword.customAttributes["moving"] and not comboSlowdown):
 				if (Player.customAttributes["attack power"] == 0):
 					directional_vector = modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=2)
 				else:
