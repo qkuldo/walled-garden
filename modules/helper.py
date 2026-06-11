@@ -140,6 +140,8 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 		else:
 			enemy.coordinates[0] += movement_vector[0]/2
 			enemy.coordinates[1] += movement_vector[1]/2
+def lerp(start, end, percent):
+	return start+(end-start)*percent
 def makeEnemy(data, type, coordinates, assetData, facingDirection):
 	enemyFlags = data["FLAGS"]
 	BASE_ATTRIBUTES = copy.deepcopy(data["BASE ATTRIBUTES"][type])

@@ -325,8 +325,6 @@ def game():
 	SIMOVE_ADD = 1
 	SIMOVE_Y = 1
 	SIMOVE_X = 0
-	cameraMove_Percentx = 0.01
-	cameraMove_Percenty = 0.01
 	clicked = False
 	INVENTORYBUTTONS = []
 	INVENTORY_ITEMS = []
@@ -351,6 +349,9 @@ def game():
 	actionTimer_max = 100
 	actionTimerFailingMark = False
 	comboSlowdown = False
+	swingWithoutTarget_setting = False
+	start_zoomLevel = 1
+	zoomStep = 0
 	#minimum topleft position of camera to reveal out of bounds
 	outOfBoundsRevealBaseline = (4.3, 2.42)
 	#cache stores data that should be saved
@@ -452,10 +453,6 @@ def game():
 		player_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
 		zoom_reveal_outOfBounds = [outOfBoundsRevealBaseline[0]*((zoom_level-1)*100),outOfBoundsRevealBaseline[1]*((zoom_level-1)*100)]
 		playerSword.hitbox.center = Player.hitbox.center
-		if (not specialPickupVisible):
-			screenCoordinates = (0, 0)
-			cameraMove_Percentx = 0.01
-			cameraMove_Percenty = 0.01
 		#below line is pretty trippy ngl
 		#Player.angle = modules.helper.face_target(Player.coordinates, (SCREENWIDTH/2,SCREENHEIGHT/2))
 
@@ -487,6 +484,8 @@ def game():
 			elif (event.type == START_FADEOUT):
 				pg.time.set_timer(START_FADEOUT, 0)
 				specialPickupFade = True
+				start_zoomLevel = copy.deepcopy(zoom_level)
+				zoomStep = 0.001
 				SFX["itemCollect"].play()
 			elif (event.type == pg.MOUSEBUTTONDOWN):
 				clicked = True
@@ -724,6 +723,8 @@ def game():
 				canScroll = False
 				pg.time.set_timer(SCROLLWHEEL_COOLDOWN, 300, 1)
 			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
+				start_zoomLevel = copy.deepcopy(zoom_level)
+				zoomStep = 0.001
 				if (not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = copy.deepcopy(distanceList[0]["position"])
 					Player.customAttributes["targeting"] = True
@@ -742,14 +743,14 @@ def game():
 				Player.customAttributes["target name"] = ""
 			if (keys[pg.K_z] and Player.customAttributes["action state"] == 1 and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
 				Player.customAttributes["recovery timer"] = 0
-				if (not Player.customAttributes["targeting"]):
+				if (swingWithoutTarget_setting and not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = copy.copy(mouseRect.center)
 					attack_qte_ongoing_attack = True
 					attack_qte_success = False
 					timedRect_fill = True
 					Player.customAttributes["attack power"] = 0
 					Player.customAttributes["speed divider"] = 3
-				elif (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 120):
+				elif (Player.customAttributes["targeting"] and modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) < 120):
 					attack_qte_ongoing_attack = True
 					attack_qte_success = False
 					timedRect_fill = True
@@ -985,8 +986,10 @@ def game():
 				pg.draw.rect(DEBUGLAYER,BRIGHTYELLOW,attackHitbox)
 				if (Player.customAttributes["target pos"] != None):
 					pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, Player.customAttributes["target pos"], 5)
-				if (keys[pg.K_n] and menuPressCooldown <= 0):
+				if (keys[pg.K_n] and menuPressCooldown <= 0):	
 					comboSlowdown = not comboSlowdown
+					start_zoomLevel = copy.deepcopy(zoom_level)
+					zoomStep = 0.001
 					menuPressCooldown = MENUPRESSTIME
 			elif (debugMode == 3):
 				if (keys[pg.K_f]):
@@ -1032,6 +1035,8 @@ def game():
 						itemText = ITEMIDS[item.customAttributes["itemID"]]
 						specialPickupText, specialPickupTextRect = modules.helper.createText((0,0), text = f"You got a {itemText}!", color=BRIGHTYELLOW)
 						specialPickupVisible = True
+						start_zoomLevel = copy.deepcopy(zoom_level)
+						zoomStep = 0.001
 						comboSlowdown = True
 						zoom_level = 1
 						pg.time.set_timer(SPECIALPICKUPSTAY, 2700)
@@ -1080,13 +1085,27 @@ def game():
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-50),2,str(Player.customAttributes["currentFrame"]) + "," + str(Player.customAttributes["frameRow"]),BLUE)
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
+		if ((not (Player.customAttributes["targeting"] or comboSlowdown or specialPickupVisible) and zoomStep > 0) and zoom_level != 1):
+			start_zoomLevel = copy.deepcopy(zoom_level)
+		if ((Player.customAttributes["targeting"] or comboSlowdown or specialPickupVisible) and zoomStep <= 1):
+			if (not specialPickupVisible):
+				zoomStep += 0.1
+			else:
+				zoomStep += 0.05
+		if (specialPickupFade):
+			zoom_level = modules.helper.lerp(start_zoomLevel, 1, zoomStep)
+		elif (specialPickupVisible):
+			zoom_level = modules.helper.lerp(start_zoomLevel, 1.5, zoomStep)
+		elif (comboSlowdown):
+			zoom_level = modules.helper.lerp(start_zoomLevel, 1.5, zoomStep)
+		elif (Player.customAttributes["targeting"]):
+			zoom_level = modules.helper.lerp(start_zoomLevel, 1.25, zoomStep)
+		elif (zoom_level > 1 and not (Player.customAttributes["targeting"] or comboSlowdown or specialPickupVisible)):
+			zoom_level = modules.helper.lerp(start_zoomLevel, 1, zoomStep)
+		else:
+			zoom_level = 1
+			zoomStep = 0
 		if (not specialPickupVisible):
-			if ((comboSlowdown and zoom_level < 1.5) or (Player.customAttributes["targeting"] and 1.5 > zoom_level < 1.25)):
-				zoom_level += 0.1
-			elif (Player.customAttributes["targeting"] and 1.5 > zoom_level < 1.25):
-				zoom_level += 0.1
-			elif (zoom_level > 1 and not (Player.customAttributes["targeting"] or comboSlowdown)):
-				zoom_level -= 0.05
 			for exit in currentRoomData["exits"]:
 				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
 					exitID = currentRoomData["exit IDs"][currentRoomData["exits"].index(exit)]
@@ -1200,35 +1219,13 @@ def game():
 			player_CenterOffset[1] = zoom_reveal_outOfBounds[1]
 		elif (player_CenterOffset[1] < -zoom_reveal_outOfBounds[1]):
 			player_CenterOffset[1] = -zoom_reveal_outOfBounds[1]
-		if ((not specialPickupVisible)):
-			if (zoom_level > 1):
-				CAMERALAYER.blit(BASELAYER, player_CenterOffset)
-			else:
-				CAMERALAYER.blit(BASELAYER)
-			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
-			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
-			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
-		elif (specialPickupVisible):
-			if (not specialPickupFade):
-				if (zoom_level < 2):
-					zoom_level += 0.05
-				if (cameraMove_Percentx <= 1):
-					cameraMove_Percentx += 0.02
-				if (cameraMove_Percenty <= 1):
-					cameraMove_Percenty += 0.02
-			else:
-				if (zoom_level > 1):
-					zoom_level -= 0.05
-				if (cameraMove_Percentx >= 0):
-					cameraMove_Percentx -= 0.04
-				if (cameraMove_Percenty >= 0):
-					cameraMove_Percenty -= 0.04
-			screenCoordinates = ((cameraMove_Percentx * player_CenterOffset[0]),(cameraMove_Percenty * player_CenterOffset[1]))
-			CAMERALAYER.blit(BASELAYER, screenCoordinates)
-			#CAMERALAYER.blit(BASELAYER)
-			CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
-			CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
-			screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
+		if (zoom_level > 1):
+			CAMERALAYER.blit(BASELAYER, player_CenterOffset)
+		else:
+			CAMERALAYER.blit(BASELAYER)
+		CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
+		CAMERA_ZOOMED_RECT.center = (SCREENWIDTH/2,SCREENHEIGHT/2)
+		screen.blit(pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)), CAMERA_ZOOMED_RECT)
 		if (((not drawHud) or (drawHud and Player.hitbox.center[1] < 420)) and (not specialPickupVisible)):
 			screen.blit(INFOLAYER, (0,0))
 		if (drawHud):
