@@ -1085,9 +1085,10 @@ def game():
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 				dataDisplayText, dataDisplayRect = modules.helper.createText((Player.hitbox.midtop[0],Player.hitbox.midtop[1]-50),2,str(Player.customAttributes["currentFrame"]) + "," + str(Player.customAttributes["frameRow"]),BLUE)
 				DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
-		if ((not (Player.customAttributes["targeting"] or comboSlowdown or specialPickupVisible) and zoomStep > 0) and zoom_level != 1):
+		if ((not (Player.customAttributes["targeting"] or comboSlowdown or specialPickupVisible) and zoomStep > 0) and zoom_level > 1):
 			start_zoomLevel = copy.deepcopy(zoom_level)
-		if ((Player.customAttributes["targeting"] or comboSlowdown or specialPickupVisible) and zoomStep <= 1):
+			zoomStep = 0.001
+		if ((Player.customAttributes["targeting"] or comboSlowdown or specialPickupVisible) and zoomStep < 1):
 			if (not specialPickupVisible):
 				zoomStep += 0.1
 			else:
@@ -1100,11 +1101,10 @@ def game():
 			zoom_level = modules.helper.lerp(start_zoomLevel, 1.5, zoomStep)
 		elif (Player.customAttributes["targeting"]):
 			zoom_level = modules.helper.lerp(start_zoomLevel, 1.25, zoomStep)
-		elif (zoom_level > 1 and not (Player.customAttributes["targeting"] or comboSlowdown or specialPickupVisible)):
-			zoom_level = modules.helper.lerp(start_zoomLevel, 1, zoomStep)
 		else:
-			zoom_level = 1
-			zoomStep = 0
+			if (zoomStep < 1):
+				zoomStep += 0.1
+			zoom_level = modules.helper.lerp(start_zoomLevel, 1, zoomStep)
 		if (not specialPickupVisible):
 			for exit in currentRoomData["exits"]:
 				if (exit.colliderect(Player.hitbox) and not currentRoomData["contained exits"][currentRoomData["exits"].index(exit)]):
