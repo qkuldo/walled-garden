@@ -29,7 +29,8 @@
 			"recovery duration":1000,
 			"hitstun duration":100,
 			"state timer start":0,
-			"got hit":false
+			"got hit":false,
+			"stored momentum":0
 		}
 	],
 	"FLAGS":[

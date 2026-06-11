@@ -352,6 +352,7 @@ def game():
 	swingWithoutTarget_setting = False
 	start_zoomLevel = 1
 	slowedDownAnimations = False
+	was_comboSlowdown = False
 	zoomStep = 0
 	#minimum topleft position of camera to reveal out of bounds
 	outOfBoundsRevealBaseline = (4.3, 2.42)
@@ -362,7 +363,8 @@ def game():
 	#temp cache stores data only needed for the current session
 	temp_cache = {
 		"item timers":{},
-		"hit cooldowns":{}
+		"hit cooldowns":{},
+		"combolist":set()
 	}
 	if (not current_room in list(cache["item inactivators"].keys())):
 		cache["item inactivators"][current_room] = set()
@@ -584,17 +586,29 @@ def game():
 				SFX["damage"].set_volume(random.uniform(0.2,0.5))
 				SFX["slash"].set_volume(0.2)
 				SFX["damage"].play()
+				if (not comboSlowdown):
+					enemy.customAttributes["stored momentum"] = MIN_KNOCKBACK
+				else:
+					enemy.customAttributes["stored momentum"] += MIN_KNOCKBACK
+					temp_cache["combolist"].add(enemy.customAttributes["name"])
+			if (was_comboSlowdown and enemy.customAttributes["name"] in temp_cache["combolist"]):
+				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
+					"start time":pg.time.get_ticks(),
+					"duration":500
+				}
+				SFX["damage"].set_volume(random.uniform(0.2,0.5))
+				SFX["damage"].play()
+				enemy.customAttributes["stored momentum"] = 0
+				temp_cache["combolist"].remove(enemy.customAttributes["name"])
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys() and not (specialPickupVisible or drawHud)):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
 				if (not ENEMYDATA["FLAGS"][0] in enemy.customAttributes["flags"]):
 					speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
 					if (enemy.customAttributes["hit power"] == 0):
 						speedResistanceCalculation = speedResistanceCalculation*1.5
-					directional_vector = modules.helper.goto_angleComplex(enemy, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation, speedOverride=MIN_KNOCKBACK)
-					if (comboSlowdown):
-						enemy.coordinates[0] += directional_vector[0]/2
-						enemy.coordinates[1] += directional_vector[1]/2
-					else:
+					if (not comboSlowdown):
+						directional_vector = modules.helper.goto_angleComplex(enemy, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation, speedOverride=enemy.customAttributes["stored momentum"])
+					if (not comboSlowdown):
 						enemy.coordinates[0] += directional_vector[0]
 						enemy.coordinates[1] += directional_vector[1]
 				enemy.customAttributes["got hit"] = True
@@ -662,6 +676,7 @@ def game():
 					dataDisplayText, dataDisplayRect = modules.helper.createText((enemy.hitbox.midtop[0],enemy.hitbox.midtop[1]-90),2,str(enemy.customAttributes["state timer start"]),BLUE)
 					DEBUGLAYER.blit(dataDisplayText, dataDisplayRect)
 			distanceList.append({"distance":modules.helper.measureDistance(enemy.hitbox.center,Player.hitbox.center),"position":enemy.hitbox.center,"name":enemy.customAttributes["name"]})
+		was_comboSlowdown = False
 		if (len(enemyList) > 0):
 			distances = modules.helper.unpack_nestedDict(distanceList, "distance", returnSet = False)
 			zipped_distData = zip(distances, distanceList)
@@ -999,6 +1014,8 @@ def game():
 					pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, Player.customAttributes["target pos"], 5)
 				if (keys[pg.K_n] and menuPressCooldown <= 0):	
 					comboSlowdown = not comboSlowdown
+					if (not comboSlowdown):
+						was_comboSlowdown = True
 					start_zoomLevel = copy.deepcopy(zoom_level)
 					zoomStep = 0.001
 					menuPressCooldown = MENUPRESSTIME
