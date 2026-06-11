@@ -351,6 +351,7 @@ def game():
 	comboSlowdown = False
 	swingWithoutTarget_setting = False
 	start_zoomLevel = 1
+	slowedDownAnimations = False
 	zoomStep = 0
 	#minimum topleft position of camera to reveal out of bounds
 	outOfBoundsRevealBaseline = (4.3, 2.42)
@@ -590,8 +591,12 @@ def game():
 					if (enemy.customAttributes["hit power"] == 0):
 						speedResistanceCalculation = speedResistanceCalculation*1.5
 					directional_vector = modules.helper.goto_angleComplex(enemy, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation, speedOverride=MIN_KNOCKBACK)
-					enemy.coordinates[0] += directional_vector[0]
-					enemy.coordinates[1] += directional_vector[1]
+					if (comboSlowdown):
+						enemy.coordinates[0] += directional_vector[0]/2
+						enemy.coordinates[1] += directional_vector[1]/2
+					else:
+						enemy.coordinates[0] += directional_vector[0]
+						enemy.coordinates[1] += directional_vector[1]
 				enemy.customAttributes["got hit"] = True
 			else:
 				if (enemy.customAttributes["stats"]["health"] <= 0):
@@ -810,6 +815,12 @@ def game():
 		if (attack_qte_ongoing_attack or playerSword.customAttributes["visible"]):
 			modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 		if (switchFrame and (not specialPickupVisible)):
+			if (comboSlowdown and not slowedDownAnimations):
+				slowedDownAnimations = True
+				pg.time.set_timer(ANIMATIONSWITCHEVENT, 360)
+			elif (slowedDownAnimations and not comboSlowdown):
+				slowedDownAnimations = False
+				pg.time.set_timer(ANIMATIONSWITCHEVENT, 180)
 			if (Player.customAttributes["hit animation"]):
 				Player.customAttributes["visible"] = not Player.customAttributes["visible"]
 				if (Player.customAttributes["facingDirection"] == DIRECTION_IDS["left"]):
