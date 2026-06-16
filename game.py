@@ -354,6 +354,8 @@ def game():
 	slowedDownAnimations = False
 	was_comboSlowdown = False
 	zoomStep = 0
+	attackOverride = False
+	lastAttackFailed = False
 	#minimum topleft position of camera to reveal out of bounds
 	outOfBoundsRevealBaseline = (4.3, 2.42)
 	#cache stores data that should be saved
@@ -363,8 +365,7 @@ def game():
 	#temp cache stores data only needed for the current session
 	temp_cache = {
 		"item timers":{},
-		"hit cooldowns":{},
-		"combolist":set()
+		"hit cooldowns":{}
 	}
 	if (not current_room in list(cache["item inactivators"].keys())):
 		cache["item inactivators"][current_room] = set()
@@ -570,47 +571,26 @@ def game():
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				if (Player.customAttributes["attack power"] == 1):
 					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
-					enemy.customAttributes["hit power"] = 1
+					enemy.customAttributes["stored momentum"] = MIN_KNOCKBACK
 				else:
-					enemy.customAttributes["hit power"] = 0
+					enemy.customAttributes["stored momentum"] = MIN_KNOCKBACK/2
 					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]*0.5
 				#deals damage if enemy has no "invincible" flag
 				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
 					enemy.customAttributes["stats"]["health"] -= damage
 				#name is for identification in case of index change
 				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
-					"start time":pg.time.get_ticks(),
-					"duration":500
+						"start time":pg.time.get_ticks(),
+						"duration":500
 				}
-				enemy.customAttributes["hit angle"] = copy.copy(playerSword.angle)
+				attackOverride = True
+				enemy.customAttributes["knockback start time"] = copy.deepcopy(current_time)
+				enemy.customAttributes["hit angle"] = copy.deepcopy(playerSword.angle)
 				SFX["damage"].set_volume(random.uniform(0.2,0.5))
 				SFX["slash"].set_volume(0.2)
 				SFX["damage"].play()
-				if (not comboSlowdown):
-					enemy.customAttributes["stored momentum"] = MIN_KNOCKBACK
-				else:
-					enemy.customAttributes["stored momentum"] += MIN_KNOCKBACK
-					temp_cache["combolist"].add(enemy.customAttributes["name"])
-			if (was_comboSlowdown and enemy.customAttributes["name"] in temp_cache["combolist"]):
-				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
-					"start time":pg.time.get_ticks(),
-					"duration":500
-				}
-				SFX["damage"].set_volume(random.uniform(0.2,0.5))
-				SFX["damage"].play()
-				enemy.customAttributes["stored momentum"] = 0
-				temp_cache["combolist"].remove(enemy.customAttributes["name"])
-			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys() and not (specialPickupVisible or drawHud)):
+			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
-				if (not ENEMYDATA["FLAGS"][0] in enemy.customAttributes["flags"]):
-					speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
-					if (enemy.customAttributes["hit power"] == 0):
-						speedResistanceCalculation = speedResistanceCalculation*1.5
-					if (not comboSlowdown):
-						directional_vector = modules.helper.goto_angleComplex(enemy, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation, speedOverride=enemy.customAttributes["stored momentum"])
-					if (not comboSlowdown):
-						enemy.coordinates[0] += directional_vector[0]
-						enemy.coordinates[1] += directional_vector[1]
 				enemy.customAttributes["got hit"] = True
 			else:
 				if (enemy.customAttributes["stats"]["health"] <= 0):
@@ -619,6 +599,20 @@ def game():
 				if (not (specialPickupVisible or drawHud)):
 					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, enemy.customAttributes["got hit"], comboSlowdown)
 					enemy.customAttributes["got hit"] = False
+			if (comboSlowdown):
+				knockback_duration = enemy.customAttributes["combo knockback duration"]
+			else:
+				knockback_duration = enemy.customAttributes["knockback duration"]
+			if (not (modules.helper.timerFinishCheck(current_time, enemy.customAttributes["knockback start time"], knockback_duration)) and not (specialPickupVisible or drawHud)):
+				if (not ENEMYDATA["FLAGS"][0] in enemy.customAttributes["flags"]):
+					speedResistanceCalculation = enemy.customAttributes["stats"]["weight"]
+					directional_vector = modules.helper.goto_angleComplex(enemy, angle=enemy.customAttributes["hit angle"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = False, speedDivider=speedResistanceCalculation, speedOverride=enemy.customAttributes["stored momentum"])
+					if (not comboSlowdown):
+						enemy.coordinates[0] += directional_vector[0]
+						enemy.coordinates[1] += directional_vector[1]
+					else:
+						enemy.coordinates[0] += directional_vector[0]/2
+						enemy.coordinates[1] += directional_vector[1]/2
 			enemy.update(rectOperation = (enemy.coordinates[0]+enemy.customAttributes["rectOperation"][0],enemy.coordinates[1]+enemy.customAttributes["rectOperation"][1]))
 			if (enemy.customAttributes["name"] == Player.customAttributes["target name"]):
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
@@ -757,12 +751,15 @@ def game():
 					AFFECTED_INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
 				else:
 					AFFECTED_INFOLAYER.blit(pg.transform.rotate(AVAILABLETARGET, target_angle), TARGETRECT)
-			elif (not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+			elif (not ((comboSlowdown and lastAttackFailed) or attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
 				Player.customAttributes["target name"] = ""
-			if (keys[pg.K_z] and Player.customAttributes["action state"] == 1 and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
+			if (lastAttackFailed):
+				comboSlowdown = False
+			if ((keys[pg.K_z] or attackOverride) and Player.customAttributes["action state"] == 1 and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
 				Player.customAttributes["recovery timer"] = 0
+				attackOverride = False
 				if (swingWithoutTarget_setting and not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = copy.copy(mouseRect.center)
 					attack_qte_ongoing_attack = True
@@ -794,13 +791,24 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 				Player.customAttributes["attempted qte"] = True
+				targetDistanceFromPlayer = modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"])
+				if (comboSlowdown and targetDistanceFromPlayer > 60):
+					directional_vector = modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=1, speedOverride=targetDistanceFromPlayer-60)
+					Player.coordinates[0] += directional_vector[0]
+					Player.coordinates[1] += directional_vector[1]
 				if (playerSword.customAttributes["offset"] > 0):
 					playerSword.customAttributes["negativeSUB"] = True
 				else:
 					playerSword.customAttributes["negativeSUB"] = False
+				if (not comboSlowdown):
+					swipeSpeed = 1
+				else:
+					swipeSpeed = 2
+				lastAttackFailed = False
 				playerSword.angle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
 				Player.customAttributes["action timer"] -= 25
+				lastAttackFailed = True
 				attack_qte_success = False
 				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
 				on_attack_button_cooldown = True
@@ -880,18 +888,16 @@ def game():
 
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 		if (playerSword.customAttributes["visible"]):
-			if (playerSword.customAttributes["negativeSUB"] == True):
-				if (playerSword.customAttributes["offset"] > 0):
-					if (Player.customAttributes["attack power"] == 0):
-						playerSword.customAttributes["offset"] -= 6
-					else:
-						playerSword.customAttributes["offset"] -= 10
-			else:
-				if (playerSword.customAttributes["offset"] < 0):
-					if (Player.customAttributes["attack power"] == 0):
-						playerSword.customAttributes["offset"] += 6
-					else:
-						playerSword.customAttributes["offset"] += 8
+			if (playerSword.customAttributes["offset"] > 0 and playerSword.customAttributes["negativeSUB"]):
+				if (Player.customAttributes["attack power"] == 0):
+					playerSword.customAttributes["offset"] -= 6*swipeSpeed
+				else:
+					playerSword.customAttributes["offset"] -= 8*swipeSpeed
+			elif (playerSword.customAttributes["offset"] < 0 and not playerSword.customAttributes["negativeSUB"]):
+				if (Player.customAttributes["attack power"] == 0):
+					playerSword.customAttributes["offset"] += 6*swipeSpeed
+				else:
+					playerSword.customAttributes["offset"] += 8*swipeSpeed
 			if (playerSword.customAttributes["moving"] and not comboSlowdown):
 				if (Player.customAttributes["attack power"] == 0):
 					directional_vector = modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=2)
@@ -1078,6 +1084,8 @@ def game():
 				timer = temp_cache["hit cooldowns"][timerKey]
 				if (modules.helper.timerFinishCheck(current_time, timer["start time"], timer["duration"])):
 					del temp_cache["hit cooldowns"][timerKey]
+					if (timerKey == Player.customAttributes["target name"] and comboSlowdown):
+						attackOverride = True
 		if (Player.customAttributes["visible"]):
 			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 			#if (playerSword.customAttributes["visible"]):

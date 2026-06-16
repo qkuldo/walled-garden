@@ -153,6 +153,7 @@ def makeEnemy(data, type, coordinates, assetData, facingDirection):
 			raise Exception("<qkuldo> flag " + flag + " does not exist. </qkuldo>")
 		CUSTOM_ATTRIBUTES["flags"][CUSTOM_ATTRIBUTES["flags"].index(flag)] = enemyFlags[enemyFlags.index(flag)]
 	CUSTOM_ATTRIBUTES["flags"] = set(CUSTOM_ATTRIBUTES["flags"])
+	CUSTOM_ATTRIBUTES["combo knockback duration"] = CUSTOM_ATTRIBUTES["knockback duration"]/2
 	enemy = sprite.Sprite(assetData[type], coordinates, BASE_ATTRIBUTES["speed"], BASE_ATTRIBUTES["scale"], BASE_ATTRIBUTES["hitboxScale"], customAttributes=CUSTOM_ATTRIBUTES)
 	enemy.update(CUSTOM_ATTRIBUTES["rectOperation"])
 	return enemy

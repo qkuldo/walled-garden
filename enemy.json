@@ -30,7 +30,9 @@
 			"hitstun duration":100,
 			"state timer start":0,
 			"got hit":false,
-			"stored momentum":0
+			"stored momentum":0,
+			"knockback start time":0,
+			"knockback duration":500
 		}
 	],
 	"FLAGS":[
