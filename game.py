@@ -418,7 +418,7 @@ def game():
 	timedRectBG = pg.Rect(0, 0, 30*timedRect_fillRate, TILESIZE//5)
 	playerHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["health"], TILESIZE//2)
 	playerMaxHealthRect = pg.Rect(30, 20, 10*Player.customAttributes["stats"]["max health"], TILESIZE//2)
-	attackHitbox = pg.Rect(0, 0, TILESIZE//2, TILESIZE//2)
+	attackHitbox = pg.Rect(0, 0, TILESIZE/1.5, TILESIZE/1.5)
 	#make text
 	#testText, textTestRect = modules.helper.createText((SCREENWIDTH/2,SCREENHEIGHT/2))
 	specialPickupText, specialPickupTextRect = modules.helper.createText((0,0), text = DEBUGTEXT)
@@ -736,7 +736,7 @@ def game():
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 				canScroll = False
 				pg.time.set_timer(SCROLLWHEEL_COOLDOWN, 300, 1)
-			if (keys[pg.K_LSHIFT] and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
+			if ((keys[pg.K_LSHIFT] or (comboSlowdown and not lastAttackFailed)) and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
 				start_zoomLevel = copy.deepcopy(zoom_level)
 				zoomStep = 0.001
 				if (not Player.customAttributes["targeting"]):
@@ -744,14 +744,15 @@ def game():
 					Player.customAttributes["targeting"] = True
 					Player.customAttributes["target name"] = copy.copy(distanceList[0]["name"])
 				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
-				target_angle += 4
+				if (not comboSlowdown):
+					target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 				TARGETRECT.center = Player.customAttributes["target pos"]
 				if (modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"]) > 120):
 					AFFECTED_INFOLAYER.blit(pg.transform.rotate(TARGET, target_angle), TARGETRECT)
 				else:
 					AFFECTED_INFOLAYER.blit(pg.transform.rotate(AVAILABLETARGET, target_angle), TARGETRECT)
-			elif (not ((comboSlowdown and lastAttackFailed) or attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+			elif (not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
 				Player.customAttributes["target name"] = ""
@@ -791,9 +792,11 @@ def game():
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
 				Player.customAttributes["attempted qte"] = True
-				targetDistanceFromPlayer = modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"])
+				targetDistanceFromPlayer = modules.helper.measureDistance(Player.customAttributes["target pos"], Player.hitbox.center)
 				if (comboSlowdown and targetDistanceFromPlayer > 60):
-					directional_vector = modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], speed_multiplier=1, speedOverride=targetDistanceFromPlayer-60)
+					targetDirection = (Player.customAttributes["target pos"][0]-Player.hitbox.center[0],Player.customAttributes["target pos"][1]-Player.hitbox.center[1])
+					normalizedDirection = (targetDirection[0]/targetDistanceFromPlayer,targetDirection[1]/targetDistanceFromPlayer)
+					directional_vector = (normalizedDirection[0]*50,normalizedDirection[1]*50)
 					Player.coordinates[0] += directional_vector[0]
 					Player.coordinates[1] += directional_vector[1]
 				if (playerSword.customAttributes["offset"] > 0):
@@ -817,6 +820,8 @@ def game():
 				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 				pg.time.set_timer(ATTACK_QTE_END, 1, 1)
 				pg.time.set_timer(ATTACK_BUTTON_COOLDOWN, 800, 1)
+			if (Player.customAttributes["action state"] == 0):
+				lastAttackFailed = True
 		#update stuff
 		if (attack_qte_ongoing_attack):
 			actionTimerFailingMark = False
@@ -1189,7 +1194,7 @@ def game():
 				temp_cache["item timers"][current_room].remove(timer)
 			continue
 
-		if ((attack_qte_ongoing_attack or playerSword.customAttributes["visible"]) and Player.customAttributes["targeting"]):
+		if ((attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or comboSlowdown) and Player.customAttributes["targeting"]):
 			posMatch = next((enemy for enemy in enemyList if (enemy.customAttributes["name"] == Player.customAttributes["target name"])), None)
 			if (posMatch != None):
 				Player.customAttributes["target pos"] = posMatch.hitbox.center
