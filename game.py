@@ -518,6 +518,9 @@ def game():
 					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
 					if (debugMode == 2):
 						test_text, test_text_rect = modules.helper.createText((100, 20), text = "fail", color=BRIGHTYELLOW)
+				elif ((not Player.customAttributes["attempted qte"]) and comboSlowdown):
+					lastAttackFailed = True
+					comboSlowdown = False
 				attack_qte_success = False
 				attack_qte_ongoing_attack = False
 				attack_qte_active = False
@@ -777,10 +780,16 @@ def game():
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active):
 				if (attack_qte_power > 27):
 					Player.customAttributes["attack power"] = 1
-					Player.customAttributes["action timer"] -= 40
+					if (not comboSlowdown):
+						Player.customAttributes["action timer"] -= 40
+					else:
+						Player.customAttributes["action timer"] -= 40*0.6
 					playerSword.customAttributes["offset"] = random.choice((-100,100))
 				else:
-					Player.customAttributes["action timer"] -= 20
+					if (not comboSlowdown):
+						Player.customAttributes["action timer"] -= 20
+					else:
+						Player.customAttributes["action timer"] -= 20*0.6
 					playerSword.customAttributes["offset"] = random.choice((-40,40))
 				if (Player.customAttributes["action timer"] >= 0):
 					attack_qte_success = True
@@ -826,14 +835,18 @@ def game():
 		if (attack_qte_ongoing_attack):
 			actionTimerFailingMark = False
 			if (attack_qte_power > 27):
-				if (Player.customAttributes["action timer"] >= 40):
-					playerActionCostRect.width = 80
+				if (Player.customAttributes["action timer"] >= 40 and not comboSlowdown):
+					playerActionCostRect.width = 40*2
+				elif (Player.customAttributes["action timer"] >= 40*0.6 and comboSlowdown):
+					playerActionCostRect.width = 40*0.6*2
 				else:
 					playerActionCostRect.width = playerActionRect.width
 					actionTimerFailingMark = True
 			else:
-				if (Player.customAttributes["action timer"] >= 20):
-					playerActionCostRect.width = 40
+				if (Player.customAttributes["action timer"] >= 20 and not comboSlowdown):
+					playerActionCostRect.width = 20*2
+				elif (Player.customAttributes["action timer"] >= 20*0.6 and comboSlowdown):
+					playerActionCostRect.width = 20*0.6*2
 				else:
 					actionTimerFailingMark = True
 					playerActionCostRect.width = playerActionRect.width
@@ -1029,6 +1042,7 @@ def game():
 						was_comboSlowdown = True
 					start_zoomLevel = copy.deepcopy(zoom_level)
 					zoomStep = 0.001
+					lastAttackFailed = False
 					menuPressCooldown = MENUPRESSTIME
 			elif (debugMode == 3):
 				if (keys[pg.K_f]):
@@ -1208,7 +1222,10 @@ def game():
 			UNTARGETRECT.center = (Player.hitbox.center[0]-modules.helper.goto_angle(30,faceAngle)[0],Player.hitbox.center[1]-modules.helper.goto_angle(30,faceAngle)[1])
 			AFFECTED_INFOLAYER.blit(pg.transform.rotate(LOCKEDUNTARGET, faceAngle), UNTARGETRECT)
 		if (timedRect_fill):
-			attack_qte_power += timedRect_fillRate
+			if (not comboSlowdown):
+				attack_qte_power += timedRect_fillRate
+			else:
+				attack_qte_power += timedRect_fillRate*1.5
 			timedRect.width = attack_qte_power
 			pg.draw.rect(AFFECTED_INFOLAYER, DARKBLUE, timedRectBG)
 			pg.draw.rect(AFFECTED_INFOLAYER, BLUE, timedRectBG,3)
