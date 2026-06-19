@@ -603,8 +603,12 @@ def game():
 			else:
 				if (enemy.customAttributes["stats"]["health"] <= 0):
 					enemyList.remove(enemy)
-				enemy.customAttributes["visible"] = True
-				if (not (specialPickupVisible or drawHud)):
+					if (Player.customAttributes["targeting"] and Player.customAttributes["target name"] == enemy.customAttributes["name"]):
+						Player.customAttributes["targeting"] = False
+						Player.customAttributes["target pos"] = None
+						Player.customAttributes["target name"] = ""
+					enemy.customAttributes["visible"] = True
+				if (not (specialPickupVisible or drawHud or comboSlowdown)):
 					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, enemy.customAttributes["got hit"], comboSlowdown)
 					enemy.customAttributes["got hit"] = False
 			if (comboSlowdown):
@@ -626,7 +630,10 @@ def game():
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
-			if (enemy.hitbox.colliderect(Player.hitbox) and enemy.customAttributes["state"] == modules.helper.ATTACK and not (Player.customAttributes["apply knockback"] or specialPickupVisible)):
+			if (enemy.hitbox.colliderect(Player.hitbox) and enemy.customAttributes["state"] == modules.helper.ATTACK and not (Player.customAttributes["apply knockback"] or specialPickupVisible or (comboSlowdown and Player.customAttributes["target name"] == enemy.customAttributes["name"]))):
+				if (playerSword.customAttributes["visible"]):
+					pg.event.post(pg.event.Event(ENDSWORD_VISIBILITY))
+					pg.event.post(pg.event.Event(ENDSWORD_PLAYERMOVEMENT))
 				Player.customAttributes["apply knockback"] = True
 				Player.customAttributes["stats"]["health"] -= enemy.customAttributes["stats"]["attack"]
 				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, enemy.hitbox.center, False)
@@ -783,7 +790,7 @@ def game():
 					timedRect_fill = True
 					Player.customAttributes["attack power"] = 0
 					Player.customAttributes["speed divider"] = 3
-			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active):
+			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active and Player.customAttributes["target name"] != ""):
 				if (attack_qte_power > 27):
 					Player.customAttributes["attack power"] = 1
 					if (not comboSlowdown):
@@ -824,7 +831,7 @@ def game():
 					swipeSpeed = 2
 				lastAttackFailed = False
 				playerSword.angle = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"])
-			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active):
+			elif (keys[pg.K_x] and attack_qte_ongoing_attack and not attack_qte_active and Player.customAttributes["target name"] != ""):
 				Player.customAttributes["action timer"] -= 25
 				lastAttackFailed = True
 				attack_qte_success = False
@@ -859,7 +866,7 @@ def game():
 			playerActionCostRect.topright = playerActionRect.topright
 		else:
 			playerActionCostRect.width = 0
-		if ((attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
+		if ((attack_qte_ongoing_attack or playerSword.customAttributes["visible"]) and Player.customAttributes["target name"] != ""):
 			modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
 		if (switchFrame and (not specialPickupVisible)):
 			if (comboSlowdown and not slowedDownAnimations):
@@ -911,7 +918,7 @@ def game():
 			specialPickupTextRect.midbottom = [Player.hitbox.midtop[0], Player.hitbox.midtop[1]-70-special_itemGet_addY]
 
 		Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
-		if (playerSword.customAttributes["visible"]):
+		if (playerSword.customAttributes["visible"] and Player.customAttributes["target name"] != ""):
 			if (playerSword.customAttributes["offset"] > 0 and playerSword.customAttributes["negativeSUB"]):
 				if (Player.customAttributes["attack power"] == 0):
 					playerSword.customAttributes["offset"] -= 6*swipeSpeed
@@ -1225,7 +1232,7 @@ def game():
 			TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
 			TARGETRECT.center = Player.customAttributes["target pos"]
 			AFFECTED_INFOLAYER.blit(pg.transform.rotate(LOCKEDTARGET, target_angle), TARGETRECT)
-		elif (attack_qte_ongoing_attack and not playerSword.customAttributes["visible"]):
+		elif (attack_qte_ongoing_attack and Player.customAttributes["target name"] != "" and not playerSword.customAttributes["visible"]):
 			faceAngle = modules.helper.face_target(Player.hitbox.center, copy.copy(Player.customAttributes["target pos"]))
 			UNTARGETRECT = pg.transform.rotate(LOCKEDUNTARGET, faceAngle).get_rect()
 			UNTARGETRECT.center = (Player.hitbox.center[0]-modules.helper.goto_angle(30,faceAngle)[0],Player.hitbox.center[1]-modules.helper.goto_angle(30,faceAngle)[1])
