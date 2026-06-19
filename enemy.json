@@ -3,7 +3,7 @@
 		"assets/missing.png"
 	],
 	"BASE ATTRIBUTES":[
-		{"speed":3, "scale":[48,48], "hitboxScale":[24,48]}
+		{"speed":3, "scale":[48,48], "hitboxScale":[48,48]}
 	],
 	"CUSTOM ATTRIBUTES":[
 		{
@@ -17,7 +17,7 @@
 				"attack":1
 			},
 			"visible":true,
-			"rectOperation":[12,0],
+			"rectOperation":[0,0],
 			"hit angle":0,
 			"nameAdder":"_TEST",
 			"flags":["INVINCIBLE"],
