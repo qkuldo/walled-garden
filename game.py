@@ -762,7 +762,8 @@ def game():
 			if (lastAttackFailed):
 				comboSlowdown = False
 			if ((keys[pg.K_z] or attackOverride) and Player.customAttributes["action state"] == 1 and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
-				Player.customAttributes["recovery timer"] = 0
+				if (not comboSlowdown):
+					Player.customAttributes["recovery timer"] = 0
 				attackOverride = False
 				if (swingWithoutTarget_setting and not Player.customAttributes["targeting"]):
 					Player.customAttributes["target pos"] = copy.copy(mouseRect.center)
@@ -1002,13 +1003,16 @@ def game():
 			Player.customAttributes["action state"] = 1
 		if (Player.customAttributes["action timer"] <= 0 and Player.customAttributes["action state"] == 1):
 			Player.customAttributes["action state"] = 0
-		if (Player.customAttributes["action state"] == 1 and Player.customAttributes["action timer"] < actionTimer_max and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
-			if (not comboSlowdown):
+		if (Player.customAttributes["action state"] == 1 and Player.customAttributes["action timer"] < actionTimer_max):
+			if ((not comboSlowdown) and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"])):
 				Player.customAttributes["recovery timer"] += actionTimer_recoveryChange
-			else:
-				Player.customAttributes["recovery timer"] += actionTimer_recoveryChange/2
+			elif (comboSlowdown):
+				Player.customAttributes["recovery timer"] += actionTimer_recoveryChange*2
 			if (Player.customAttributes["recovery timer"] >= 50):
-				Player.customAttributes["action timer"] += 16
+				if (not comboSlowdown):
+					Player.customAttributes["action timer"] += 16
+				else:
+					Player.customAttributes["action timer"] += 8
 				Player.customAttributes["recovery timer"] = 0
 				if (Player.customAttributes["action timer"] > 100):
 					Player.customAttributes["action timer"] = 100
