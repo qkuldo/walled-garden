@@ -573,6 +573,11 @@ def game():
 		for enemy in enemyList:
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				if (Player.customAttributes["attack power"] == 1):
+					if (not comboSlowdown):
+						comboSlowdown = True
+						start_zoomLevel = copy.deepcopy(zoom_level)
+						zoomStep = 0.001
+						lastAttackFailed = False
 					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
 					enemy.customAttributes["stored momentum"] = MIN_KNOCKBACK
 				else:
