@@ -133,7 +133,7 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 		if (enemy.customAttributes["state"] == PURSUING):
 			movement_vector = goto_angleComplex(enemy, speed_multiplier=1, angle=face_target(enemy.hitbox.center, Player.hitbox.center), targetPos=Player.hitbox.center, checkCollision=True, collisionList=checkCollisionList, setDir = True) 
 		elif (enemy.customAttributes["state"] == ATTACK):
-			movement_vector = goto_angleComplex(enemy, speed_multiplier=3, angle=enemy.customAttributes["target angle"], targetPos=Player.hitbox.center, checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = True)
+			movement_vector = goto_angleComplex(enemy, speed_multiplier=2, angle=enemy.customAttributes["target angle"], targetPos=Player.hitbox.center, checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = True)
 		if (not slowdown):
 			enemy.coordinates[0] += movement_vector[0]
 			enemy.coordinates[1] += movement_vector[1]

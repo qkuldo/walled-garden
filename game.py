@@ -573,11 +573,6 @@ def game():
 		for enemy in enemyList:
 			if (enemy.hitbox.colliderect(attackHitbox) and playerSword.customAttributes["visible"] and not enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				if (Player.customAttributes["attack power"] == 1):
-					if (not comboSlowdown):
-						comboSlowdown = True
-						start_zoomLevel = copy.deepcopy(zoom_level)
-						zoomStep = 0.001
-						lastAttackFailed = False
 					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
 					enemy.customAttributes["stored momentum"] = MIN_KNOCKBACK
 				else:
@@ -586,6 +581,12 @@ def game():
 				#deals damage if enemy has no "invincible" flag
 				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
 					enemy.customAttributes["stats"]["health"] -= damage
+				if (enemy.customAttributes["state"] == modules.helper.ATTACK):
+					if (not comboSlowdown):
+						lastAttackFailed = False
+						comboSlowdown = True
+						start_zoomLevel = copy.deepcopy(zoom_level)
+						zoomStep = 0.001
 				#name is for identification in case of index change
 				temp_cache["hit cooldowns"][enemy.customAttributes["name"]] = {
 						"start time":pg.time.get_ticks(),
@@ -597,6 +598,8 @@ def game():
 				SFX["damage"].set_volume(random.uniform(0.2,0.5))
 				SFX["slash"].set_volume(0.2)
 				SFX["damage"].play()
+				enemy.customAttributes["state timer start"] = current_time
+				enemy.customAttributes["state"] = modules.helper.HITSTUN
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
 				enemy.customAttributes["got hit"] = True
