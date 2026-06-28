@@ -55,7 +55,7 @@ def readAllJsonData():
 	ENEMYDATA = modules.helper.readJsonFile("enemy.json")
 	assert len(ITEMDATA["ITEM TYPES"]) == len(ITEMDATA["ITEM ASSETS"]), "<qkuldo>there's an inequality in the itemData.json file between the item types and item assets.</qkuldo>"
 
-def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems=[]):
+def loadRoom(roomname,tileLayer,itemAssets, enemyAssets, loadAll=True, frame=0, inactiveItems=[]):
 	#loadRoom function needs only to be used when loading a new room
 	oneWayExits = []
 	for exit in EXITDATA:
@@ -84,6 +84,7 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 	collisionBoxes = []
 	exits = []
 	items = []
+	enemies = []
 	for row in roomLayout:
 		for column in row:
 			if ((not column == " ") and (not column == "@")):
@@ -163,6 +164,11 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 			toCoordinates.append(EXITDATA[exitID][roomToLoad])
 			exitReturns.append(exitTo)
 			exitIDs.append(exitID)
+		for enemyData in ROOMTILEDATA[roomToLoad]["enemies"]:
+			enemyID = copy.deepcopy(enemyData["id"])
+			enemyCoordinates = copy.deepcopy(enemyData["coordinates"])
+			enemyCoordinates = modules.helper.findTilePixelLocation(enemyCoordinates[0],enemyCoordinates[1])
+			enemies.append(modules.helper.makeEnemy(ENEMYDATA, enemyID, list(enemyCoordinates), enemyAssets, DIRECTION_IDS["left"]))
 		currentRoomData = {
 			"wall set index":wallSet,
 			"prop set index":propSet,
@@ -175,7 +181,8 @@ def loadRoom(roomname,tileLayer,itemAssets, loadAll=True, frame=0, inactiveItems
 			"exit returns":exitReturns,
 			"contained exits":inExit,
 			"exit tp coordinates":toCoordinates,
-			"exit IDs":exitIDs
+			"exit IDs":exitIDs,
+			"enemies":enemies
 		}
 		return currentRoomData
 
@@ -371,7 +378,7 @@ def game():
 		cache["item inactivators"][current_room] = set()
 	if (not current_room in list(temp_cache["item timers"].keys())):
 		temp_cache["item timers"][current_room] = []
-	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | modules.helper.unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
+	currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,enemyAssets,inactiveItems=cache["item inactivators"][current_room] | modules.helper.unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 	#define sprites
 	#directionalFrames custom attribute is written as a list for compatibility with DIRECTION_IDS constant dict
 	Player = modules.interactables.Sprite(playerAsset,copy.copy(currentRoomData["playerSpawn"]),5,spriteScale = (TILESIZE,TILESIZE), hitboxScale = (TILESIZE-24,TILESIZE-18), hitboxLocation = (currentRoomData["playerSpawn"][0]+6,currentRoomData["playerSpawn"][1]+18),customAttributes = {
@@ -410,8 +417,7 @@ def game():
 			"recovery timer":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
-	test_enemy = modules.helper.makeEnemy(ENEMYDATA, 0, [currentRoomData["playerSpawn"][0] + 48, currentRoomData["playerSpawn"][1] + 48], enemyAssets, DIRECTION_IDS["left"])
-	enemyList = [test_enemy]
+	enemyList = currentRoomData["enemies"]
 	#rect creation
 	playerActionCostRect = pg.Rect((0, 0), (0, TILESIZE//2))
 	timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
@@ -902,7 +908,7 @@ def game():
 				roomAccumulateFrames = 0
 			modules.helper.clearLayer(TILELAYER)
 			TILELAYER.fill(DARKESTBLUE)
-			loadRoom(current_room,TILELAYER,itemAssets,False,roomFrame)
+			loadRoom(current_room,TILELAYER,itemAssets,enemyAssets,False,roomFrame)
 		elif (specialPickupVisible):
 			Player.customAttributes["currentFrame"] = 0
 			Player.customAttributes["frameRow"] = 1
@@ -1192,7 +1198,7 @@ def game():
 					if (not current_room in list(temp_cache["item timers"].keys())):
 						temp_cache["item timers"][current_room] = []
 					modules.helper.roomTransition(PREVCOMBINELAYER, center=Player.hitbox.center, duration=2500, circleRadius=600, radiusChange=15)
-					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,inactiveItems=cache["item inactivators"][current_room] | modules.helper.unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
+					currentRoomData = loadRoom(current_room,TILELAYER,itemAssets,enemyAssets,inactiveItems=cache["item inactivators"][current_room] | modules.helper.unpack_nestedDict(temp_cache["item timers"][current_room], "item index"))
 					Player.coordinates = list(modules.helper.findTilePixelLocation(currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][0],currentRoomData["exit tp coordinates"][currentRoomData["exit IDs"].index(exitID)][1]))
 					Player.update(rectOperation = (Player.coordinates[0]+12,Player.coordinates[1]+18))
 					for exitIndex in range(0, len(currentRoomData["exits"])):
@@ -1210,6 +1216,7 @@ def game():
 					playerSword.customAttributes["visible"] = False
 					Player.customAttributes["speed divider"] = 1
 					playerSword.customAttributes["offset"] = 0
+					enemyList = currentRoomData["enemies"]
 					attack_qte_success = True
 					on_attack_button_cooldown = False
 					timedRect_fill = False

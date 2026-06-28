@@ -54,7 +54,8 @@
           11
         ]
       ],
-      "exits": []
+      "exits": [],
+      "enemies":[]
     },
     "spawnSpot": {
       "wall set": 0,
@@ -90,7 +91,8 @@
       ],
       "exits": [
         1
-      ]
+      ],
+      "enemies":[{"coordinates":[12,12],"id":0}]
     },
     "open field ramp": {
       "wall set": 0,
@@ -119,7 +121,8 @@
       "itemCoordinates": [],
       "exits": [
         1
-      ]
+      ],
+      "enemies":[]
     }
   },
   "roomList": [
