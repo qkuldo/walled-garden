@@ -611,6 +611,7 @@ def game():
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
 				enemy.customAttributes["got hit"] = True
 			else:
+				enemy.customAttributes["visible"] = True
 				if (enemy.customAttributes["stats"]["health"] <= 0):
 					enemyList.remove(enemy)
 					if (Player.customAttributes["targeting"] and Player.customAttributes["target name"] == enemy.customAttributes["name"]):
