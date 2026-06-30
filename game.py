@@ -363,6 +363,7 @@ def game():
 	zoomStep = 0
 	attackOverride = False
 	lastAttackFailed = False
+	fullPowerHit = False
 	#minimum topleft position of camera to reveal out of bounds
 	outOfBoundsRevealBaseline = (4.3, 2.42)
 	#cache stores data that should be saved
@@ -533,6 +534,7 @@ def game():
 				Player.customAttributes["attempted qte"] = False
 			elif (event.type == ENDSWORD_VISIBILITY):
 				playerSword.customAttributes["visible"] = False
+				fullPowerHit = False
 			elif (event.type == ENDSWORD_PLAYERMOVEMENT):
 				playerSword.customAttributes["moving"] = False
 			elif (event.type == PLAYER_HITSTOP):
@@ -587,7 +589,7 @@ def game():
 				#deals damage if enemy has no "invincible" flag
 				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
 					enemy.customAttributes["stats"]["health"] -= damage
-				if (enemy.customAttributes["state"] == modules.helper.ATTACK):
+				if (enemy.customAttributes["state"] == modules.helper.ATTACK or fullPowerHit):
 					if (not comboSlowdown):
 						lastAttackFailed = False
 						comboSlowdown = True
@@ -598,7 +600,6 @@ def game():
 						"start time":pg.time.get_ticks(),
 						"duration":500
 				}
-				attackOverride = True
 				enemy.customAttributes["knockback start time"] = copy.deepcopy(current_time)
 				enemy.customAttributes["hit angle"] = copy.deepcopy(playerSword.angle)
 				SFX["damage"].set_volume(random.uniform(0.2,0.5))
@@ -800,6 +801,8 @@ def game():
 					Player.customAttributes["attack power"] = 0
 					Player.customAttributes["speed divider"] = 3
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active and Player.customAttributes["target name"] != ""):
+				if (Player.customAttributes["action timer"] == actionTimer_max):
+					fullPowerHit = True
 				if (attack_qte_power > 27):
 					Player.customAttributes["attack power"] = 1
 					if (not comboSlowdown):
@@ -1128,8 +1131,11 @@ def game():
 				timer = temp_cache["hit cooldowns"][timerKey]
 				if (modules.helper.timerFinishCheck(current_time, timer["start time"], timer["duration"])):
 					del temp_cache["hit cooldowns"][timerKey]
-					if (timerKey == Player.customAttributes["target name"] and comboSlowdown):
+					posMatch = next((enemy for enemy in enemyList if (enemy.customAttributes["name"] == Player.customAttributes["target name"])), None)
+					if (timerKey == Player.customAttributes["target name"] and comboSlowdown and posMatch != None and posMatch.customAttributes["stats"]["health"] > 0):
 						attackOverride = True
+					elif (timerKey == Player.customAttributes["target name"] and comboSlowdown):
+						comboSlowdown = False
 		if (Player.customAttributes["visible"]):
 			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 			#if (playerSword.customAttributes["visible"]):
