@@ -15,6 +15,7 @@ DARKBLUE = (7,5,35)
 DARKESTBLUE = (0,0,15)
 ORANGE = (255,126,71)
 GREEN = (88, 130, 112)
+PALERED = (156, 127, 114)
 PALEGREEN = (138, 158, 149)
 TILESIZE = 48
 #from bottom
@@ -589,7 +590,7 @@ def game():
 				#deals damage if enemy has no "invincible" flag
 				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
 					enemy.customAttributes["stats"]["health"] -= damage
-				if (enemy.customAttributes["state"] == modules.helper.ATTACK or fullPowerHit):
+				if (enemy.customAttributes["state"] == modules.helper.RECOVERY or fullPowerHit):
 					if (not comboSlowdown):
 						lastAttackFailed = False
 						comboSlowdown = True
@@ -802,9 +803,9 @@ def game():
 					Player.customAttributes["attack power"] = 0
 					Player.customAttributes["speed divider"] = 3
 			if (keys[pg.K_x] and attack_qte_ongoing_attack and attack_qte_active and Player.customAttributes["target name"] != ""):
-				if (Player.customAttributes["action timer"] == actionTimer_max):
-					fullPowerHit = True
 				if (attack_qte_power > 27):
+					if (Player.customAttributes["action timer"] == actionTimer_max):
+						fullPowerHit = True
 					Player.customAttributes["attack power"] = 1
 					if (not comboSlowdown):
 						Player.customAttributes["action timer"] -= 40
@@ -1281,8 +1282,10 @@ def game():
 			pg.draw.rect(INFOLAYER, DARKBLUE, playerMaxActionRect)
 			if (Player.customAttributes["action state"] == 0):
 				pg.draw.rect(INFOLAYER, BLUE, playerActionRect)
-			else:
+			elif (Player.customAttributes["action state"] == 1 and Player.customAttributes["action timer"] != actionTimer_max):
 				pg.draw.rect(INFOLAYER, GREEN, playerActionRect)
+			else:
+				pg.draw.rect(INFOLAYER, PALERED, playerActionRect)
 			if (Player.customAttributes["action state"] == 1):
 				if (actionTimerFailingMark):
 					pg.draw.rect(INFOLAYER, ORANGE, playerActionCostRect)
