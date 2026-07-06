@@ -365,6 +365,7 @@ def game():
 	attackOverride = False
 	lastAttackFailed = False
 	fullPowerHit = False
+	test_zoom = False
 	#minimum topleft position of camera to reveal out of bounds
 	outOfBoundsRevealBaseline = (4.3, 2.42)
 	#cache stores data that should be saved
@@ -419,6 +420,7 @@ def game():
 			"recovery timer":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
+	subject_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
 	enemyList = currentRoomData["enemies"]
 	#rect creation
 	playerActionCostRect = pg.Rect((0, 0), (0, TILESIZE//2))
@@ -462,7 +464,6 @@ def game():
 		playerMaxHealthRect = pg.Rect(HEALTHBAR_COORDINATES, (10*Player.customAttributes["stats"]["max health"], TILESIZE//2))
 		healthString = str(Player.customAttributes["stats"]["health"])+"/"+str(Player.customAttributes["stats"]["max health"])
 		healthText, healthTextRect = modules.helper.createText((playerHealthRect.midleft[0]+45, playerHealthRect.midleft[1]), text = healthString, color = BRIGHTYELLOW, font = 2)
-		player_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
 		zoom_reveal_outOfBounds = [outOfBoundsRevealBaseline[0]*((zoom_level-1)*100),outOfBoundsRevealBaseline[1]*((zoom_level-1)*100)]
 		playerSword.hitbox.center = Player.hitbox.center
 		#below line is pretty trippy ngl
@@ -590,7 +591,7 @@ def game():
 				#deals damage if enemy has no "invincible" flag
 				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
 					enemy.customAttributes["stats"]["health"] -= damage
-				if (enemy.customAttributes["state"] == modules.helper.RECOVERY or fullPowerHit):
+				if (enemy.customAttributes["state"] == modules.helper.RECOVERY or enemy.customAttributes["state"] == modules.helper.HITSTUN or fullPowerHit):
 					if (not comboSlowdown):
 						lastAttackFailed = False
 						comboSlowdown = True
@@ -714,13 +715,44 @@ def game():
 				timedRect = pg.Rect(0, 0, 0, TILESIZE//5)
 				timedRect_fill = False
 				pg.time.set_timer(ATTACK_QTE_END, 500, 1)
-		if (keys[pg.K_SPACE] and menuPressCooldown <= 0):
+		if (keys[pg.K_SPACE] and debugMode and menuPressCooldown <= 0):
 			#debug controller
 			debugSecMode += 1
 			if (debugSecMode > 2):
 				debugSecMode = 0
 			if (debugMode == 3):
 				enemyList.append(modules.helper.makeEnemy(ENEMYDATA, 0, [Player.coordinates[0] + 48, Player.coordinates[1] + 48], enemyAssets, DIRECTION_IDS["left"]))
+			menuPressCooldown = MENUPRESSTIME
+		if (debugMode == 3 and keys[pg.K_m] and menuPressCooldown <= 0):
+			snapshot = {
+				"game time":current_time,
+				"player":{
+					"custom attributes":Player.customAttributes,
+					"base attributes":[Player.coordinates,Player.speed]
+				},
+				"cache":cache,
+				"temp cache":temp_cache,
+				"enemies":[],
+				"attack state":None,
+				"current room":current_room,
+				"attack pos":attackHitbox.topleft,
+				"room data":currentRoomData,
+				"active items":[]
+			}
+			if (attack_qte_ongoing_attack):
+				snapshot["attack state"] = "charging"
+			elif (playerSword.customAttributes["visible"]):
+				snapshot["attack state"] = "ongoing"
+			for enemy in enemyList:
+				snapshot["enemies"].append({
+						"id":enemy.customAttributes["type"],
+						"base attributes":[enemy.coordinates, enemy.speed],
+						"custom attributes":enemy.customAttributes
+					})
+			for item in currentRoomData["items"]:
+				if (item.customAttributes["active"]):
+					snapshot["items"].append(item.customAttributes["itemID"])
+			print(snapshot)
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"]) and (not Player.customAttributes["hit animation"])):
 			if (keys[pg.K_w] or keys[pg.K_UP]):
@@ -1067,9 +1099,7 @@ def game():
 				if (Player.customAttributes["target pos"] != None):
 					pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, Player.customAttributes["target pos"], 5)
 				if (keys[pg.K_n] and menuPressCooldown <= 0):	
-					comboSlowdown = not comboSlowdown
-					if (not comboSlowdown):
-						was_comboSlowdown = True
+					test_zoom = not test_zoom
 					start_zoomLevel = copy.deepcopy(zoom_level)
 					zoomStep = 0.001
 					lastAttackFailed = False
@@ -1141,9 +1171,9 @@ def game():
 		if (Player.customAttributes["visible"]):
 			Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 			#if (playerSword.customAttributes["visible"]):
-			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-modules.helper.goto_angle(50, playerSword.angle)[0],-modules.helper.goto_angle(50, playerSword.angle)[1]))
+			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, offset = (-modules.helper.goto_angle(50, playerSword.angle)[0],-modules.helper.goto_angle(50, playerSword.angle)[1]), frameRow = Player.customAttributes["frameRow"])
 			#else:
-			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER)
+			#	Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 		if (debugMode == 2):
 			#debug shenanigans part 2: electric boogaloo
 			if (debugSecMode == 0):
@@ -1180,14 +1210,21 @@ def game():
 			if (not specialPickupVisible):
 				zoomStep += 0.1
 			else:
-				zoomStep += 0.05
+				zoomStep += 0.05	
 		if (specialPickupFade):
+			subject_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
 			zoom_level = modules.helper.lerp(start_zoomLevel, 1, zoomStep)
 		elif (specialPickupVisible):
+			subject_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
+			zoom_level = modules.helper.lerp(start_zoomLevel, 1.5, zoomStep)
+		elif (test_zoom):
+			subject_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
 			zoom_level = modules.helper.lerp(start_zoomLevel, 1.5, zoomStep)
 		elif (comboSlowdown):
+			subject_CenterOffset = [SCREENWIDTH//2 - Player.customAttributes["target pos"][0], SCREENHEIGHT//2 - Player.customAttributes["target pos"][1]]
 			zoom_level = modules.helper.lerp(start_zoomLevel, 1.5, zoomStep)
 		elif (Player.customAttributes["targeting"]):
+			subject_CenterOffset = [SCREENWIDTH//2 - Player.customAttributes["target pos"][0], SCREENHEIGHT//2 - Player.customAttributes["target pos"][1]]
 			zoom_level = modules.helper.lerp(start_zoomLevel, 1.25, zoomStep)
 		else:
 			if (zoomStep < 1):
@@ -1214,7 +1251,7 @@ def game():
 							currentRoomData["contained exits"][exitIndex] = True
 					CURRENTCOMBINELAYER = modules.helper.initDrawLayer().convert_alpha()
 					CURRENTCOMBINELAYER.fill((0,0,15))
-					loadRoom(current_room,CURRENTCOMBINELAYER,itemAssets,False,roomFrame)
+					loadRoom(current_room,CURRENTCOMBINELAYER,itemAssets,enemyAssets,False,roomFrame)
 					Player.draw(Player.customAttributes["currentFrame"], SPRITELAYER, frameRow = Player.customAttributes["frameRow"])
 					CURRENTCOMBINELAYER.blit(SPRITELAYER, (0,0))
 					modules.helper.roomTransition(CURRENTCOMBINELAYER, center=Player.hitbox.center, duration=1000, circleRadius=300, radiusChange=15, mode=1)
@@ -1305,16 +1342,16 @@ def game():
 			BASELAYER.blit(TILELAYER,(0,(420-Player.coordinates[1])-30))
 			BASELAYER.blit(SPRITELAYER, (0,(420-Player.coordinates[1])-30))
 		BASELAYER.blit(DEBUGLAYER, (0,0))
-		if (player_CenterOffset[0] > zoom_reveal_outOfBounds[0]):
-			player_CenterOffset[0] = zoom_reveal_outOfBounds[0]
-		elif (player_CenterOffset[0] < -zoom_reveal_outOfBounds[0]):
-			player_CenterOffset[0] = -zoom_reveal_outOfBounds[0]
-		if (player_CenterOffset[1] > zoom_reveal_outOfBounds[1]):
-			player_CenterOffset[1] = zoom_reveal_outOfBounds[1]
-		elif (player_CenterOffset[1] < -zoom_reveal_outOfBounds[1]):
-			player_CenterOffset[1] = -zoom_reveal_outOfBounds[1]
+		if (subject_CenterOffset[0] > zoom_reveal_outOfBounds[0]):
+			subject_CenterOffset[0] = zoom_reveal_outOfBounds[0]
+		elif (subject_CenterOffset[0] < -zoom_reveal_outOfBounds[0]):
+			subject_CenterOffset[0] = -zoom_reveal_outOfBounds[0]
+		if (subject_CenterOffset[1] > zoom_reveal_outOfBounds[1]):
+			subject_CenterOffset[1] = zoom_reveal_outOfBounds[1]
+		elif (subject_CenterOffset[1] < -zoom_reveal_outOfBounds[1]):
+			subject_CenterOffset[1] = -zoom_reveal_outOfBounds[1]
 		if (zoom_level > 1):
-			CAMERALAYER.blit(BASELAYER, player_CenterOffset)
+			CAMERALAYER.blit(BASELAYER, subject_CenterOffset)
 		else:
 			CAMERALAYER.blit(BASELAYER)
 		CAMERA_ZOOMED_RECT = pg.transform.scale(CAMERALAYER, (SCREENWIDTH*zoom_level, SCREENHEIGHT*zoom_level)).get_rect()
