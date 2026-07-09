@@ -585,6 +585,8 @@ def game():
 				if (Player.customAttributes["attack power"] == 1):
 					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]
 					enemy.customAttributes["stored momentum"] = MIN_KNOCKBACK
+					if (not comboSlowdown):
+						enemy.customAttributes["strong attack"] = True
 				else:
 					enemy.customAttributes["stored momentum"] = MIN_KNOCKBACK/2
 					damage = ITEMDATA["WEAPON STATS"][Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"]]*0.5
@@ -608,7 +610,6 @@ def game():
 				SFX["slash"].set_volume(0.2)
 				SFX["damage"].play()
 				enemy.customAttributes["state timer start"] = current_time
-				enemy.customAttributes["state"] = modules.helper.HITSTUN
 			if (enemy.customAttributes["name"] in temp_cache["hit cooldowns"].keys()):
 				enemy.customAttributes["visible"] = not enemy.customAttributes["visible"]
 				enemy.customAttributes["got hit"] = True
@@ -622,8 +623,22 @@ def game():
 						Player.customAttributes["target name"] = ""
 					enemy.customAttributes["visible"] = True
 				if (not (specialPickupVisible or drawHud or comboSlowdown)):
+					if (enemy.customAttributes["got hit"]):
+						enemy.customAttributes["state"] = modules.helper.HITSTUN
+						enemy.customAttributes["state timer start"] = copy.deepcopy(current_time)
 					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, enemy.customAttributes["got hit"], comboSlowdown)
 					enemy.customAttributes["got hit"] = False
+				if (enemy.hitbox.colliderect(Player.hitbox) and enemy.customAttributes["state"] == modules.helper.ATTACK and not (Player.customAttributes["apply knockback"] or specialPickupVisible or (comboSlowdown and Player.customAttributes["target name"] == enemy.customAttributes["name"]))):
+					if (playerSword.customAttributes["visible"]):
+						pg.event.post(pg.event.Event(ENDSWORD_VISIBILITY))
+						pg.event.post(pg.event.Event(ENDSWORD_PLAYERMOVEMENT))
+					Player.customAttributes["apply knockback"] = True
+					Player.customAttributes["stats"]["health"] -= enemy.customAttributes["stats"]["attack"]
+					Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, enemy.hitbox.center, False)
+					pg.time.set_timer(PLAYER_HITSTART, 200, 1)
+					pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
+					SFX["damage"].set_volume(random.uniform(0.2,0.5))
+					SFX["damage"].play()
 			if (comboSlowdown):
 				knockback_duration = enemy.customAttributes["combo knockback duration"]
 			else:
@@ -643,18 +658,6 @@ def game():
 				Player.customAttributes["target pos"] = copy.deepcopy(enemy.hitbox.center)
 			if (enemy.customAttributes["visible"]):
 				enemy.draw(0, SPRITELAYER)
-			if (enemy.hitbox.colliderect(Player.hitbox) and enemy.customAttributes["state"] == modules.helper.ATTACK and not (Player.customAttributes["apply knockback"] or specialPickupVisible or (comboSlowdown and Player.customAttributes["target name"] == enemy.customAttributes["name"]))):
-				if (playerSword.customAttributes["visible"]):
-					pg.event.post(pg.event.Event(ENDSWORD_VISIBILITY))
-					pg.event.post(pg.event.Event(ENDSWORD_PLAYERMOVEMENT))
-				Player.customAttributes["apply knockback"] = True
-				Player.customAttributes["stats"]["health"] -= enemy.customAttributes["stats"]["attack"]
-				Player.customAttributes["hit angle"] = modules.helper.face_target(Player.hitbox.center, enemy.hitbox.center, False)
-				pg.time.set_timer(PLAYER_HITSTART, 200, 1)
-				pg.time.set_timer(PLAYER_HITSTOP, 1000, 1)
-				SFX["damage"].set_volume(random.uniform(0.2,0.5))
-				SFX["slash"].set_volume(0.2)
-				SFX["damage"].play()
 			if (debugMode == 2):
 				#debug shenanigans
 				if (debugSecMode == 0):

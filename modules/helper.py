@@ -101,6 +101,9 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 	else:
 		durationMultiplier = 2
 	if (data["FLAGS"][2] in enemy.customAttributes["flags"]):
+		longHitstunMultiplier = 1
+		if (enemy.customAttributes["strong attack"] == True):
+			longHitstun = 2
 		if (enemy.customAttributes["state"] < 2):
 			if (distance_fromPlayer < 500 and distance_fromPlayer > enemy.customAttributes["pursue distance"]):
 				enemy.customAttributes["state"] = PURSUING
@@ -121,8 +124,9 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 				enemy.customAttributes["state timer start"] = currentTime
 				enemy.customAttributes["state"] = PURSUING
 		if (enemy.customAttributes["state"] == HITSTUN):
-			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["hitstun duration"]*durationMultiplier)):
+			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["hitstun duration"]*durationMultiplier*longHitstunMultiplier)):
 				enemy.customAttributes["state timer start"] = currentTime
+				enemy.customAttributes["strong attack"] = False
 				if (distance_fromPlayer <= enemy.customAttributes["pursue distance"]):
 					enemy.customAttributes["state"] = WINDUP
 				else:
