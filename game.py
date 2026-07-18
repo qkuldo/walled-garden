@@ -593,8 +593,8 @@ def game():
 				#deals damage if enemy has no "invincible" flag
 				if (not ENEMYDATA["FLAGS"][1] in enemy.customAttributes["flags"]):
 					enemy.customAttributes["stats"]["health"] -= damage
-				if (enemy.customAttributes["state"] == modules.helper.RECOVERY or enemy.customAttributes["state"] == modules.helper.HITSTUN or fullPowerHit):
-					if (not comboSlowdown):
+				if (enemy.customAttributes["state"] == modules.helper.HITSTUN or fullPowerHit):
+					if (not (comboSlowdown and Player.customAttributes["action state"] == 0)):
 						lastAttackFailed = False
 						comboSlowdown = True
 						start_zoomLevel = copy.deepcopy(zoom_level)
@@ -623,7 +623,7 @@ def game():
 						Player.customAttributes["target name"] = ""
 					enemy.customAttributes["visible"] = True
 				if (not (specialPickupVisible or drawHud or comboSlowdown)):
-					if (enemy.customAttributes["got hit"]):
+					if (enemy.customAttributes["got hit"] and enemy.customAttributes["strong attack"]):
 						enemy.customAttributes["state"] = modules.helper.HITSTUN
 						enemy.customAttributes["state timer start"] = copy.deepcopy(current_time)
 					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, enemy.customAttributes["got hit"], comboSlowdown)

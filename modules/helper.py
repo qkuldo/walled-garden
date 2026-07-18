@@ -124,16 +124,13 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 				enemy.customAttributes["state timer start"] = currentTime
 				enemy.customAttributes["state"] = PURSUING
 		if (enemy.customAttributes["state"] == HITSTUN):
-			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["hitstun duration"]*durationMultiplier*longHitstunMultiplier)):
+			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["hitstun duration"]*durationMultiplier)):
 				enemy.customAttributes["state timer start"] = currentTime
 				enemy.customAttributes["strong attack"] = False
 				if (distance_fromPlayer <= enemy.customAttributes["pursue distance"]):
 					enemy.customAttributes["state"] = WINDUP
 				else:
 					enemy.customAttributes["state"] = PURSUING
-		if (isHit):
-			enemy.customAttributes["state timer start"] = currentTime
-			enemy.customAttributes["state"] = HITSTUN
 		if (enemy.customAttributes["state"] == PURSUING):
 			movement_vector = goto_angleComplex(enemy, speed_multiplier=1, angle=face_target(enemy.hitbox.center, Player.hitbox.center), targetPos=Player.hitbox.center, checkCollision=True, collisionList=checkCollisionList, setDir = True) 
 		elif (enemy.customAttributes["state"] == ATTACK):

@@ -27,7 +27,7 @@
 			"attack duration":800,
 			"windup duration":1000,
 			"recovery duration":1000,
-			"hitstun duration":500,
+			"hitstun duration":2000,
 			"state timer start":0,
 			"got hit":false,
 			"strong attack":false,
