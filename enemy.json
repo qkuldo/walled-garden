@@ -17,6 +17,7 @@
 				"attack":1
 			},
 			"visible":true,
+			"debug":null,
 			"rectOperation":[0,0],
 			"hit angle":0,
 			"nameAdder":"_TEST",
@@ -24,11 +25,17 @@
 			"state":0,
 			"pursue distance":100,
 			"target angle":0,
+			"looking offset":20,
 			"attack duration":800,
 			"windup duration":1000,
 			"recovery duration":1000,
+			"look duration":800,
+			"player see timer":0,
+			"aggression time":1500,
+			"curious time":800,
 			"hitstun duration":2000,
 			"state timer start":0,
+			"look timer start":0,
 			"got hit":false,
 			"strong attack":false,
 			"stored momentum":0,
@@ -39,6 +46,7 @@
 	"FLAGS":[
 		"NO KNOCKBACK",
 		"INVINCIBLE",
-		"_TEST MOVEMENT"
+		"_TEST MOVEMENT",
+		"_TEST IDLE"
 	]
 }

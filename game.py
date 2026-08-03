@@ -366,6 +366,7 @@ def game():
 	lastAttackFailed = False
 	fullPowerHit = False
 	test_zoom = False
+	deltaTime = 0
 	#minimum topleft position of camera to reveal out of bounds
 	outOfBoundsRevealBaseline = (4.3, 2.42)
 	#cache stores data that should be saved
@@ -626,7 +627,7 @@ def game():
 					if (enemy.customAttributes["got hit"] and enemy.customAttributes["strong attack"]):
 						enemy.customAttributes["state"] = modules.helper.HITSTUN
 						enemy.customAttributes["state timer start"] = copy.deepcopy(current_time)
-					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, enemy.customAttributes["got hit"], comboSlowdown)
+					modules.helper.moveEnemy(enemy, ENEMYDATA, currentRoomData, Player, current_time, enemy.customAttributes["got hit"], comboSlowdown, deltaTime)
 					enemy.customAttributes["got hit"] = False
 				if (enemy.hitbox.colliderect(Player.hitbox) and enemy.customAttributes["state"] == modules.helper.ATTACK and not (Player.customAttributes["apply knockback"] or specialPickupVisible or (comboSlowdown and Player.customAttributes["target name"] == enemy.customAttributes["name"]))):
 					if (playerSword.customAttributes["visible"]):
@@ -1088,6 +1089,14 @@ def game():
 					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)
 					extended_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"])
 					pg.draw.line(DEBUGLAYER,GREEN,enemy.hitbox.center,(enemy.hitbox.center[0]-extended_endpoint[0], enemy.hitbox.center[1]-extended_endpoint[1]), 2)
+					offsetPositive_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"]+enemy.customAttributes["looking offset"])
+					offsetNegative_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"]-enemy.customAttributes["looking offset"])
+					actual_offsetNegative_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["debug"][0])
+					actual_offsetPositive_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["debug"][1])
+					pg.draw.line(DEBUGLAYER,PALEBLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-offsetPositive_endpoint[0], enemy.hitbox.center[1]-offsetPositive_endpoint[1]), 2)
+					pg.draw.line(DEBUGLAYER,PALEBLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-offsetNegative_endpoint[0], enemy.hitbox.center[1]-offsetNegative_endpoint[1]), 2)
+					pg.draw.line(DEBUGLAYER,BLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-actual_offsetNegative_endpoint[0], enemy.hitbox.center[1]-actual_offsetNegative_endpoint[1]), 2)
+					pg.draw.line(DEBUGLAYER,BLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-actual_offsetPositive_endpoint[0], enemy.hitbox.center[1]-actual_offsetPositive_endpoint[1]), 2)
 				for dataIndex in range(0, len(distanceList)):
 					data = distanceList[dataIndex]
 					distance = distances[dataIndex]
@@ -1374,7 +1383,7 @@ def game():
 		if (menuPressCooldown > 0):
 			menuPressCooldown -= 1
 		pg.display.flip()
-		clock.tick(FPS)
+		deltaTime = clock.tick(FPS)
 		Player.moved = False
 
 if (__name__ == "__main__"):

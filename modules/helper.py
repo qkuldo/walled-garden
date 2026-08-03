@@ -27,6 +27,9 @@ WINDUP = 2
 ATTACK = 3
 RECOVERY = 4
 HITSTUN = 5
+#the direction order the enemy looks in during idle state
+LOOKSEQUENCE = (3,0,2,1)
+DIRECTION_ANGLES = (90,270,0,180)
 
 def generateName(length=1):
 	return "".join(random.choices(namecharacters, k=length))
@@ -91,7 +94,7 @@ def addItem(itemList, itemID, coordinates, assets):
 				}))
 def timerFinishCheck(currentTime, startTime, duration):
 	return currentTime - startTime >= duration
-def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, slowdown=False):
+def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, slowdown=False, deltaTime=0):
 	movement_vector = (0, 0)
 	checkCollisionList = copy.deepcopy(currentRoomData["collisionBoxes"])
 	checkCollisionList.append(Player.hitbox)
@@ -131,6 +134,8 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 					enemy.customAttributes["state"] = WINDUP
 				else:
 					enemy.customAttributes["state"] = PURSUING
+		if (enemy.customAttributes["state"] == IDLE):
+			enemy.customAttributes["debug"] = basicIdle(enemy, durationMultiplier, currentTime, Player, deltaTime)
 		if (enemy.customAttributes["state"] == PURSUING):
 			movement_vector = goto_angleComplex(enemy, speed_multiplier=1, angle=face_target(enemy.hitbox.center, Player.hitbox.center), targetPos=Player.hitbox.center, checkCollision=True, collisionList=checkCollisionList, setDir = True) 
 		elif (enemy.customAttributes["state"] == ATTACK):
@@ -141,6 +146,44 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 		else:
 			enemy.coordinates[0] += movement_vector[0]/2
 			enemy.coordinates[1] += movement_vector[1]/2
+	if (data["FLAGS"][3] in enemy.customAttributes["flags"]):
+		if (enemy.customAttributes["state"] == IDLE):
+			enemy.customAttributes["debug"] = basicIdle(enemy, durationMultiplier, currentTime, Player, deltaTime)
+def basicIdle(enemy,durationMultiplier, currentTime, Player, deltaTime):
+	#base idle function for enemies
+	if (timerFinishCheck(currentTime, enemy.customAttributes["look timer start"], enemy.customAttributes["look duration"]*durationMultiplier) and enemy.customAttributes["player see timer"] == 0):
+		enemy.customAttributes["look timer start"] = currentTime
+		lookSequence_index = LOOKSEQUENCE.index(copy.deepcopy(enemy.customAttributes["facingDirection"]))+1
+		if (lookSequence_index > len(LOOKSEQUENCE)-1):
+			lookSequence_index = 0
+		enemy.customAttributes["facingDirection"] = LOOKSEQUENCE[lookSequence_index]
+		enemy.customAttributes["target angle"] = DIRECTION_ANGLES[enemy.customAttributes["facingDirection"]]
+	#reverse up & down angles because it's simpler than fixing the bug fully
+	#if (enemy.customAttributes["target angle"] == 180):
+	#	useAngle = 0
+	#elif (enemy.customAttributes["target angle"] == 0):
+	#	useAngle = 180
+	#else:
+	useAngle = enemy.customAttributes["target angle"]
+	targetAngleOffsets = (useAngle-enemy.customAttributes["looking offset"],useAngle+enemy.customAttributes["looking offset"])
+	playerFindAngle = face_target(enemy.hitbox.center, Player.hitbox.center)
+	if (betweenAngles(targetAngleOffsets[0], targetAngleOffsets[1], playerFindAngle)):
+		enemy.customAttributes["player see timer"] += deltaTime
+	else:
+		enemy.customAttributes["player see timer"] = 0
+	return betweenAngles(targetAngleOffsets[0], targetAngleOffsets[1], playerFindAngle, True)
+
+def betweenAngles(lower, upper, angle, debug=False):
+    lower %= 360
+    upper %= 360
+    angle %= 360
+    if (not debug):
+    	if (lower > upper):
+       	 	return angle >= lower or angle <= upper
+    	return angle > lower and angle < upper
+    else:
+    	return (lower, upper)
+
 def lerp(start, end, percent):
 	return start+(end-start)*percent
 def makeEnemy(data, type, coordinates, assetData, facingDirection):
@@ -154,6 +197,7 @@ def makeEnemy(data, type, coordinates, assetData, facingDirection):
 			raise Exception("<qkuldo> flag " + flag + " does not exist. </qkuldo>")
 		CUSTOM_ATTRIBUTES["flags"][CUSTOM_ATTRIBUTES["flags"].index(flag)] = enemyFlags[enemyFlags.index(flag)]
 	CUSTOM_ATTRIBUTES["flags"] = set(CUSTOM_ATTRIBUTES["flags"])
+	CUSTOM_ATTRIBUTES["facingDirection"] = 3
 	CUSTOM_ATTRIBUTES["combo knockback duration"] = CUSTOM_ATTRIBUTES["knockback duration"]/2
 	enemy = sprite.Sprite(assetData[type], coordinates, BASE_ATTRIBUTES["speed"], BASE_ATTRIBUTES["scale"], BASE_ATTRIBUTES["hitboxScale"], customAttributes=CUSTOM_ATTRIBUTES)
 	enemy.update(CUSTOM_ATTRIBUTES["rectOperation"])
