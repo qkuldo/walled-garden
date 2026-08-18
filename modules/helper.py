@@ -107,7 +107,7 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 		longHitstunMultiplier = 1
 		if (enemy.customAttributes["strong attack"] == True):
 			longHitstun = 2
-		if (enemy.customAttributes["state"] < 2):
+		if (enemy.customAttributes["state"] == 1):
 			if (distance_fromPlayer < 500 and distance_fromPlayer > enemy.customAttributes["pursue distance"]):
 				enemy.customAttributes["state"] = PURSUING
 			elif (distance_fromPlayer <= enemy.customAttributes["pursue distance"]):
@@ -122,6 +122,7 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["attack duration"]*durationMultiplier)):
 				enemy.customAttributes["state timer start"] = currentTime
 				enemy.customAttributes["state"] = RECOVERY
+				enemy.customAttributes["random steer"] = random.randint(-enemy.customAttributes["steer offset"],enemy.customAttributes["steer offset"])
 		if (enemy.customAttributes["state"] == RECOVERY):
 			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["recovery duration"]*durationMultiplier)):
 				enemy.customAttributes["state timer start"] = currentTime
@@ -130,6 +131,7 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 			if (timerFinishCheck(currentTime, enemy.customAttributes["state timer start"], enemy.customAttributes["hitstun duration"]*durationMultiplier)):
 				enemy.customAttributes["state timer start"] = currentTime
 				enemy.customAttributes["strong attack"] = False
+				enemy.customAttributes["random steer"] = random.randint(-enemy.customAttributes["steer offset"],enemy.customAttributes["steer offset"])
 				if (distance_fromPlayer <= enemy.customAttributes["pursue distance"]):
 					enemy.customAttributes["state"] = WINDUP
 				else:
@@ -137,7 +139,7 @@ def moveEnemy(enemy, data, currentRoomData, Player, currentTime, isHit=False, sl
 		if (enemy.customAttributes["state"] == IDLE):
 			enemy.customAttributes["debug"] = basicIdle(enemy, durationMultiplier, currentTime, Player, deltaTime)
 		if (enemy.customAttributes["state"] == PURSUING):
-			movement_vector = goto_angleComplex(enemy, speed_multiplier=1, angle=face_target(enemy.hitbox.center, Player.hitbox.center), targetPos=Player.hitbox.center, checkCollision=True, collisionList=checkCollisionList, setDir = True) 
+			movement_vector = goto_angleComplex(enemy, speed_multiplier=1, angle=face_target(enemy.hitbox.center, Player.hitbox.center)+enemy.customAttributes["random steer"], targetPos=Player.hitbox.center, checkCollision=True, collisionList=checkCollisionList, setDir = True) 
 		elif (enemy.customAttributes["state"] == ATTACK):
 			movement_vector = goto_angleComplex(enemy, speed_multiplier=2, angle=enemy.customAttributes["target angle"], targetPos=Player.hitbox.center, checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir = True)
 		if (not slowdown):
@@ -169,6 +171,10 @@ def basicIdle(enemy,durationMultiplier, currentTime, Player, deltaTime):
 	playerFindAngle = face_target(enemy.hitbox.center, Player.hitbox.center)
 	if (betweenAngles(targetAngleOffsets[0], targetAngleOffsets[1], playerFindAngle)):
 		enemy.customAttributes["player see timer"] += deltaTime
+		enemy.customAttributes["look timer start"] = copy.deepcopy(currentTime)
+		if (enemy.customAttributes["player see timer"] >= enemy.customAttributes["aggression time"]):
+			enemy.customAttributes["state"] = PURSUING
+			enemy.customAttributes["random steer"] = random.randint(-enemy.customAttributes["steer offset"],enemy.customAttributes["steer offset"])
 	else:
 		enemy.customAttributes["player see timer"] = 0
 	return betweenAngles(targetAngleOffsets[0], targetAngleOffsets[1], playerFindAngle, True)
