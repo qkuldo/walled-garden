@@ -1087,18 +1087,20 @@ def game():
 				pg.draw.circle(DEBUGLAYER, BRIGHTYELLOW, (SCREENWIDTH/2,SCREENHEIGHT/2), 5)
 				for enemy in enemyList:
 					pg.draw.rect(DEBUGLAYER,ORANGE,enemy.hitbox)
-					extended_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"])
-					pg.draw.line(DEBUGLAYER,GREEN,enemy.hitbox.center,(enemy.hitbox.center[0]-extended_endpoint[0], enemy.hitbox.center[1]-extended_endpoint[1]), 2)
-					offsetPositive_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"]+enemy.customAttributes["looking offset"])
-					offsetNegative_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"]-enemy.customAttributes["looking offset"])
-					actual_offsetNegative_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["debug"][0])
-					actual_offsetPositive_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["debug"][1])
-					lookSteer_endpoint = modules.helper.goto_angle(3000, modules.helper.face_target(enemy.hitbox.center, Player.hitbox.center)+enemy.customAttributes["random steer"])
-					pg.draw.line(DEBUGLAYER,PALEBLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-offsetPositive_endpoint[0], enemy.hitbox.center[1]-offsetPositive_endpoint[1]), 2)
-					pg.draw.line(DEBUGLAYER,PALEBLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-offsetNegative_endpoint[0], enemy.hitbox.center[1]-offsetNegative_endpoint[1]), 2)
-					pg.draw.line(DEBUGLAYER,BLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-actual_offsetNegative_endpoint[0], enemy.hitbox.center[1]-actual_offsetNegative_endpoint[1]), 2)
-					pg.draw.line(DEBUGLAYER,BLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-actual_offsetPositive_endpoint[0], enemy.hitbox.center[1]-actual_offsetPositive_endpoint[1]), 2)
-					pg.draw.line(DEBUGLAYER,PALEGREEN,enemy.hitbox.center,(enemy.hitbox.center[0]-lookSteer_endpoint[0], enemy.hitbox.center[1]-lookSteer_endpoint[1]), 2)
+					if (debugSecMode == 0):
+						extended_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"])
+						pg.draw.line(DEBUGLAYER,GREEN,enemy.hitbox.center,(enemy.hitbox.center[0]-extended_endpoint[0], enemy.hitbox.center[1]-extended_endpoint[1]), 2)
+						offsetPositive_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"]+enemy.customAttributes["looking offset"])
+						offsetNegative_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["target angle"]-enemy.customAttributes["looking offset"])
+						actual_offsetNegative_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["debug"][0])
+						actual_offsetPositive_endpoint = modules.helper.goto_angle(3000, enemy.customAttributes["debug"][1])
+						pg.draw.line(DEBUGLAYER,PALEBLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-offsetPositive_endpoint[0], enemy.hitbox.center[1]-offsetPositive_endpoint[1]), 2)
+						pg.draw.line(DEBUGLAYER,PALEBLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-offsetNegative_endpoint[0], enemy.hitbox.center[1]-offsetNegative_endpoint[1]), 2)
+						pg.draw.line(DEBUGLAYER,BLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-actual_offsetNegative_endpoint[0], enemy.hitbox.center[1]-actual_offsetNegative_endpoint[1]), 2)
+						pg.draw.line(DEBUGLAYER,BLUE,enemy.hitbox.center,(enemy.hitbox.center[0]-actual_offsetPositive_endpoint[0], enemy.hitbox.center[1]-actual_offsetPositive_endpoint[1]), 2)
+					elif (debugSecMode == 1):
+						lookSteer_endpoint = modules.helper.goto_angle(3000, modules.helper.face_target(enemy.hitbox.center, (Player.hitbox.center[0]+enemy.customAttributes["random steer"][0],Player.hitbox.center[1]+enemy.customAttributes["random steer"][1])))
+						pg.draw.line(DEBUGLAYER,PALEGREEN,enemy.hitbox.center,(enemy.hitbox.center[0]-lookSteer_endpoint[0], enemy.hitbox.center[1]-lookSteer_endpoint[1]), 2)
 				for dataIndex in range(0, len(distanceList)):
 					data = distanceList[dataIndex]
 					distance = distances[dataIndex]
