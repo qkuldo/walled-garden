@@ -418,7 +418,9 @@ def game():
 			"attack power":0,
 			"action timer":100,
 			"action state":1,
-			"recovery timer":0
+			"recovery timer":0,
+			"target radius":0,
+			"moveAngle":0
 		})
 	playerSword = modules.interactables.Sprite(weaponAssets[1], Player.hitbox.center, 0, spriteScale = (TILESIZE, TILESIZE), hitboxScale = (TILESIZE, TILESIZE), hitboxLocation = Player.hitbox.center, customAttributes = {"visible":False, "moving":False, "offset":0, "negativeSUB":False})
 	subject_CenterOffset = [SCREENWIDTH//2 - Player.hitbox.center[0], SCREENHEIGHT//2 - Player.hitbox.center[1]]
@@ -759,22 +761,54 @@ def game():
 			print(snapshot)
 			menuPressCooldown = MENUPRESSTIME
 		if ((not drawHud) and (not specialPickupVisible) and (not playerSword.customAttributes["visible"]) and (not Player.customAttributes["hit animation"])):
-			if (keys[pg.K_w] or keys[pg.K_UP]):
-				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
-				Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
-				#Player.angle = DIRECTION_ANGLES["up"]
-			elif (keys[pg.K_s] or keys[pg.K_DOWN]):
-				modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
-				Player.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
-				#Player.angle = DIRECTION_ANGLES["down"]
-			if (keys[pg.K_a] or keys[pg.K_LEFT]):
-				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
-				Player.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
-				#Player.angle = DIRECTION_ANGLES["left"]
-			elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
-				modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
-				Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
-				#Player.angle = DIRECTION_ANGLES["right"]
+			if (not Player.customAttributes["targeting"]):
+				if (keys[pg.K_w] or keys[pg.K_UP]):
+					modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
+					Player.customAttributes["facingDirection"] = DIRECTION_IDS["up"]
+					#Player.angle = DIRECTION_ANGLES["up"]
+				elif (keys[pg.K_s] or keys[pg.K_DOWN]):
+					modules.helper.complexMove(Player,SIMOVE_Y,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
+					Player.customAttributes["facingDirection"] = DIRECTION_IDS["down"]
+					#Player.angle = DIRECTION_ANGLES["down"]
+				if (keys[pg.K_a] or keys[pg.K_LEFT]):
+					modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_SUB,currentRoomData,Player.customAttributes["speed divider"])
+					Player.customAttributes["facingDirection"] = DIRECTION_IDS["left"]
+					#Player.angle = DIRECTION_ANGLES["left"]
+				elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
+					modules.helper.complexMove(Player,SIMOVE_X,SIMOVE_ADD,currentRoomData,Player.customAttributes["speed divider"])
+					Player.customAttributes["facingDirection"] = DIRECTION_IDS["right"]
+					#Player.angle = DIRECTION_ANGLES["right"]
+			else:
+				if (keys[pg.K_w] or keys[pg.K_UP]):
+					movement_vector = modules.helper.goto_angleComplex(Player, angle=modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"]),speed_multiplier=1, targetPos=Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir=True,speedDivider=Player.customAttributes["speed divider"])
+					Player.coordinates[0] += movement_vector[0]
+					Player.coordinates[1] += movement_vector[1]
+					Player.customAttributes["target radius"] = modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"])
+				elif (keys[pg.K_s] or keys[pg.K_DOWN]):
+					movement_vector = modules.helper.goto_angleComplex(Player, angle=modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"]),speed_multiplier=1, targetPos=Player.customAttributes["target pos"], checkCollision=True, collisionList=currentRoomData["collisionBoxes"], setDir=True,speedDivider=Player.customAttributes["speed divider"])
+					Player.coordinates[0] -= movement_vector[0]
+					Player.coordinates[1] -= movement_vector[1]
+					Player.customAttributes["target radius"] = modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"])
+				elif (keys[pg.K_a] or keys[pg.K_LEFT]):
+					angleChange = Player.speed/(Player.customAttributes["speed divider"]*2)
+					movement_vector = modules.helper.goto_angle(Player.customAttributes["target radius"], (Player.customAttributes["moveAngle"]+angleChange)%360)
+					dummyPlayer = Player.createDummy()
+					dummyPlayer.topleft = (Player.customAttributes["target pos"][0]+movement_vector[0],Player.customAttributes["target pos"][1]+movement_vector[1])
+					if (dummyPlayer.collidelist(currentRoomData["collisionBoxes"]) == -1 and modules.helper.hitboxInbound(dummyPlayer)):
+						Player.customAttributes["moveAngle"] += angleChange
+						Player.customAttributes["moveAngle"] %= 360
+						Player.coordinates[0] = Player.customAttributes["target pos"][0]+movement_vector[0]
+						Player.coordinates[1] = Player.customAttributes["target pos"][1]+movement_vector[1]
+				elif (keys[pg.K_d] or keys[pg.K_RIGHT]):
+					angleChange = -(Player.speed/(Player.customAttributes["speed divider"]*2))
+					movement_vector = modules.helper.goto_angle(Player.customAttributes["target radius"], (Player.customAttributes["moveAngle"]+angleChange)%360)
+					dummyPlayer = Player.createDummy()
+					dummyPlayer.topleft = (Player.customAttributes["target pos"][0]+movement_vector[0],Player.customAttributes["target pos"][1]+movement_vector[1])
+					if (dummyPlayer.collidelist(currentRoomData["collisionBoxes"]) == -1 and modules.helper.hitboxInbound(dummyPlayer)):
+						Player.customAttributes["moveAngle"] += angleChange
+						Player.customAttributes["moveAngle"] %= 360
+						Player.coordinates[0] = Player.customAttributes["target pos"][0]+movement_vector[0]
+						Player.coordinates[1] = Player.customAttributes["target pos"][1]+movement_vector[1]
 			if (scrollWheel_direction == SCROLLWHEEL_UP and Player.customAttributes["targeting"] and canScroll and not (attack_qte_ongoing_attack or playerSword.customAttributes["visible"] or len(enemyList) == 0)):
 				targetNames = modules.helper.unpack_nestedDict(distanceList, "name", False)
 				targetIndex = targetNames.index(Player.customAttributes["target name"])
@@ -806,7 +840,8 @@ def game():
 					Player.customAttributes["target pos"] = copy.deepcopy(distanceList[0]["position"])
 					Player.customAttributes["targeting"] = True
 					Player.customAttributes["target name"] = copy.copy(distanceList[0]["name"])
-				modules.helper.goto_angleComplex(Player, angle=playerSword.angle, targetPos = Player.customAttributes["target pos"])
+					Player.customAttributes["target radius"] = modules.helper.measureDistance(Player.hitbox.center, Player.customAttributes["target pos"])
+					Player.customAttributes["moveAngle"] = modules.helper.face_target(Player.hitbox.center, Player.customAttributes["target pos"]) % 360
 				if (not comboSlowdown):
 					target_angle += 4
 				TARGETRECT = pg.transform.rotate(TARGET, target_angle).get_rect()
@@ -819,6 +854,7 @@ def game():
 				Player.customAttributes["targeting"] = False
 				Player.customAttributes["target pos"] = None
 				Player.customAttributes["target name"] = ""
+				Player.customAttributes["moveAngle"] = 0
 			if (lastAttackFailed):
 				comboSlowdown = False
 			if ((keys[pg.K_z] or attackOverride) and Player.customAttributes["action state"] == 1 and (not attack_qte_ongoing_attack) and Player.customAttributes["stats"]["equipment"]["WEAPONS"]["sword"] != None and (not Player.customAttributes["apply knockback"])):
@@ -1101,6 +1137,8 @@ def game():
 					elif (debugSecMode == 1):
 						lookSteer_endpoint = modules.helper.goto_angle(3000, modules.helper.face_target(enemy.hitbox.center, (Player.hitbox.center[0]+enemy.customAttributes["random steer"][0],Player.hitbox.center[1]+enemy.customAttributes["random steer"][1])))
 						pg.draw.line(DEBUGLAYER,PALEGREEN,enemy.hitbox.center,(enemy.hitbox.center[0]-lookSteer_endpoint[0], enemy.hitbox.center[1]-lookSteer_endpoint[1]), 2)
+						targetMove_endpoint = modules.helper.goto_angle(3000, Player.customAttributes["moveAngle"])
+						pg.draw.line(DEBUGLAYER,PALERED,enemy.hitbox.center,(enemy.hitbox.center[0]-targetMove_endpoint[0], enemy.hitbox.center[1]-targetMove_endpoint[1]), 2)
 				for dataIndex in range(0, len(distanceList)):
 					data = distanceList[dataIndex]
 					distance = distances[dataIndex]
